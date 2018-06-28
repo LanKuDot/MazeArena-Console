@@ -17,10 +17,10 @@ class WebCamera:
 	WebCamera.frame from another thread, you have to check the
 	WebCamera.read_lock first.
 
-	@var camera The camera object
+	@var _camera The camera object
 	@var isCaptured Is this frame captured successfully?
 	@var frame The frame captured from the web camera
-	@var camera_thread The thread for capturing frames
+	@var _camera_thread The thread for capturing frames
 	@var is_thread_started Is the camera_thread started?
 	     It is also the flag for thread to keep running.
 	@var read_lock The mutex for WebCamera.isCaptured and
@@ -37,11 +37,11 @@ class WebCamera:
 		@param width Specify the width in pixel of the frame
 		@param height Specify the height in pixel of the frame
 		"""
-		self.camera = cv2.VideoCapture(src)
-		self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-		self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-		(self.isCaptured, self.frame) = self.camera.read()
-		self.camera_thread = None
+		self._camera = cv2.VideoCapture(src)
+		self._camera.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+		self._camera.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+		(self.isCaptured, self.frame) = self._camera.read()
+		self._camera_thread = None
 		self.is_thread_started = False
 		self.read_lock = Lock()
 
@@ -50,7 +50,7 @@ class WebCamera:
 
 		Release the camera object.
 		"""
-		self.camera.release()
+		self._camera.release()
 
 	def start_camera_thread(self):
 		"""Start a new thread for capturing frames from the web camera
@@ -63,9 +63,9 @@ class WebCamera:
 			print("[INFO] The camera thread has been started.\n");
 			return
 
-		self.camera_thread = Thread(target = self._camera_read_frame)
+		self._camera_thread = Thread(target = self._camera_read_frame)
 		self.is_thread_started = True
-		self.camera_thread.start()
+		self._camera_thread.start()
 
 	def stop_camera_thread(self):
 		"""Stop the running thread
@@ -73,9 +73,9 @@ class WebCamera:
 		If the camera thread haven't started yet, the method will do
 		nothing.
 		"""
-		if self.camera_thread.is_alive():
+		if self._camera_thread.is_alive():
 			self.is_thread_started = False
-			self.camera_thread.join()
+			self._camera_thread.join()
 
 	def _camera_read_frame(self):
 		"""Keep capturing frames from the web camera
@@ -88,7 +88,7 @@ class WebCamera:
 		critcal section.
 		"""
 		while self.is_thread_started:
-			(isCaptured, frame) = self.camera.read()
+			(isCaptured, frame) = self._camera.read()
 			self.read_lock.acquire()
 			(self.isCaptured, self.frame) = isCaptured, frame
 			self.read_lock.release()
