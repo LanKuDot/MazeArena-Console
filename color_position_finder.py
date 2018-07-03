@@ -21,7 +21,7 @@ class ColorPositionFinder:
 	"""Find the given colors in the video stream of the camera
 
 	@var colors_to_find A list stores colors to be find in the frame
-	@var camera The camera object for getting frames
+	@var _camera The camera object for getting frames
 	@var _frame Store the frame got from the camera
 	"""
 
@@ -31,7 +31,7 @@ class ColorPositionFinder:
 		@param camera Spcify the camera object
 		"""
 		self.colors_to_find = []
-		self.camera = camera
+		self._camera = camera
 		self._frame = None
 
 	def select_colors(self):
@@ -43,7 +43,7 @@ class ColorPositionFinder:
 		the selection and close the window.
 		"""
 		windowName = "Select target color (q to quit)"
-		self._frame = self.camera.get_frame()
+		self._frame = self._camera.get_frame()
 		cv2.namedWindow(windowName)
 		cv2.setMouseCallback(windowName, self._on_mouse_click)
 
@@ -51,7 +51,7 @@ class ColorPositionFinder:
 			if cv2.waitKey(1) & 0xFF == ord('q'):
 				break
 
-			self._frame = self.camera.get_frame()
+			self._frame = self._camera.get_frame()
 			cv2.imshow(windowName, self._frame)
 
 		cv2.destroyWindow(windowName)
