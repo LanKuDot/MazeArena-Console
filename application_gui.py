@@ -28,7 +28,8 @@ class ApplicationGUI:
 		# Set up the option panel
 		option_panel = Frame(self._main_window)
 		option_panel.pack()
-		btn_select_color = Button(option_panel, text = "Select Color", command = self._color_position_finder.select_colors)
+		btn_select_color = Button(option_panel, text = "Select Color", \
+			command = self._color_position_finder.select_colors)
 		btn_select_color.pack(side = LEFT)
 
 	def start_gui(self):
