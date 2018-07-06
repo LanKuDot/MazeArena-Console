@@ -9,13 +9,15 @@ import numpy as np
 class ColorPosition:
 	"""Data structure storing the position of the color found in the frame
 
-	@var color The target color
+	@var color_rgb The target color in RGB domain
+	@var color_hsv The target color in HSV domain
 	@var is_found Is this color found in the frame?
 	@var pixel_position The position in pixel in the frame
 	"""
 
-	def __init__(self, color = None):
-		self.color = color
+	def __init__(self, color_rgb = None):
+		self.color_rgb = color_rgb
+		self.color_hsv = cv2.cvtColor(np.uint8([[color_rgb]]), cv2.COLOR_BGR2HSV)
 		self.is_found = False
 		self.pixel_position = [0, 0]
 
@@ -86,10 +88,9 @@ class ColorPositionFinder:
 	def find_colors(self):
 		# Convert color from RGB domain from HSV domain
 		frame_hsv = cv2.cvtColor(self._frame, cv2.COLOR_BGR2HSV)
-		target_color_hsv = cv2.cvtColor(np.uint8([[self.colors_to_find[0].color]]), cv2.COLOR_BGR2HSV)
 
 		# Set the range of detecting colors in HSV domain
-		hue = target_color_hsv[0][0][0]
+		hue = self.colors_to_find[0].color_hsv[0][0][0]
 		# TODO The range of the detecting colors can be set on the UI
 		low_hue = hue - 15 if hue - 15 > -1 else 0
 		high_hue = hue + 15 if hue + 15 < 256 else 255
