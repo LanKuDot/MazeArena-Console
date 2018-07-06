@@ -90,6 +90,7 @@ class ColorPositionFinder:
 
 		# Set the range of detecting colors in HSV domain
 		hue = target_color_hsv[0][0][0]
+		# TODO The range of the detecting colors can be set on the UI
 		low_hue = hue - 15 if hue - 15 > -1 else 0
 		high_hue = hue + 15 if hue + 15 < 256 else 255
 		lower_bound = np.array([low_hue, 100, 100], dtype = np.uint8)
@@ -100,10 +101,10 @@ class ColorPositionFinder:
 
 		# Erode and dilate the filtered result with 7 x 7 kernal
 		# to eliminate the noise
-		kernal = np.ones((7, 7), dtype = np.uint8)
+		kernal = np.ones((3, 3), dtype = np.uint8)
 		filtered_frame = cv2.erode(filtered_frame, kernal, iterations = 1)
 		filtered_frame = cv2.dilate(filtered_frame, kernal, iterations = 1)
-		filtered_frame = cv2.GaussianBlur(filtered_frame, (7, 7), 0)
+		filtered_frame = cv2.GaussianBlur(filtered_frame, (5, 5), 0)
 
 		# Find contours in the final filtered frame
 		contours = cv2.findContours(filtered_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
