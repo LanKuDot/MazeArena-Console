@@ -9,6 +9,8 @@ import numpy as np
 class ColorPosition:
 	"""Data structure storing the position of the color found in the frame
 
+	@param color_rgb Specify the target color in RGB domain
+	       The color specified will be automatically converted into HSV domain.
 	@var color_rgb The target color in RGB domain
 	@var color_hsv The target color in HSV domain
 	@var is_found Is this color found in the frame?
