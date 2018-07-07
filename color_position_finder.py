@@ -90,21 +90,28 @@ class ColorPositionFinder:
 			" ({0}, {1}, {2})".format(color_r, color_g, color_b))
 
 	def find_colors(self):
+		def _get_detect_range(color_hsv):
+			"""Generate the detecting color range from predefined sensitivity
+
+			@param color_hsv The detecting colot in HSV domain
+			@return (lower_bound, upper_bound) The range of the detecting color
+			"""
+			# TODO The range of the detecting colors can be set on the UI
+			hue = color_hsv[0]
+			low_hue = hue - 15 if hue - 15 > -1 else 0
+			high_hue = hue + 15 if hue + 15 < 256 else 255
+			lower_bound = np.array([low_hue, 100, 180], dtype = np.uint8)
+			upper_bound = np.array([high_hue, 255, 255], dtype = np.uint8)
+			return lower_bound, upper_bound
+
 		# Convert color from RGB domain from HSV domain
 		frame_hsv = cv2.cvtColor(self._frame, cv2.COLOR_BGR2HSV)
 
-		# Set the range of detecting colors in HSV domain
-		hue = self.colors_to_find[0].color_hsv[0][0][0]
-		# TODO The range of the detecting colors can be set on the UI
-		low_hue = hue - 15 if hue - 15 > -1 else 0
-		high_hue = hue + 15 if hue + 15 < 256 else 255
-		lower_bound = np.array([low_hue, 100, 100], dtype = np.uint8)
-		upper_bound = np.array([high_hue, 255, 255], dtype = np.uint8)
-
 		# Only colors in defined range will be passed
+		lower_bound, upper_bound = _get_detect_range(self.colors_to_find[0].color_hsv)
 		filtered_frame = cv2.inRange(frame_hsv, lower_bound, upper_bound)
 
-		# Erode and dilate the filtered result with 7 x 7 kernal
+		# Erode and dilate the filtered result with 3 x 3 kernal
 		# to eliminate the noise
 		kernal = np.ones((3, 3), dtype = np.uint8)
 		filtered_frame = cv2.erode(filtered_frame, kernal, iterations = 1)
