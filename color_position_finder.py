@@ -20,6 +20,8 @@ class ColorPosition:
 	def __init__(self, color_rgb = None):
 		self.color_rgb = color_rgb
 		self.color_hsv = cv2.cvtColor(np.uint8([[color_rgb]]), cv2.COLOR_BGR2HSV)
+		# cvtColor will return [pixel.y][pixel.x][hsv]
+		self.color_hsv = self.color_hsv[0][0]
 		self.is_found = False
 		self.pixel_position = [0, 0]
 
