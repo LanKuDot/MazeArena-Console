@@ -140,8 +140,11 @@ class ColorPositionFinder:
 			return centres
 
 		frame_hsv = cv2.cvtColor(self._frame, cv2.COLOR_BGR2HSV)
-		posFound = _find_target_color(frame_hsv, 0)
-		self.colors_to_find[0].pixel_position = posFound.copy()
+		# TODO Create multiple thread to find colors if there are
+		# too many colors to be found
+		for i in range(len(self.colors_to_find)):
+			posFound = _find_target_color(frame_hsv, i)
+			self.colors_to_find[i].pixel_position = posFound.copy()
 
 	def _mark_searching_result(self):
 		"""Mark the searching result to the original frame
@@ -151,6 +154,7 @@ class ColorPositionFinder:
 		ColorPositionFinder.colors_to_find.
 		And then mark red dots at these position.
 		"""
-		posFound = self.colors_to_find[0].pixel_position
-		for i in range(len(posFound)):
-			cv2.circle(self._frame, posFound[i], 5, (0, 0, 150), -1)
+		for color in self.colors_to_find:
+			posFound = color.pixel_position
+			for pos in posFound:
+				cv2.circle(self._frame, pos, 5, (0, 0, 150), -1)
