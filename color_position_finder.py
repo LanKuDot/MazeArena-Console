@@ -63,6 +63,7 @@ class ColorPositionFinder:
 
 			if len(self.colors_to_find) > 0:
 				self.find_colors()
+				self._mark_searching_result()
 
 			cv2.imshow(windowName, self._frame)
 
@@ -140,9 +141,16 @@ class ColorPositionFinder:
 
 		frame_hsv = cv2.cvtColor(self._frame, cv2.COLOR_BGR2HSV)
 		posFound = _find_target_color(frame_hsv, 0)
+		self.colors_to_find[0].pixel_position = posFound.copy()
 
-		# Draw the dot found
+	def _mark_searching_result(self):
+		"""Mark the searching result to the original frame
+
+		The method will take the positions stored in the
+		ColorPosition.pixel_position from each color stored in the
+		ColorPositionFinder.colors_to_find.
+		And then mark red dots at these position.
+		"""
+		posFound = self.colors_to_find[0].pixel_position
 		for i in range(len(posFound)):
 			cv2.circle(self._frame, posFound[i], 5, (0, 0, 150), -1)
-
-		#return self.colors_to_find
