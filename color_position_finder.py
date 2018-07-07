@@ -14,7 +14,7 @@ class ColorPosition:
 	@var color_rgb The target color in RGB domain
 	@var color_hsv The target color in HSV domain
 	@var is_found Is this color found in the frame?
-	@var pixel_position The position in pixel in the frame
+	@var pixel_position A list of positions in pixel of the target color
 	"""
 
 	def __init__(self, color_rgb = None):
@@ -23,7 +23,7 @@ class ColorPosition:
 		# cvtColor will return [pixel.y][pixel.x][hsv]
 		self.color_hsv = self.color_hsv[0][0]
 		self.is_found = False
-		self.pixel_position = [0, 0]
+		self.pixel_position = []
 
 class ColorPositionFinder:
 	"""Find the given colors in the video stream of the camera
@@ -104,32 +104,45 @@ class ColorPositionFinder:
 			upper_bound = np.array([high_hue, 255, 255], dtype = np.uint8)
 			return lower_bound, upper_bound
 
-		# Convert color from RGB domain from HSV domain
+		def _find_target_color(target_frame_hsv, color_index):
+			"""Find the position of the specified color in the given frame
+
+			@param target_frame_hsv The source frame in HSV domain
+			@param color_index The index of color to be found in \
+			       ColorPositionFinder.colors_to_find
+			@return A list of positions in pixel where the target color is at
+			        It is possible that returning an empty list
+			"""
+			lower_bound, upper_bound = _get_detect_range( \
+				self.colors_to_find[color_index].color_hsv)
+			# Only colors in defined range will be passed
+			filtered_frame = cv2.inRange(target_frame_hsv, lower_bound, upper_bound)
+
+			# Erode and dilate the filtered result with 3 x 3 kernal
+			# to eliminate the noise
+			kernal = np.ones((3, 3), dtype = np.uint8)
+			filtered_frame = cv2.erode(filtered_frame, kernal, iterations = 1)
+			filtered_frame = cv2.dilate(filtered_frame, kernal, iterations = 1)
+			filtered_frame = cv2.GaussianBlur(filtered_frame, (5, 5), 0)
+
+			# Find contours in the final filtered frame
+			contours = cv2.findContours(filtered_frame, \
+				cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+			contours = contours[0] if imutils.is_cv2() else contours[1]
+
+			# Find center point of each contour
+			centres = []
+			for i in range(len(contours)):
+				moments = cv2.moments(contours[i])
+				centres.append((int(moments['m10']/moments['m00']), \
+					int(moments['m01']/moments['m00'])))
+			return centres
+
 		frame_hsv = cv2.cvtColor(self._frame, cv2.COLOR_BGR2HSV)
-
-		# Only colors in defined range will be passed
-		lower_bound, upper_bound = _get_detect_range(self.colors_to_find[0].color_hsv)
-		filtered_frame = cv2.inRange(frame_hsv, lower_bound, upper_bound)
-
-		# Erode and dilate the filtered result with 3 x 3 kernal
-		# to eliminate the noise
-		kernal = np.ones((3, 3), dtype = np.uint8)
-		filtered_frame = cv2.erode(filtered_frame, kernal, iterations = 1)
-		filtered_frame = cv2.dilate(filtered_frame, kernal, iterations = 1)
-		filtered_frame = cv2.GaussianBlur(filtered_frame, (5, 5), 0)
-
-		# Find contours in the final filtered frame
-		contours = cv2.findContours(filtered_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-		contours = contours[0] if imutils.is_cv2() else contours[1]
-
-		# Find center point of each contour
-		centres = []
-		for i in range(len(contours)):
-			moments = cv2.moments(contours[i])
-			centres.append((int(moments['m10']/moments['m00']), int(moments['m01']/moments['m00'])))
+		posFound = _find_target_color(frame_hsv, 0)
 
 		# Draw the dot found
-		for i in range(len(centres)):
-			cv2.circle(self._frame, centres[i], 5, (0, 0, 150), -1)
+		for i in range(len(posFound)):
+			cv2.circle(self._frame, posFound[i], 5, (0, 0, 150), -1)
 
 		#return self.colors_to_find
