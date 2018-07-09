@@ -154,7 +154,7 @@ class ColorPositionFinder:
 		ColorPositionFinder.colors_to_find.
 		And then mark red dots at these position.
 		"""
-		for color in self.colors_to_find:
-			posFound = color.pixel_position
-			for pos in posFound:
-				cv2.circle(self._frame, pos, 5, (0, 0, 150), -1)
+		for color_id in range(len(self.colors_to_find)):
+			posFound = self.colors_to_find[color_id].pixel_position
+			for i in range(len(posFound)):
+				cv2.circle(self._frame, posFound[i], 5, (0, 0, 150), -1)
