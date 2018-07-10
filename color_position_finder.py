@@ -6,6 +6,8 @@ import cv2
 import imutils
 import numpy as np
 
+from enum import Enum
+
 class ColorPosition:
 	"""Data structure storing the position of the color found in the frame
 
@@ -17,11 +19,22 @@ class ColorPosition:
 	@var pixel_position A list of positions in pixel of the target color
 	"""
 
-	def __init__(self, color_rgb = None):
+	class Type(Enum):
+		"""The representation of colors in the maze arena
+
+		@var MAZE_UPPER_PLANE enum = 1
+		"""
+		MAZE_UPPER_PLANE = 1
+		MAZE_LOWER_PLANE = 2
+		MAZE_CAR = 3
+		OTHER = 99
+
+	def __init__(self, color_rgb = None, color_type = Type.OTHER):
 		self.color_rgb = color_rgb
 		self.color_hsv = cv2.cvtColor(np.uint8([[color_rgb]]), cv2.COLOR_BGR2HSV)
 		# cvtColor will return [pixel.y][pixel.x][hsv]
 		self.color_hsv = self.color_hsv[0][0]
+		self.color_type = color_type
 		self.is_found = False
 		self.pixel_position = []
 
