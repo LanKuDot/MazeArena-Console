@@ -7,6 +7,7 @@ import imutils
 import numpy as np
 
 from enum import Enum
+from point import Point2D
 
 class ColorPosition:
 	"""Data structure storing the position of the color found in the frame
@@ -148,7 +149,7 @@ class ColorPositionFinder:
 			centres = []
 			for i in range(len(contours)):
 				moments = cv2.moments(contours[i])
-				centres.append((int(moments['m10']/moments['m00']), \
+				centres.append(Point2D(int(moments['m10']/moments['m00']), \
 					int(moments['m01']/moments['m00'])))
 			return centres
 
@@ -170,4 +171,5 @@ class ColorPositionFinder:
 		for color_id in range(len(self.colors_to_find)):
 			posFound = self.colors_to_find[color_id].pixel_position
 			for i in range(len(posFound)):
-				cv2.circle(self._frame, posFound[i], 5, (0, 0, 150), -1)
+				cv2.circle(self._frame, (posFound[i].x, posFound[i].y), \
+					5, (0, 0, 150), -1)
