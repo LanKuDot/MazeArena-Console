@@ -9,9 +9,16 @@ class Point2D():
 		self.y = y
 
 	def __eq__(self, other):
-		if self.x == other.x and self.y == other.y:
-			return True
-		return False
+		if type(other) == type(self):
+			if self.x == other.x and self.y == other.y:
+				return True
+			return False
+		elif type(other) == tuple:
+			if self.x == other[0] and self.y == other[1]:
+				return True
+			return False
+		else:
+			raise NotImplementedError
 
 	def __ne__(self, other):
 		return not self.__eq__(self, other)
