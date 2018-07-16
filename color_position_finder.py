@@ -34,13 +34,30 @@ class ColorPosition:
 		MAZE_CAR = 3
 		OTHER = 99
 
-	def __init__(self, color_rgb = None, color_type = Type.OTHER):
+	def __init__(self, color_rgb, color_type = Type.OTHER):
 		self.color_rgb = color_rgb
 		self.color_hsv = cv2.cvtColor(np.uint8([[color_rgb]]), cv2.COLOR_BGR2HSV)
 		# cvtColor will return [pixel.y][pixel.x][hsv]
 		self.color_hsv = self.color_hsv[0][0]
 		self.color_type = color_type
 		self.pixel_position = []
+
+	def __eq__(self, other):
+		"""Predefined equal comparsion method
+
+		Two ColorPosition objects are the same if their ColorPosition.color_rgb
+		is the same.
+		It is useful that you can get the ColorPosition element from a list
+		by specifing the color (e.g., with statement
+		list.index(ColorPosition([255, 0, 0]), you will get the element whose
+		target color is red).
+
+		@return True if the color is the same
+		"""
+		return self.color_rgb == other.color_rgb
+
+	def __ne__(self, other):
+		return not __eq__(other)
 
 class ColorPositionFinder:
 	"""Find the given colors in the video stream of the camera
