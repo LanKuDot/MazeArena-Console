@@ -14,9 +14,10 @@ class ColorPosition:
 
 	@param color_rgb Specify the target color in RGB domain
 	       The color specified will be automatically converted into HSV domain.
+
 	@var color_rgb The target color in RGB domain
 	@var color_hsv The target color in HSV domain
-	@var is_found Is this color found in the frame?
+	@var color_type The represenation of the color in the maze
 	@var pixel_position A list of positions in pixel of the target color
 	"""
 
@@ -36,7 +37,6 @@ class ColorPosition:
 		# cvtColor will return [pixel.y][pixel.x][hsv]
 		self.color_hsv = self.color_hsv[0][0]
 		self.color_type = color_type
-		self.is_found = False
 		self.pixel_position = []
 
 class ColorPositionFinder:
