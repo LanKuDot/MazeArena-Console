@@ -24,7 +24,10 @@ class ColorPosition:
 	class Type(Enum):
 		"""The representation of colors in the maze arena
 
-		@var MAZE_UPPER_PLANE enum = 1
+		@var MAZE_UPPER_PLANE enum = 1 The color that marks the upper plane of the maze
+		@var MAZE_LOWER_PLANE enum = 2 The color that marks the lower plane of the maze
+		@var MAZEC_CAR enum = 3 The color that marks the maze car
+		@ver OTHER enum = 99 Undefined color
 		"""
 		MAZE_UPPER_PLANE = 1
 		MAZE_LOWER_PLANE = 2
