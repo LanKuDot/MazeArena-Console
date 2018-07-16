@@ -28,3 +28,9 @@ class Point2D():
 
 	def __repr__(self):
 		return "Point2D({0}, {1})".format(self.x, self.y)
+
+	def getTuple(self):
+		return (self.x, self.y)
+
+	def getList(self):
+		return [self.x, self.y]
