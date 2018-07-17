@@ -161,17 +161,16 @@ class ColorPositionFinder:
 			upper_bound = np.array([high_hue, 255, 255], dtype = np.uint8)
 			return lower_bound, upper_bound
 
-		def _find_target_color(target_frame_hsv, color_index):
+		def _find_target_color(target_frame_hsv, target_color_hsv):
 			"""Find the position of the specified color in the given frame
 
 			@param target_frame_hsv The source frame in HSV domain
-			@param color_index The index of color to be found in \
-			       ColorPositionFinder.colors_to_find
+			@param target_color_hsv The color in the HSV domain to be found
+			       in the target_frame_hsv
 			@return A list of positions in pixel where the target color is at
 			        It is possible that returning an empty list
 			"""
-			lower_bound, upper_bound = _get_detect_range( \
-				self.colors_to_find[color_index].color_hsv)
+			lower_bound, upper_bound = _get_detect_range(target_color_hsv)
 			# Only colors in defined range will be passed
 			filtered_frame = cv2.inRange(target_frame_hsv, lower_bound, upper_bound)
 
@@ -198,8 +197,8 @@ class ColorPositionFinder:
 		frame_hsv = cv2.cvtColor(self._frame, cv2.COLOR_BGR2HSV)
 		# TODO Create multiple thread to find colors if there are
 		# too many colors to be found
-		for i in range(len(self.colors_to_find)):
-			posFound = _find_target_color(frame_hsv, i)
+		for i in range(len(self._colors_to_find)):
+			posFound = _find_target_color(frame_hsv, self.colors_to_find[i].color_hsv)
 			self.colors_to_find[i].pixel_position = posFound.copy()
 
 	def _mark_searching_result(self):
