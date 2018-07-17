@@ -5,8 +5,9 @@ Find the position of the specified color in the image.
 import cv2
 import imutils
 import numpy as np
-
 from enum import Enum
+from threading import Thread, Lock
+
 from point import Point2D
 
 class ColorPosition:
@@ -62,9 +63,12 @@ class ColorPosition:
 class ColorPositionFinder:
 	"""Find the given colors in the video stream of the camera
 
-	@var colors_to_find A list stores colors to be find in the frame
+	@var _colors_to_find A list stores colors to be find in the frame
 	@var _camera The camera object for getting frames
 	@var _frame Store the frame got from the camera
+	@var _color_finding_thread The thread for finding colors in the frame
+	@var _is_thread_started Is the _color_finding_thread started?
+	@var _colors_to_find_lock The read lock of _colors_to_find
 	"""
 
 	def __init__(self, camera):
@@ -72,9 +76,13 @@ class ColorPositionFinder:
 
 		@param camera Spcify the camera object
 		"""
-		self.colors_to_find = []
+		self._colors_to_find = []
 		self._camera = camera
 		self._frame = None
+
+		self._color_finding_thread = None
+		self._is_thread_started = False
+		self._colors_to_find_lock = Lock()
 
 	def select_colors(self):
 		"""Select colors to be find in the frame
@@ -95,7 +103,7 @@ class ColorPositionFinder:
 
 			self._frame = self._camera.get_frame()
 
-			if len(self.colors_to_find) > 0:
+			if len(self._colors_to_find) > 0:
 				self.find_colors()
 				self._mark_searching_result()
 
@@ -107,27 +115,27 @@ class ColorPositionFinder:
 		"""The callback function of the mouse clicking event
 
 		When the left mouse click releases, store the color at where
-		the mouse point is in the frame to ColorPositionFinder.colors_to_find.
+		the mouse point is in the frame to ColorPositionFinder._colors_to_find.
 		"""
 		if event == cv2.EVENT_LBUTTONUP:
 			self.add_target_color( \
 				self._frame[y, x][0], self._frame[y, x][1], self._frame[y, x][2])
 
 	def add_target_color(self, color_r, color_g, color_b):
-		"""Add new target color to ColorPositionFinder.colors_to_find
+		"""Add new target color to ColorPositionFinder._colors_to_find
 
 		@param color_r The red channel of the target color
 		@param color_g The green channel of the target color
 		@param color_b The blue channel of the target color
 		"""
-		self.colors_to_find.append(ColorPosition([color_r, color_g, color_b]))
+		self._colors_to_find.append(ColorPosition([color_r, color_g, color_b]))
 		print("[ColorPositionFinder] New target color added:" \
 			" ({0}, {1}, {2})".format(color_r, color_g, color_b))
 
 	def delete_target_color(self, color_r, color_g, color_b):
-		"""Delete the specified color from ColorPositionFinder.colors_to_find
+		"""Delete the specified color from ColorPositionFinder._colors_to_find
 
-		If the specified color is not in the colors_to_find, the method
+		If the specified color is not in the _colors_to_find, the method
 		will warn the user.
 
 		@param color_r The red channel of the target color
@@ -136,13 +144,13 @@ class ColorPositionFinder:
 		"""
 		where = -1
 		try:
-			where = self.colors_to_find.index( \
+			where = self._colors_to_find.index( \
 				ColorPosition([color_r, color_g, color_b]))
 		except ValueError:
 			print("[ColorPositionFinder] Color ({0}, {1}, {2}) " \
 				"is not in the target colors".format(color_r, color_g, color_b))
 		else:
-			self.colors_to_find.remove(where)
+			self._colors_to_find.remove(where)
 			print("[ColorPositionFinder] Target color removed:" \
 			" ({0}, {1}, {2})".format(color_r, color_g, color_b))
 
@@ -198,19 +206,19 @@ class ColorPositionFinder:
 		# TODO Create multiple thread to find colors if there are
 		# too many colors to be found
 		for i in range(len(self._colors_to_find)):
-			posFound = _find_target_color(frame_hsv, self.colors_to_find[i].color_hsv)
-			self.colors_to_find[i].pixel_position = posFound.copy()
+			posFound = _find_target_color(frame_hsv, self._colors_to_find[i].color_hsv)
+			self._colors_to_find[i].pixel_position = posFound.copy()
 
 	def _mark_searching_result(self):
 		"""Mark the searching result to the original frame
 
 		The method will take the positions stored in the
 		ColorPosition.pixel_position from each color stored in the
-		ColorPositionFinder.colors_to_find.
+		ColorPositionFinder._colors_to_find.
 		And then mark red dots at these position.
 		"""
-		for color_id in range(len(self.colors_to_find)):
-			posFound = self.colors_to_find[color_id].pixel_position
+		for color_id in range(len(self._colors_to_find)):
+			posFound = self._colors_to_find[color_id].pixel_position
 			for i in range(len(posFound)):
 				cv2.circle(self._frame, (posFound[i].x, posFound[i].y), \
 					5, (0, 0, 150), -1)
