@@ -60,6 +60,16 @@ class ColorPosition:
 	def __ne__(self, other):
 		return not __eq__(other)
 
+	def copy(self) -> ColorPosition:
+		"""Return a clone of itself
+
+		@return A clone of the ColorPosition object
+		"""
+		new_item = ColorPosition(self.color_rgb.copy(), self.color_type)
+		new_item.color_hsv = self.color_hsv.copy()
+		new_item.pixel_position = self.pixel_position.copy()
+		return new_item
+
 class ColorPositionFinder:
 	"""Find the given colors in the video stream of the camera
 
