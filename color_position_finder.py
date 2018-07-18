@@ -164,6 +164,31 @@ class ColorPositionFinder:
 			print("[ColorPositionFinder] Target color removed:" \
 			" ({0}, {1}, {2})".format(color_r, color_g, color_b))
 
+	def get_target_color(self, color_r, color_g, color_b) -> ColorPosition:
+		"""Get the copy of the element of the specified color in _colors_to_find
+
+		If the specified color is not in the _colors_to_find, the method
+		will warn the user.
+
+		@param color_r The red channel of the target color
+		@param color_g The green channel of the target color
+		@param color_b The blue channel of the target color
+
+		@return A copy of ColorPosition object in the _colors_to_find if the
+		        specified color is existing
+		"""
+		where = -1
+		new_item = None
+		try:
+			where = self._colors_to_find.index( \
+				ColorPosition([color_r, color_g, color_b]))
+		except ValueError:
+			print("[ColorPositionFinder] Color ({0}, {1}, {2}) " \
+				"is not in the target colors".format(color_r, color_g, color_b))
+		else:
+			new_item = self._colors_to_find[where].copy()
+			return new_item
+
 	def find_colors(self):
 		def _get_detect_range(color_hsv):
 			"""Generate the detecting color range from predefined sensitivity
