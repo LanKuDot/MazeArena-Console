@@ -13,10 +13,10 @@ from point import Point2D
 class ColorPosition:
 	"""Data structure storing the position of the color found in the frame
 
-	@param color_rgb Specify the target color in RGB domain
+	@param color_bgr Specify the target color in BGR domain
 	       The color specified will be automatically converted into HSV domain.
 
-	@var color_rgb The target color in RGB domain: [r, g, b]
+	@var color_bgr The target color in BGR domain: [b, g, r]
 	@var color_hsv The target color in HSV domain: [h, s, v]
 	@var color_type The represenation of the color in the maze
 	@var pixel_position A list of positions in pixel of the target color
@@ -35,9 +35,9 @@ class ColorPosition:
 		MAZE_CAR = 3
 		OTHER = 99
 
-	def __init__(self, color_rgb, color_type = Type.OTHER):
-		self.color_rgb = color_rgb
-		self.color_hsv = cv2.cvtColor(np.uint8([[color_rgb]]), cv2.COLOR_BGR2HSV)
+	def __init__(self, color_bgr, color_type = Type.OTHER):
+		self.color_bgr = color_bgr
+		self.color_hsv = cv2.cvtColor(np.uint8([[color_bgr]]), cv2.COLOR_BGR2HSV)
 		# cvtColor will return [pixel.y][pixel.x][hsv]
 		self.color_hsv = self.color_hsv[0][0]
 		self.color_type = color_type
@@ -46,16 +46,16 @@ class ColorPosition:
 	def __eq__(self, other):
 		"""Predefined equal comparsion method
 
-		Two ColorPosition objects are the same if their ColorPosition.color_rgb
+		Two ColorPosition objects are the same if their ColorPosition.color_bgr
 		is the same.
 		It is useful that you can get the ColorPosition element from a list
 		by specifing the color (e.g., with statement
 		list.index(ColorPosition([255, 0, 0]), you will get the element whose
-		target color is red).
+		target color is blue).
 
 		@return True if the color is the same
 		"""
-		return self.color_rgb == other.color_rgb
+		return self.color_bgr == other.color_bgr
 
 	def __ne__(self, other):
 		return not __eq__(other)
@@ -65,7 +65,7 @@ class ColorPosition:
 
 		@return A clone of the ColorPosition object
 		"""
-		new_item = ColorPosition(self.color_rgb.copy(), self.color_type)
+		new_item = ColorPosition(self.color_bgr.copy(), self.color_type)
 		new_item.color_hsv = self.color_hsv.copy()
 		new_item.pixel_position = self.pixel_position.copy()
 		return new_item
@@ -94,48 +94,48 @@ class ColorPositionFinder:
 		self._is_thread_started = False
 		self._colors_to_find_lock = Lock()
 
-	def add_target_color(self, color_r, color_g, color_b):
+	def add_target_color(self, color_b, color_g, color_r):
 		"""Add new target color to ColorPositionFinder._colors_to_find
 
-		@param color_r The red channel of the target color
-		@param color_g The green channel of the target color
 		@param color_b The blue channel of the target color
+		@param color_g The green channel of the target color
+		@param color_r The red channel of the target color
 		"""
-		self._colors_to_find.append(ColorPosition([color_r, color_g, color_b]))
+		self._colors_to_find.append(ColorPosition([color_b, color_g, color_r]))
 		print("[ColorPositionFinder] New target color added:" \
-			" ({0}, {1}, {2})".format(color_r, color_g, color_b))
+			" ({0}, {1}, {2})".format(color_b, color_g, color_r))
 
-	def delete_target_color(self, color_r, color_g, color_b):
+	def delete_target_color(self, color_b, color_g, color_r):
 		"""Delete the specified color from ColorPositionFinder._colors_to_find
 
 		If the specified color is not in the _colors_to_find, the method
 		will warn the user.
 
-		@param color_r The red channel of the target color
-		@param color_g The green channel of the target color
 		@param color_b The blue channel of the target color
+		@param color_g The green channel of the target color
+		@param color_r The red channel of the target color
 		"""
 		where = -1
 		try:
 			where = self._colors_to_find.index( \
-				ColorPosition([color_r, color_g, color_b]))
+				ColorPosition([color_b, color_g, color_r]))
 		except ValueError:
 			print("[ColorPositionFinder] Color ({0}, {1}, {2}) " \
-				"is not in the target colors".format(color_r, color_g, color_b))
+				"is not in the target colors".format(color_b, color_g, color_r))
 		else:
 			self._colors_to_find.remove(where)
 			print("[ColorPositionFinder] Target color removed:" \
-			" ({0}, {1}, {2})".format(color_r, color_g, color_b))
+			" ({0}, {1}, {2})".format(color_b, color_g, color_r))
 
-	def get_target_color(self, color_r, color_g, color_b) -> ColorPosition:
+	def get_target_color(self, color_b, color_g, color_r) -> ColorPosition:
 		"""Get the copy of the element of the specified color in _colors_to_find
 
 		If the specified color is not in the _colors_to_find, the method
 		will warn the user.
 
-		@param color_r The red channel of the target color
-		@param color_g The green channel of the target color
 		@param color_b The blue channel of the target color
+		@param color_g The green channel of the target color
+		@param color_r The red channel of the target color
 
 		@return A copy of ColorPosition object in the _colors_to_find if the
 		        specified color is existing
@@ -144,10 +144,10 @@ class ColorPositionFinder:
 		new_item = None
 		try:
 			where = self._colors_to_find.index( \
-				ColorPosition([color_r, color_g, color_b]))
+				ColorPosition([color_b, color_g, color_r]))
 		except ValueError:
 			print("[ColorPositionFinder] Color ({0}, {1}, {2}) " \
-				"is not in the target colors".format(color_r, color_g, color_b))
+				"is not in the target colors".format(color_b, color_g, color_r))
 		else:
 			new_item = self._colors_to_find[where].copy()
 			return new_item

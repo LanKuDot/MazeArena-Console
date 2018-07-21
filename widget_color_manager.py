@@ -10,11 +10,13 @@ from tkinter import *
 import cv2
 
 class ColorLabel(Button):
-	def __init__(self, master = None, color_rgb = [0, 0, 0], **options):
-		super().__init__(master, text = color_rgb.__str__(), **options)
+	def __init__(self, master = None, color_bgr = [0, 0, 0], **options):
+		super().__init__(master, text = color_bgr.__str__(), \
+			bg = "#%02x%02x%02x" % (color_bgr[2], color_bgr[1], color_bgr[0]) , \
+			**options) # bg is in RGB domain
 		self.pack()
 
-		self._color = color_rgb
+		self._color = color_bgr
 
 class ColorManagerWidget(LabelFrame):
 	"""A widget that manage the colors to be found in the video stream
@@ -103,10 +105,10 @@ class ColorManagerWidget(LabelFrame):
 		the mouse point is in the frame to ColorPositionFinder._colors_to_find.
 		"""
 		if event == cv2.EVENT_LBUTTONUP:
+			target_color = [self._frame[y, x][0], self._frame[y, x][1], self._frame[y, x][2]]
 			#self._color_position_finder.add_target_color( \
 			#	self._frame[y, x][0], self._frame[y, x][1], self._frame[y, x][2])
-			new_color_label = ColorLabel(self._color_label_panel, \
-				[self._frame[y, x][0], self._frame[y, x][1], self._frame[y, x][2]])
+			new_color_label = ColorLabel(self._color_label_panel, target_color)
 			new_color_label.pack(fill = X)
 
 	def _show_result(self):
