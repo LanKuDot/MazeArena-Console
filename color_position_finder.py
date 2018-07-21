@@ -60,7 +60,7 @@ class ColorPosition:
 	def __ne__(self, other):
 		return not __eq__(other)
 
-	def copy(self) -> ColorPosition:
+	def copy(self):
 		"""Return a clone of itself
 
 		@return A clone of the ColorPosition object
