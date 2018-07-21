@@ -9,11 +9,11 @@ from webcam import WebCamera
 import cv2
 
 if __name__ == "__main__":
-	camera = WebCamera(width = 800, height = 600)
-	camera.start_camera_thread()
-
+	camera = WebCamera(src = 0, width = 1080, height = 720)
 	color_position_finder = ColorPositionFinder(camera)
 
-	gui = ApplicationGUI(color_position_finder).start_gui()
+	camera.start_camera_thread()
+
+	gui = ApplicationGUI(camera, color_position_finder).start_gui()
 
 	camera.stop_camera_thread()

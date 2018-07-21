@@ -94,43 +94,6 @@ class ColorPositionFinder:
 		self._is_thread_started = False
 		self._colors_to_find_lock = Lock()
 
-	def select_colors(self):
-		"""Select colors to be find in the frame
-
-		The method will pop up a window showing the stream from the camera
-		for the user to select colors.
-		Use left mouse click to specify the color and press 'q' to confirm
-		the selection and close the window.
-		"""
-		windowName = "Select target color (q to quit)"
-		self._frame = self._camera.get_frame()
-		cv2.namedWindow(windowName)
-		cv2.setMouseCallback(windowName, self._on_mouse_click)
-
-		while True:
-			if cv2.waitKey(1) & 0xFF == ord('q'):
-				break
-
-			self._frame = self._camera.get_frame()
-
-			if len(self._colors_to_find) > 0:
-				self.find_colors()
-				self._mark_searching_result()
-
-			cv2.imshow(windowName, self._frame)
-
-		cv2.destroyWindow(windowName)
-
-	def _on_mouse_click(self, event, x, y, flags, param):
-		"""The callback function of the mouse clicking event
-
-		When the left mouse click releases, store the color at where
-		the mouse point is in the frame to ColorPositionFinder._colors_to_find.
-		"""
-		if event == cv2.EVENT_LBUTTONUP:
-			self.add_target_color( \
-				self._frame[y, x][0], self._frame[y, x][1], self._frame[y, x][2])
-
 	def add_target_color(self, color_r, color_g, color_b):
 		"""Add new target color to ColorPositionFinder._colors_to_find
 
