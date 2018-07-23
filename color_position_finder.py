@@ -90,7 +90,7 @@ class ColorPositionFinder:
 		self._camera = camera
 		self._frame = None
 
-		self._color_finding_thread = None
+		self._color_recognition_thread = None
 		self._is_thread_started = False
 		self._colors_to_find_lock = Lock()
 
@@ -161,8 +161,26 @@ class ColorPositionFinder:
 		for i in range(len(self._colors_to_find)):
 			copied.append(self._colors_to_find[i].copy())
 		return copied
+	
+	def start_recognition_thread(self):
+		"""Start a new thread to do color recognition
+		"""
+		if self._is_thread_started:
+			print("[INFO] The color recognition thread has been already started.")
+			return
 
-	def find_colors(self):
+		self._color_recognition_thread = Thread(target = self._find_colors)
+		self._is_thread_started = True
+		self._color_recognition_thread.start()
+		print("[INFO] The color recognition thread is started.")
+
+	def stop_recognition_thread(self):
+		if self._color_recognition_thread.isAlive():
+			self._is_thread_started = False
+			self._color_recognition_thread.join()
+			print("[INFO] The color recognition thread is stopped.")
+
+	def _find_colors(self):
 		def _get_detect_range(color_hsv):
 			"""Generate the detecting color range from predefined sensitivity
 
@@ -210,12 +228,14 @@ class ColorPositionFinder:
 					int(moments['m01']/moments['m00'])))
 			return centres
 
-		frame_hsv = cv2.cvtColor(self._frame, cv2.COLOR_BGR2HSV)
-		# TODO Create multiple thread to find colors if there are
-		# too many colors to be found
-		for i in range(len(self._colors_to_find)):
-			posFound = _find_target_color(frame_hsv, self._colors_to_find[i].color_hsv)
-			self._colors_to_find[i].pixel_position = posFound.copy()
+		while self._is_thread_started:
+			self._frame = _camera.get_frame()
+			frame_hsv = cv2.cvtColor(self._frame, cv2.COLOR_BGR2HSV)
+			# TODO Create multiple thread to find colors if there are
+			# too many colors to be found
+			for i in range(len(self._colors_to_find)):
+				posFound = _find_target_color(frame_hsv, self._colors_to_find[i].color_hsv)
+				self._colors_to_find[i].pixel_position = posFound.copy()
 
 	def _mark_searching_result(self):
 		"""Mark the searching result to the original frame
