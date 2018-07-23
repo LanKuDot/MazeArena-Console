@@ -66,6 +66,7 @@ class WebCamera:
 		self._camera_thread = Thread(target = self._camera_read_frame)
 		self.is_thread_started = True
 		self._camera_thread.start()
+		print("[INFO] The camera thread is started.")
 
 	def stop_camera_thread(self):
 		"""Stop the running thread
@@ -76,6 +77,7 @@ class WebCamera:
 		if self._camera_thread.is_alive():
 			self.is_thread_started = False
 			self._camera_thread.join()
+			printf("[INFO] The camera thread is stopped.")
 
 	def _camera_read_frame(self):
 		"""Keep capturing frames from the web camera
