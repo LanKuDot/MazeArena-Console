@@ -152,6 +152,16 @@ class ColorPositionFinder:
 			new_item = self._colors_to_find[where].copy()
 			return new_item
 
+	def get_all_target_colors(self) -> list:
+		"""Get a copy of all the target colors and their recognition result
+
+		@return A copy of ColorPositionFinder._colors_to_find
+		"""
+		copied = []
+		for i in range(len(self._colors_to_find)):
+			copied.append(self._colors_to_find[i].copy())
+		return copied
+
 	def find_colors(self):
 		def _get_detect_range(color_hsv):
 			"""Generate the detecting color range from predefined sensitivity
