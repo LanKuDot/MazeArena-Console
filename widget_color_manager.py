@@ -118,6 +118,8 @@ class ColorManagerWidget(LabelFrame):
 			new_color_label.pack(fill = X)
 
 	def _toggle_color_recognition(self):
+		"""Toggle the color recognition thread in ColorPositionFinder
+		"""
 		# Start color recognition
 		if not self._color_position_finder.is_recognition_thread_started():
 			self._color_position_finder.start_recognition_thread()
