@@ -198,6 +198,14 @@ class ColorPositionFinder:
 			self._color_recognition_thread.join()
 			print("[INFO] The color recognition thread is stopped.")
 
+	def is_recognition_thread_started(self) -> bool:
+		"""Is the color recognition thread has been started?
+
+		@return True if the color recognition thread is started,
+		        otherwise, return False.
+		"""
+		return self._is_thread_started
+
 	def _find_colors(self):
 		def _get_detect_range(color_hsv):
 			"""Generate the detecting color range from predefined sensitivity
