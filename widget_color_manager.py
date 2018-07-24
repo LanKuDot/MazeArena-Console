@@ -23,8 +23,8 @@ class ColorManagerWidget(LabelFrame):
 
 	The user can specify the colors and manage the colors in the widget
 
-	@var _camera_thread The camera object for getting frames
-	@var _frame The frame got from _camera_thread
+	@var _camera The camera object for getting frames
+	@var _frame The frame got from _camera
 	@var _color_pos_finder The ColorPositionFinder for updating
 	     the target colors to be found in the frame
 	@var _color_label_panel The Frame widget that stores the
@@ -45,7 +45,7 @@ class ColorManagerWidget(LabelFrame):
 		super().__init__(master, text = "Color Manager", **options)
 		self.pack()
 
-		self._camera_thread = camera
+		self._camera = camera
 		self._frame = None
 		self._color_position_finder = color_pos_finder
 		self._setup_layout()
@@ -99,7 +99,7 @@ class ColorManagerWidget(LabelFrame):
 			if cv2.waitKey(1) & 0xFF == ord('q'):
 				break
 
-			self._frame = self._camera_thread.get_frame()
+			self._frame = self._camera.get_frame()
 			cv2.imshow(windowName, self._frame)
 
 		cv2.destroyWindow(windowName)
