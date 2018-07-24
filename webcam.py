@@ -77,7 +77,7 @@ class WebCamera:
 		if self._camera_thread.is_alive():
 			self.is_thread_started = False
 			self._camera_thread.join()
-			printf("[INFO] The camera thread is stopped.")
+			print("[INFO] The camera thread is stopped.")
 
 	def _camera_read_frame(self):
 		"""Keep capturing frames from the web camera
