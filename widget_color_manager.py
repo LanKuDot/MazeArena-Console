@@ -29,6 +29,8 @@ class ColorManagerWidget(LabelFrame):
 	     the target colors to be found in the frame
 	@var _color_label_panel The Frame widget that stores the
 	     ColorLabel buttons
+	@var _button_toggle_recognition The button widget that can
+	     toggle the color recognition thread
 	"""
 
 	def __init__(self, master, camera: WebCamera, \
@@ -52,12 +54,13 @@ class ColorManagerWidget(LabelFrame):
 		"""Set up the layout of ColorManagerWidget
 
 		Layout as below:
-		+--------------+--------------+
-		| options      | color labels |
-		+--------------+--------------+
-		| select color | colors to    |
-		| show result  | be found     |
-		+--------------+--------------+
+		+---------------------+--------------+
+		| options             | color labels |
+		+---------------------+--------------+
+		| select color        | colors to    |
+		| Toggle recognition  | be found     |
+		| show result         |              |
+		+---------------------+--------------+
 		"""
 		option_panel = Frame(self)
 		option_panel.pack(side = LEFT, fill = Y)
@@ -67,6 +70,9 @@ class ColorManagerWidget(LabelFrame):
 		button_select_color = Button(option_panel, \
 			text = "Select color", command = self._select_color)
 		button_select_color.pack(fill = X)
+		self._button_toggle_recognition = Button(option_panel, \
+			text = "Start recognition", command = self._toggle_color_recognition)
+		self._button_toggle_recognition.pack(fill = X)
 		button_show_detect_img = Button(option_panel, \
 			text = "Show detect image", command = self._show_result)
 		button_show_detect_img.pack(fill = X)
@@ -106,10 +112,20 @@ class ColorManagerWidget(LabelFrame):
 		"""
 		if event == cv2.EVENT_LBUTTONUP:
 			target_color = [self._frame[y, x][0], self._frame[y, x][1], self._frame[y, x][2]]
-			#self._color_position_finder.add_target_color( \
-			#	self._frame[y, x][0], self._frame[y, x][1], self._frame[y, x][2])
+			self._color_position_finder.add_target_color( \
+				self._frame[y, x][0], self._frame[y, x][1], self._frame[y, x][2])
 			new_color_label = ColorLabel(self._color_label_panel, target_color)
 			new_color_label.pack(fill = X)
+
+	def _toggle_color_recognition(self):
+		# Start color recognition
+		if not self._color_position_finder.is_recognition_thread_started():
+			self._color_position_finder.start_recognition_thread()
+			self._button_toggle_recognition.config(text = "Stop recogniton")
+		# Stop color recognition
+		else:
+			self._color_position_finder.stop_recognition_thread()
+			self._button_toggle_recognition.config(text = "Start recognition")
 
 	def _show_result(self):
 		pass

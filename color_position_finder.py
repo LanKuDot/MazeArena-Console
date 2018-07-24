@@ -159,7 +159,9 @@ class ColorPositionFinder:
 			print("[ColorPositionFinder] Color ({0}, {1}, {2}) " \
 				"is not in the target colors".format(color_b, color_g, color_r))
 		else:
+			self._colors_to_find_lock.acquire()
 			new_item = self._colors_to_find[where].copy()
+			self._colors_to_find_lock.release()
 			return new_item
 
 	def get_all_target_colors(self) -> list:
@@ -168,8 +170,10 @@ class ColorPositionFinder:
 		@return A copy of ColorPositionFinder._colors_to_find
 		"""
 		copied = []
+		self._colors_to_find_lock.acquire()
 		for i in range(len(self._colors_to_find)):
 			copied.append(self._colors_to_find[i].copy())
+		self._colors_to_find_lock.release()
 		return copied
 	
 	def start_recognition_thread(self):
@@ -255,13 +259,20 @@ class ColorPositionFinder:
 			return centres
 
 		while self._is_thread_started:
-			self._frame = _camera.get_frame()
+			self._frame = self._camera.get_frame()
 			frame_hsv = cv2.cvtColor(self._frame, cv2.COLOR_BGR2HSV)
 			# TODO Create multiple thread to find colors if there are
 			# too many colors to be found
+			posFound = []
 			for i in range(len(self._colors_to_find)):
-				posFound = _find_target_color(frame_hsv, self._colors_to_find[i].color_hsv)
-				self._colors_to_find[i].pixel_position = posFound.copy()
+				posFound.append(_find_target_color(frame_hsv, \
+					self._colors_to_find[i].color_hsv))
+
+			# Write local result back to the shared data
+			self._colors_to_find_lock.acquire()
+			for i in range(len(posFound)):
+				self._colors_to_find[i].pixel_position = posFound[i].copy()
+			self._colors_to_find_lock.release()
 
 	def _mark_searching_result(self):
 		"""Mark the searching result to the original frame

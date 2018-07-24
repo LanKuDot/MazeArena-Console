@@ -29,7 +29,7 @@ class ApplicationGUI:
 		"""Set up the layout of the gui
 		"""
 		self._color_manager = ColorManagerWidget(self._main_window, \
-			self._camera, None)
+			self._camera, self._color_position_finder)
 		self._color_manager.pack()
 
 	def start_gui(self):
