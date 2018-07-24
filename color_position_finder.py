@@ -101,6 +101,11 @@ class ColorPositionFinder:
 		@param color_g The green channel of the target color
 		@param color_r The red channel of the target color
 		"""
+		if self._is_thread_started:
+			print("[ColorPositionFinder] Stop the color recognition thread " \
+				"first before modify the target colors.")
+			return
+
 		self._colors_to_find.append(ColorPosition([color_b, color_g, color_r]))
 		print("[ColorPositionFinder] New target color added:" \
 			" ({0}, {1}, {2})".format(color_b, color_g, color_r))
@@ -115,6 +120,11 @@ class ColorPositionFinder:
 		@param color_g The green channel of the target color
 		@param color_r The red channel of the target color
 		"""
+		if self._is_thread_started:
+			print("[ColorPositionFinder] Stop the color recognition thread " \
+				"first before modify the target colors.")
+			return
+
 		where = -1
 		try:
 			where = self._colors_to_find.index( \
