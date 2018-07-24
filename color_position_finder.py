@@ -174,6 +174,9 @@ class ColorPositionFinder:
 	
 	def start_recognition_thread(self):
 		"""Start a new thread to do color recognition
+
+		If the color recognition thread has been started,
+		the method will do nothing.
 		"""
 		if self._is_thread_started:
 			print("[INFO] The color recognition thread has been already started.")
@@ -185,6 +188,11 @@ class ColorPositionFinder:
 		print("[INFO] The color recognition thread is started.")
 
 	def stop_recognition_thread(self):
+		"""Stop the color recognition thread
+
+		If the color recognition thread has been stopped,
+		the method will do nothing.
+		"""
 		if self._color_recognition_thread.isAlive():
 			self._is_thread_started = False
 			self._color_recognition_thread.join()
