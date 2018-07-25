@@ -189,7 +189,6 @@ class ColorPositionFinder:
 		self._color_recognition_thread = Thread(target = self._find_colors)
 		self._is_thread_started = True
 		self._color_recognition_thread.start()
-		print("[INFO] The color recognition thread is started.")
 
 	def stop_recognition_thread(self):
 		"""Stop the color recognition thread
@@ -200,7 +199,6 @@ class ColorPositionFinder:
 		if self._color_recognition_thread.isAlive():
 			self._is_thread_started = False
 			self._color_recognition_thread.join()
-			print("[INFO] The color recognition thread is stopped.")
 
 	def is_recognition_thread_started(self) -> bool:
 		"""Is the color recognition thread has been started?
@@ -258,6 +256,8 @@ class ColorPositionFinder:
 					int(moments['m01']/moments['m00'])))
 			return centres
 
+		print("[INFO] The color recognition thread is started.")
+
 		while self._is_thread_started:
 			self._frame = self._camera.get_frame()
 			frame_hsv = cv2.cvtColor(self._frame, cv2.COLOR_BGR2HSV)
@@ -274,16 +274,4 @@ class ColorPositionFinder:
 				self._colors_to_find[i].pixel_position = posFound[i].copy()
 			self._colors_to_find_lock.release()
 
-	def _mark_searching_result(self):
-		"""Mark the searching result to the original frame
-
-		The method will take the positions stored in the
-		ColorPosition.pixel_position from each color stored in the
-		ColorPositionFinder._colors_to_find.
-		And then mark red dots at these position.
-		"""
-		for color_id in range(len(self._colors_to_find)):
-			posFound = self._colors_to_find[color_id].pixel_position
-			for i in range(len(posFound)):
-				cv2.circle(self._frame, (posFound[i].x, posFound[i].y), \
-					5, (0, 0, 150), -1)
+		print("[INFO] The color recognition thread is stopped.")
