@@ -119,15 +119,22 @@ class ColorManagerWidget(LabelFrame):
 
 	def _toggle_color_recognition(self):
 		"""Toggle the color recognition thread in ColorPositionFinder
+
+		If the thread is started, enable ColorManagerWidget._button_show_result_img
+		which make user can watch the recognition result.
+		If the thread is stopped, then disable this button.
 		"""
 		# Start color recognition
 		if not self._color_position_finder.is_recognition_thread_started():
 			self._color_position_finder.start_recognition_thread()
 			self._button_toggle_recognition.config(text = "Stop recogniton")
+			self._button_show_result_img.config(state = NORMAL)
 		# Stop color recognition
 		else:
 			self._color_position_finder.stop_recognition_thread()
 			self._button_toggle_recognition.config(text = "Start recognition")
+			self._button_show_result_img.config(state = DISABLED)
+
 
 	def _show_result(self):
 		pass
