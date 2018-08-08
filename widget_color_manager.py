@@ -199,6 +199,7 @@ class ColorManagerWidget(LabelFrame):
 		print("[Widget ColorManager] Show result image thread is stopped.")
 
 		cv2.destroyWindow(window_name)
+		self._is_show_result_thread_started = False
 
 	def _mark_recognition_result(self):
 		"""Mark the recogntion result to the original frame
