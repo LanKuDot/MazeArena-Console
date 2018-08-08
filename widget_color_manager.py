@@ -46,12 +46,9 @@ class ColorManagerWidget(LabelFrame):
 	     recognition result
 	@var _is_show_result_thread_started Is the _show_result_image_thread
 	     started?
-	@var _color_label_panel The Frame widget that stores the
+	@var _option_panel The Frame widget that contains option buttons
+	@var _color_label_panel The Frame widget that contains the
 	     ColorLabel buttons
-	@var _button_toggle_recognition The button widget that can
-	     toggle the color recognition thread
-	@var _button_show_result_img The button widget that can
-	     create a window for showing recognition result
 	"""
 
 	def __init__(self, master, camera: WebCamera, \
@@ -73,6 +70,8 @@ class ColorManagerWidget(LabelFrame):
 		self._show_result_image_thread = None
 		self._is_show_result_thread_started = False
 
+		self._option_panel = None
+		self._color_label_panel = None
 		self._setup_layout()
 
 	def _setup_layout(self):
@@ -87,21 +86,24 @@ class ColorManagerWidget(LabelFrame):
 		| show result         |              |
 		+---------------------+--------------+
 		"""
-		option_panel = Frame(self)
-		option_panel.pack(side = LEFT, fill = Y)
-		label_option = Label(option_panel, \
+		self._option_panel = Frame(self)
+		self._option_panel.pack(side = LEFT, fill = Y)
+		label_option = Label(self._option_panel, \
 			text = "Option", anchor = W)
 		label_option.pack(fill = X)
-		button_select_color = Button(option_panel, \
-			text = "Select color", command = self._select_color)
+		button_select_color = Button(self._option_panel, \
+			text = "Select color", command = self._select_color, \
+			name = "btn_select_color")
 		button_select_color.pack(fill = X)
-		self._button_toggle_recognition = Button(option_panel, \
-			text = "Start recognition", command = self._toggle_color_recognition)
-		self._button_toggle_recognition.pack(fill = X)
-		self._button_show_result_img = Button(option_panel, \
+		button_toggle_recognition = Button(self._option_panel, \
+			text = "Start recognition", command = self._toggle_color_recognition, \
+			name = "btn_toggle_recognition")
+		button_toggle_recognition.pack(fill = X)
+		button_show_result_img = Button(self._option_panel, \
 			text = "Show detect image", command = self._toggle_show_result_image, \
-			state = DISABLED)
-		self._button_show_result_img.pack(fill = X)
+			state = DISABLED, \
+			name = "btn_show_result_img")
+		button_show_result_img.pack(fill = X)
 
 		self._color_label_panel = Frame(self)
 		self._color_label_panel.pack(side = RIGHT, fill = Y)
@@ -146,20 +148,20 @@ class ColorManagerWidget(LabelFrame):
 	def _toggle_color_recognition(self):
 		"""Toggle the color recognition thread in ColorPositionFinder
 
-		If the thread is started, enable ColorManagerWidget._button_show_result_img
-		which make user can watch the recognition result.
+		If the thread is started, enable show recognition result button
+		which let user to watch the recognition result.
 		If the thread is stopped, then disable this button.
 		"""
 		# Start color recognition
 		if not self._color_position_finder.is_recognition_thread_started():
 			self._color_position_finder.start_recognition_thread()
-			self._button_toggle_recognition.config(text = "Stop recogniton")
-			self._button_show_result_img.config(state = NORMAL)
+			self._option_panel.children["btn_toggle_recognition"].config(text = "Stop recogniton")
+			self._option_panel.children["btn_show_result_img"].config(state = NORMAL)
 		# Stop color recognition
 		else:
 			self._color_position_finder.stop_recognition_thread()
-			self._button_toggle_recognition.config(text = "Start recognition")
-			self._button_show_result_img.config(state = DISABLED)
+			self._option_panel.children["btn_toggle_recognition"].config(text = "Start recognition")
+			self._option_panel.children["btn_show_result_img"].config(state = DISABLED)
 			if self._is_show_result_thread_started:
 				self._toggle_show_result_image()
 
