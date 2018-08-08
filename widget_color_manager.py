@@ -92,7 +92,7 @@ class ColorManagerWidget(LabelFrame):
 			text = "Option", anchor = W)
 		label_option.pack(fill = X)
 		button_select_color = Button(self._option_panel, \
-			text = "Select color", command = self._select_color, \
+			text = "Select color", command = self._start_select_color_thread, \
 			name = "btn_select_color")
 		button_select_color.pack(fill = X)
 		button_toggle_recognition = Button(self._option_panel, \
@@ -111,13 +111,27 @@ class ColorManagerWidget(LabelFrame):
 			text = "Colors", anchor = W)
 		label_color.pack(fill = X)
 
+	def _start_select_color_thread(self):
+		"""Start a new thread to select the color to be found
+
+		The callback function of the color selection option. The method will
+		disable button to prevent user from clicking it more than twice.
+		The new thread will run ColorManagerWidget._select_color().
+		"""
+		self._option_panel.children["btn_select_color"].config(state = DISABLED)
+		select_color_thread = Thread(target = self._select_color)
+		select_color_thread.start()
+
 	def _select_color(self):
 		"""Select colors to be find in the frame
 
 		The method will pop up a window showing the stream from the camera
 		for the user to select colors.
+
 		Use left mouse click to specify the color and press 'q' to confirm
-		the selection and close the window.
+		the selection, close the window, and automatically stop the thread
+		create by self._start_select_color_thread().
+		And then the color selection option will be enabled again.
 		"""
 		windowName = "Select target color (q to quit)"
 		cv2.namedWindow(windowName)
@@ -131,6 +145,7 @@ class ColorManagerWidget(LabelFrame):
 			cv2.imshow(windowName, self._frame)
 
 		cv2.destroyWindow(windowName)
+		self._option_panel.children["btn_select_color"].config(state = NORMAL)
 
 	def _on_mouse_click(self, event, x, y, flags, param):
 		"""The callback function of the mouse clicking event
@@ -148,9 +163,9 @@ class ColorManagerWidget(LabelFrame):
 	def _toggle_color_recognition(self):
 		"""Toggle the color recognition thread in ColorPositionFinder
 
-		If the thread is started, enable show recognition result button
-		which let user to watch the recognition result.
-		If the thread is stopped, then disable this button.
+		If the recognition thread is started, enable show recognition
+		result option which let user to watch the recognition result.
+		If the thread is stopped, then disable this option.
 		"""
 		# Start color recognition
 		if not self._color_position_finder.is_recognition_thread_started():
