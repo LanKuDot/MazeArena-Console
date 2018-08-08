@@ -5,7 +5,6 @@ Find the position of the specified color in the image.
 import cv2
 import imutils
 import numpy as np
-from enum import Enum
 from threading import Thread, Lock
 
 from point import Point2D
@@ -18,29 +17,13 @@ class ColorPosition:
 
 	@var color_bgr The target color in BGR domain: [b, g, r]
 	@var color_hsv The target color in HSV domain: [h, s, v]
-	@var color_type The represenation of the color in the maze
 	@var pixel_position A list of positions in pixel of the target color
 	"""
-
-	class Type(Enum):
-		"""The representation of colors in the maze arena
-
-		@var MAZE_UPPER_PLANE enum = 1 The color that marks the upper plane of the maze
-		@var MAZE_LOWER_PLANE enum = 2 The color that marks the lower plane of the maze
-		@var MAZEC_CAR enum = 3 The color that marks the maze car
-		@ver OTHER enum = 99 Undefined color
-		"""
-		MAZE_UPPER_PLANE = 1
-		MAZE_LOWER_PLANE = 2
-		MAZE_CAR = 3
-		OTHER = 99
-
-	def __init__(self, color_bgr, color_type = Type.OTHER):
+	def __init__(self, color_bgr):
 		self.color_bgr = color_bgr
 		self.color_hsv = cv2.cvtColor(np.uint8([[color_bgr]]), cv2.COLOR_BGR2HSV)
 		# cvtColor will return [pixel.y][pixel.x][hsv]
 		self.color_hsv = self.color_hsv[0][0]
-		self.color_type = color_type
 		self.pixel_position = []
 
 	def __eq__(self, other):
@@ -65,7 +48,7 @@ class ColorPosition:
 
 		@return A clone of the ColorPosition object
 		"""
-		new_item = ColorPosition(self.color_bgr.copy(), self.color_type)
+		new_item = ColorPosition(self.color_bgr.copy())
 		new_item.color_hsv = self.color_hsv.copy()
 		new_item.pixel_position = self.pixel_position.copy()
 		return new_item
