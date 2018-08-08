@@ -137,12 +137,16 @@ class ColorManagerWidget(LabelFrame):
 		cv2.namedWindow(windowName)
 		cv2.setMouseCallback(windowName, self._click_new_color)
 
+		print("[Widget ColorManager] Color selection thread is started.")
+
 		while True:
 			if cv2.waitKey(1) & 0xFF == ord('q'):
 				break
 
 			self._frame = self._camera.get_frame()
 			cv2.imshow(windowName, self._frame)
+
+		print("[Widget ColorManager] Color selection thread is started.")
 
 		cv2.destroyWindow(windowName)
 		self._option_panel.children["btn_select_color"].config(state = NORMAL)

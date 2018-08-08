@@ -239,7 +239,7 @@ class ColorPositionFinder:
 					int(moments['m01']/moments['m00'])))
 			return centres
 
-		print("[INFO] The color recognition thread is started.")
+		print("[ColorPosFinder] The color recognition thread is started.")
 
 		while self._is_thread_started:
 			self._frame = self._camera.get_frame()
@@ -257,4 +257,4 @@ class ColorPositionFinder:
 				self._colors_to_find[i].pixel_position = posFound[i].copy()
 			self._colors_to_find_lock.release()
 
-		print("[INFO] The color recognition thread is stopped.")
+		print("[ColorPosFinder] The color recognition thread is stopped.")

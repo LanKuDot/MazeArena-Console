@@ -60,13 +60,12 @@ class WebCamera:
 		message and do nothing.
 		"""
 		if self.is_thread_started:
-			print("[INFO] The camera thread has been started.\n");
+			print("[WebCamera] The camera thread has been started.\n");
 			return
 
 		self._camera_thread = Thread(target = self._camera_read_frame)
 		self.is_thread_started = True
 		self._camera_thread.start()
-		print("[INFO] The camera thread is started.")
 
 	def stop_camera_thread(self):
 		"""Stop the running thread
@@ -77,7 +76,6 @@ class WebCamera:
 		if self._camera_thread.is_alive():
 			self.is_thread_started = False
 			self._camera_thread.join()
-			print("[INFO] The camera thread is stopped.")
 
 	def _camera_read_frame(self):
 		"""Keep capturing frames from the web camera
@@ -89,11 +87,15 @@ class WebCamera:
 		Updating WebCamera.frame and WebCamera.isCaptured is in the
 		critcal section.
 		"""
+		print("[WebCamera] The camera thread is started.")
+
 		while self.is_thread_started:
 			(isCaptured, frame) = self._camera.read()
 			self.read_lock.acquire()
 			(self.isCaptured, self.frame) = isCaptured, frame
 			self.read_lock.release()
+
+		print("[WebCamera] The camera thread is stopped.")
 
 	def get_frame(self):
 		"""Get the frame captured from the web camera
