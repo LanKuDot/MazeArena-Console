@@ -163,18 +163,22 @@ class ColorManagerWidget(LabelFrame):
 	def _toggle_color_recognition(self):
 		"""Toggle the color recognition thread in ColorPositionFinder
 
-		If the recognition thread is started, enable show recognition
-		result option which let user to watch the recognition result.
-		If the thread is stopped, then disable this option.
+		If the recognition thread is started:
+		* enable show recognition result option;
+		* disable selecting color option.
+		If the thread is stopped, then toggle these two options.
 		"""
 		# Start color recognition
 		if not self._color_position_finder.is_recognition_thread_started():
 			self._color_position_finder.start_recognition_thread()
+			# TODO Currently you cannot select new color while recognizing
+			self._option_panel.children["btn_select_color"].config(state = DISABLED)
 			self._option_panel.children["btn_toggle_recognition"].config(text = "Stop recogniton")
 			self._option_panel.children["btn_show_result_img"].config(state = NORMAL)
 		# Stop color recognition
 		else:
 			self._color_position_finder.stop_recognition_thread()
+			self._option_panel.children["btn_select_color"].config(state = NORMAL)
 			self._option_panel.children["btn_toggle_recognition"].config(text = "Start recognition")
 			self._option_panel.children["btn_show_result_img"].config(state = DISABLED)
 			if self._is_show_result_thread_started:
