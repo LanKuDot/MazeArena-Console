@@ -135,7 +135,7 @@ class ColorManagerWidget(LabelFrame):
 		"""
 		windowName = "Select target color (q to quit)"
 		cv2.namedWindow(windowName)
-		cv2.setMouseCallback(windowName, self._on_mouse_click)
+		cv2.setMouseCallback(windowName, self._click_new_color)
 
 		while True:
 			if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -147,8 +147,8 @@ class ColorManagerWidget(LabelFrame):
 		cv2.destroyWindow(windowName)
 		self._option_panel.children["btn_select_color"].config(state = NORMAL)
 
-	def _on_mouse_click(self, event, x, y, flags, param):
-		"""The callback function of the mouse clicking event
+	def _click_new_color(self, event, x, y, flags, param):
+		"""The callback function of select new color in self._select_color()
 
 		When the left mouse click releases, store the color at where
 		the mouse point is in the frame to ColorPositionFinder._colors_to_find.
