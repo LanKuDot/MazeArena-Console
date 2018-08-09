@@ -114,11 +114,15 @@ class ColorManagerWidget(LabelFrame):
 	def _start_select_color_thread(self):
 		"""Start a new thread to select the color to be found
 
-		The callback function of the color selection option. The method will
-		disable button to prevent user from clicking it more than twice.
+		The callback function of the color selection option. The method will:
+		* disable color selection option to prevent user from
+		  clicking it more than twice;
+		* disable recognition triggering option to avoid starting recognition
+		  before the color selection.
 		The new thread will run ColorManagerWidget._select_color().
 		"""
 		self._option_panel.children["btn_select_color"].config(state = DISABLED)
+		self._option_panel.children["btn_toggle_recognition"].config(state = DISABLED)
 		select_color_thread = Thread(target = self._select_color)
 		select_color_thread.start()
 
@@ -131,7 +135,8 @@ class ColorManagerWidget(LabelFrame):
 		Use left mouse click to specify the color and press 'q' to confirm
 		the selection, close the window, and automatically stop the thread
 		create by self._start_select_color_thread().
-		And then the color selection option will be enabled again.
+		And then the color selection option and recognition triggering option
+		will be enabled again.
 		"""
 		windowName = "Select target color (q to quit)"
 		cv2.namedWindow(windowName)
@@ -150,6 +155,7 @@ class ColorManagerWidget(LabelFrame):
 
 		cv2.destroyWindow(windowName)
 		self._option_panel.children["btn_select_color"].config(state = NORMAL)
+		self._option_panel.children["btn_toggle_recognition"].config(state = NORMAL)
 
 	def _click_new_color(self, event, x, y, flags, param):
 		"""The callback function of select new color in self._select_color()
