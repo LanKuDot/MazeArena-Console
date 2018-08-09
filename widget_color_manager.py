@@ -201,12 +201,14 @@ class ColorManagerWidget(LabelFrame):
 		"""
 		# Start showing recognition result
 		if not self._is_show_result_thread_started:
+			self._option_panel.children["btn_show_result_img"].config(text = "Hide detect image")
 			self._show_result_image_thread = \
 				Thread(target = self._show_result_image)
 			self._show_result_image_thread.start()
 			self._is_show_result_thread_started = True
 		# Stop showing recognition result
 		else:
+			self._option_panel.children["btn_show_result_img"].config(text = "Show detect image")
 			self._is_show_result_thread_started = False
 			self._show_result_image_thread.join()
 
