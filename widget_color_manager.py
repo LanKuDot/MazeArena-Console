@@ -117,7 +117,7 @@ class ColorManagerWidget(LabelFrame):
 		The callback function of the color selection option. The method will:
 		* disable color selection option to prevent user from
 		  clicking it more than twice;
-		* disable recognition triggering option to avoid starting recognition
+		* disable recognition toggling option to avoid starting recognition
 		  before the color selection.
 		The new thread will run ColorManagerWidget._select_color().
 		"""
@@ -135,7 +135,7 @@ class ColorManagerWidget(LabelFrame):
 		Use left mouse click to specify the color and press 'q' to confirm
 		the selection, close the window, and automatically stop the thread
 		create by self._start_select_color_thread().
-		And then the color selection option and recognition triggering option
+		And then the color selection option and recognition toggling option
 		will be enabled again.
 		"""
 		windowName = "Select target color (q to quit)"
@@ -176,7 +176,9 @@ class ColorManagerWidget(LabelFrame):
 		If the recognition thread is started:
 		* enable show recognition result option;
 		* disable selecting color option.
-		If the thread is stopped, then toggle these two options.
+		If the thread is stopped:
+		* toggle two options mentioned above;
+		* stop the show result thread if it's running.
 		"""
 		# Start color recognition
 		if not self._color_position_finder.is_recognition_thread_started():
