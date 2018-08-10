@@ -29,11 +29,30 @@ class ColorLabel(Button):
 
 	def __init__(self, master = None, color_bgr = [0, 0, 0], **options):
 		super().__init__(master, text = color_bgr.__str__(), \
-			bg = "#%02x%02x%02x" % (color_bgr[2], color_bgr[1], color_bgr[0]) , \
-			**options) # bg is in RGB domain
+			bg = "#%02x%02x%02x" % (color_bgr[2], color_bgr[1], color_bgr[0]), \
+			command = self._show_setting_panel, **options) # bg is in RGB domain
 		self.pack()
 
 		self._color = color_bgr
+		self._color_type = StringVar(self, ColorLabel.Type.NOT_DEFINED.name)
+
+	def _show_setting_panel(self):
+		setting_panel = Toplevel()
+		setting_panel.title("Color config")
+		setting_panel.geometry("%dx%d%+d%+d" % (200, 100, 100, 50))
+
+		title = Label(setting_panel, text = "Color configuration", anchor = W)
+		title.pack(fill = X)
+
+		color_type_list = [name for name, member in ColorLabel.Type.__members__.items()]
+		om_set_color_type = OptionMenu(setting_panel, self._color_type, *color_type_list)
+		om_set_color_type.pack(fill = X)
+
+		btn_confirm = Button(setting_panel, text = "confirm", \
+			command = setting_panel.destroy)
+		btn_confirm.pack(side = BOTTOM)
+
+		setting_panel.mainloop()
 
 class ColorManagerWidget(LabelFrame):
 	"""A widget that manage the colors to be found in the video stream
