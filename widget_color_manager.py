@@ -6,7 +6,7 @@ And manage the colors to be found in the maze.
 from color_position_finder import ColorPositionFinder
 from webcam import WebCamera
 
-from enum import Enum
+from enum import Enum, auto
 from threading import Thread
 from tkinter import *
 import cv2
@@ -15,15 +15,17 @@ class ColorLabel(Button):
 	class Type(Enum):
 		"""The representation of colors in the maze arena
 
+		@var NOT_DEFINED enum = 0 The color that haven't be defined yet
 		@var MAZE_UPPER_PLANE enum = 1 The color that marks the upper plane of the maze
 		@var MAZE_LOWER_PLANE enum = 2 The color that marks the lower plane of the maze
-		@var MAZEC_CAR enum = 3 The color that marks the maze car
-		@ver OTHER enum = 99 Undefined color
+		@var MAZEC_CAR_TEAM_A enum = 3 The color that marks the maze cars of one team
+		@var MAZEC_CAR_TEAM_B enum = 4 The color that marks the maze cars of another team
 		"""
+		NOT_DEFINED = 0
 		MAZE_UPPER_PLANE = 1
 		MAZE_LOWER_PLANE = 2
-		MAZE_CAR = 3
-		OTHER = 99
+		MAZE_CAR_TEAM_A = 3
+		MAZE_CAR_TEAM_B = 4
 
 	def __init__(self, master = None, color_bgr = [0, 0, 0], **options):
 		super().__init__(master, text = color_bgr.__str__(), \
