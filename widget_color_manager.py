@@ -34,7 +34,8 @@ class ColorLabel(Button):
 		self.pack()
 
 		self._color = color_bgr
-		self._color_type = StringVar(self, ColorLabel.Type.NOT_DEFINED.name)
+		self._color_type = ColorLabel.Type.NOT_DEFINED.name
+		self._selected_color_type = StringVar(self, ColorLabel.Type.NOT_DEFINED.name)
 
 	def _show_setting_panel(self):
 		"""Pop up a setting window for user to configure the color.
@@ -53,8 +54,9 @@ class ColorLabel(Button):
 		main_panel.pack(side = TOP, fill = X)
 		title = Label(main_panel, text = "Color Type", anchor = W)
 		title.pack(side = LEFT)
+		self._selected_color_type.set(self._color_type)	# Set display text to the type of color
 		color_type_list = [name for name, member in ColorLabel.Type.__members__.items()]
-		om_set_color_type = OptionMenu(main_panel, self._color_type, *color_type_list)
+		om_set_color_type = OptionMenu(main_panel, self._selected_color_type, *color_type_list)
 		om_set_color_type.pack(side = LEFT, expand = TRUE, anchor = W)
 
 		bottom_panel = Frame(setting_panel)
@@ -62,13 +64,22 @@ class ColorLabel(Button):
 		btn_delete = Button(bottom_panel, text = "Delete", foreground = "red")
 		btn_delete.pack(side = LEFT)
 		btn_confirm = Button(bottom_panel, text = "Confirm", \
-			command = setting_panel.destroy)
+			command = lambda: self._confirm_setup(setting_panel.destroy))
 		btn_confirm.pack(side = LEFT)
 		btn_cancel = Button(bottom_panel, text = "Cancel", \
-			command = setting_panel.destroy)
+			command = setting_panel.destroy)	# Do nothing when canceled
 		btn_cancel.pack(side = LEFT)
 
 		setting_panel.mainloop()
+
+	def _confirm_setup(self, fn_close_window):
+		"""Reflect the modification and close the setting window
+
+		The callback function of the confirm option in the setting window.
+		The color type selected in the setting will be updated to ColorLabel._color_type
+		"""
+		self._color_type = self._selected_color_type.get()
+		fn_close_window()
 
 class ColorManagerWidget(LabelFrame):
 	"""A widget that manage the colors to be found in the video stream
