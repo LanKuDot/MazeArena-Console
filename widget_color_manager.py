@@ -12,6 +12,17 @@ from tkinter import *
 import cv2
 
 class ColorLabel(Button):
+	"""A button widget that manage a color
+
+	User can configure the color by clicking the button, which will pop up
+	a setting window. In the setting window, user can set the color type
+	or delete that color.
+
+	@var _color The color managed by this widget in BGR domain
+	@var _color_type The color type. See ColorLabel.Type
+	@var _selected_color_type The color type selected in the setting window
+	"""
+
 	class Type(Enum):
 		"""The representation of colors in the maze arena
 
@@ -28,6 +39,16 @@ class ColorLabel(Button):
 		MAZE_CAR_TEAM_B = 4
 
 	def __init__(self, master = None, color_bgr = [0, 0, 0], **options):
+		"""Constructor
+
+		The text of the button will be set to "[B, G, R]" and the background
+		color will be set to the color_bgr. The callback function of the
+		button is ColorLabel._show_setting_panel().
+
+		@param master Specify the parent widget
+		@param color_bgr Specify the color in BGR domain
+		@param options Other options for the Button widget
+		"""
 		super().__init__(master, text = color_bgr.__str__(), \
 			bg = "#%02x%02x%02x" % (color_bgr[2], color_bgr[1], color_bgr[0]), \
 			command = self._show_setting_panel, **options) # bg is in RGB domain
