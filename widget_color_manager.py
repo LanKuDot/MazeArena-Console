@@ -37,20 +37,36 @@ class ColorLabel(Button):
 		self._color_type = StringVar(self, ColorLabel.Type.NOT_DEFINED.name)
 
 	def _show_setting_panel(self):
+		"""Pop up a setting window for user to configure the color.
+
+		It looks like:
+		+-----------------------------+
+		| Color Type: [Not Defined -] |
+		|  [Delete][Confirm][Cancel]  |
+		+-----------------------------+
+		"""
 		setting_panel = Toplevel()
 		setting_panel.title("Color config")
-		setting_panel.geometry("%dx%d%+d%+d" % (200, 100, 100, 50))
+		setting_panel.geometry("%dx%d%+d%+d" % (250, 100, 100, 50))
 
-		title = Label(setting_panel, text = "Color configuration", anchor = W)
-		title.pack(fill = X)
-
+		main_panel = Frame(setting_panel)
+		main_panel.pack(side = TOP, fill = X)
+		title = Label(main_panel, text = "Color Type", anchor = W)
+		title.pack(side = LEFT)
 		color_type_list = [name for name, member in ColorLabel.Type.__members__.items()]
-		om_set_color_type = OptionMenu(setting_panel, self._color_type, *color_type_list)
-		om_set_color_type.pack(fill = X)
+		om_set_color_type = OptionMenu(main_panel, self._color_type, *color_type_list)
+		om_set_color_type.pack(side = LEFT, expand = TRUE, anchor = W)
 
-		btn_confirm = Button(setting_panel, text = "confirm", \
+		bottom_panel = Frame(setting_panel)
+		bottom_panel.pack(side = BOTTOM, padx = 2)
+		btn_delete = Button(bottom_panel, text = "Delete", foreground = "red")
+		btn_delete.pack(side = LEFT)
+		btn_confirm = Button(bottom_panel, text = "Confirm", \
 			command = setting_panel.destroy)
-		btn_confirm.pack(side = BOTTOM)
+		btn_confirm.pack(side = LEFT)
+		btn_cancel = Button(bottom_panel, text = "Cancel", \
+			command = setting_panel.destroy)
+		btn_cancel.pack(side = LEFT)
 
 		setting_panel.mainloop()
 
