@@ -21,6 +21,7 @@ class ColorLabel(Button):
 	@var _color The color managed by this widget in BGR domain
 	@var _color_type The color type. See ColorLabel.Type
 	@var _selected_color_type The color type selected in the setting window
+	@var _setting_panel The setting panel widget
 	"""
 
 	class Type(Enum):
@@ -58,8 +59,12 @@ class ColorLabel(Button):
 		self._color_type = ColorLabel.Type.NOT_DEFINED.name
 		self._selected_color_type = StringVar(self, ColorLabel.Type.NOT_DEFINED.name)
 
+		self._setting_panel = None
+
 	def _show_setting_panel(self):
 		"""Pop up a setting window for user to configure the color.
+
+		If the window has been already opened, foucs to that window.
 
 		It looks like:
 		+-----------------------------+
@@ -67,11 +72,17 @@ class ColorLabel(Button):
 		|  [Delete][Confirm][Cancel]  |
 		+-----------------------------+
 		"""
-		setting_panel = Toplevel()
-		setting_panel.title("Color config")
-		setting_panel.geometry("%dx%d%+d%+d" % (250, 100, 100, 50))
+		if not self._setting_panel == None:
+			self._setting_panel.focus()
+			return
 
-		main_panel = Frame(setting_panel)
+		self._setting_panel = Toplevel()
+		self._setting_panel.title("Color config")
+		self._setting_panel.geometry("%dx%d%+d%+d" % (250, 100, 100, 50))
+		# Run _close_setting_panel when the user click X on the window
+		self._setting_panel.protocol("WM_DELETE_WINDOW", self._close_setting_panel)
+
+		main_panel = Frame(self._setting_panel)
 		main_panel.pack(side = TOP, fill = X)
 		title = Label(main_panel, text = "Color Type", anchor = W)
 		title.pack(side = LEFT)
@@ -80,27 +91,33 @@ class ColorLabel(Button):
 		om_set_color_type = OptionMenu(main_panel, self._selected_color_type, *color_type_list)
 		om_set_color_type.pack(side = LEFT, expand = TRUE, anchor = W)
 
-		bottom_panel = Frame(setting_panel)
+		bottom_panel = Frame(self._setting_panel)
 		bottom_panel.pack(side = BOTTOM, padx = 2)
 		btn_delete = Button(bottom_panel, text = "Delete", foreground = "red")
 		btn_delete.pack(side = LEFT)
 		btn_confirm = Button(bottom_panel, text = "Confirm", \
-			command = lambda: self._confirm_setup(setting_panel.destroy))
+			command = self._setup_confirm)
 		btn_confirm.pack(side = LEFT)
 		btn_cancel = Button(bottom_panel, text = "Cancel", \
-			command = setting_panel.destroy)	# Do nothing when canceled
+			command = self._close_setting_panel)	# Do nothing when canceled
 		btn_cancel.pack(side = LEFT)
 
-		setting_panel.mainloop()
+		# TopLevel automatically runs without mainloop() call
 
-	def _confirm_setup(self, fn_close_window):
+	def _close_setting_panel(self):
+		"""Destory the setting window and set ColorLabel._setting_panel to None
+		"""
+		self._setting_panel.destroy()
+		self._setting_panel = None
+
+	def _setup_confirm(self):
 		"""Reflect the modification and close the setting window
 
 		The callback function of the confirm option in the setting window.
 		The color type selected in the setting will be updated to ColorLabel._color_type
 		"""
 		self._color_type = self._selected_color_type.get()
-		fn_close_window()
+		self._close_setting_panel()
 
 class ColorManagerWidget(LabelFrame):
 	"""A widget that manage the colors to be found in the video stream
