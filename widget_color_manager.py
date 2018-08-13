@@ -275,12 +275,12 @@ class ColorManagerWidget(LabelFrame):
 			self._option_panel.children["btn_show_result_img"].config(state = NORMAL)
 		# Stop color recognition
 		else:
+			if self._is_show_result_thread_started:
+				self._toggle_show_result_image()
 			self._color_position_finder.stop_recognition_thread()
 			self._option_panel.children["btn_select_color"].config(state = NORMAL)
 			self._option_panel.children["btn_toggle_recognition"].config(text = "Start recognition")
 			self._option_panel.children["btn_show_result_img"].config(state = DISABLED)
-			if self._is_show_result_thread_started:
-				self._toggle_show_result_image()
 
 	def _toggle_show_result_image(self):
 		"""Toggle the thread of showing recognition result image
@@ -311,6 +311,9 @@ class ColorManagerWidget(LabelFrame):
 
 		while self._is_show_result_thread_started:
 			if cv2.waitKey(1) & 0xFF == ord('q'):
+				self._option_panel.children["btn_show_result_img"]. \
+					config(text = "Show detect image")
+				self._is_show_result_thread_started = False
 				break
 
 			self._frame = self._camera.get_frame()
@@ -320,7 +323,6 @@ class ColorManagerWidget(LabelFrame):
 		print("[Widget ColorManager] Show result image thread is stopped.")
 
 		cv2.destroyWindow(window_name)
-		self._is_show_result_thread_started = False
 
 	def _mark_recognition_result(self):
 		"""Mark the recogntion result to the original frame
