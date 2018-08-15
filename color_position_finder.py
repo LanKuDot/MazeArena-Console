@@ -5,6 +5,7 @@ Find the position of the specified color in the image.
 import cv2
 import imutils
 import numpy as np
+from collections import namedtuple
 from threading import Thread, Lock
 
 from point import Point2D
@@ -258,3 +259,19 @@ class ColorPositionFinder:
 			self._colors_to_find_lock.release()
 
 		print("[ColorPosFinder] The color recognition thread is stopped.")
+
+class ColorPositionFinderHolder(namedtuple('ColorPositionFinderHolder', \
+	['maze', 'car_team_a', 'car_team_b'])):
+	"""A data structure for accessing different ColorPositionFinder by type
+
+	Different types of colors are assgined to seperate ColorPositionFinders.
+	This is the data structure which helps the program to access these
+	ColorPositionFinder by the name of the type.
+
+	@sa ColorLabel.Type
+	"""
+	__slots__ = ()
+
+	@property
+	def num_of_finders(self):
+		return 3
