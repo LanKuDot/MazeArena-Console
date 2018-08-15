@@ -24,9 +24,9 @@ class ApplicationGUI:
 	def _setup_gui(self):
 		"""Set up the layout of the gui
 		"""
-		self._color_manager = ColorManagerWidget(self._main_window, \
-			self._camera)
-		self._color_manager.pack()
+		color_manager = ColorManagerWidget(self._main_window, \
+			self._camera, name = "color_manager")
+		color_manager.pack()
 
 	def start_gui(self):
 		"""Start the gui
