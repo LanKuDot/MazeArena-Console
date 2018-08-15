@@ -247,7 +247,7 @@ class ColorManagerWidget(LabelFrame):
 			self._frame = self._camera.get_frame()
 			cv2.imshow(windowName, self._frame)
 
-		print("[Widget ColorManager] Color selection thread is started.")
+		print("[Widget ColorManager] Color selection thread is stopped.")
 
 		cv2.destroyWindow(windowName)
 		self._option_panel.children["btn_select_color"].config(state = NORMAL)
