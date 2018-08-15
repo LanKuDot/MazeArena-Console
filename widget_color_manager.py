@@ -4,9 +4,10 @@ And manage the colors to be found in the maze.
 """
 
 from color_position_finder import ColorPositionFinder
+from color_position_finder import ColorPositionFinderHolder
 from webcam import WebCamera
 
-from enum import Enum, auto
+from enum import Enum
 from threading import Thread
 from tkinter import *
 import cv2
@@ -126,8 +127,6 @@ class ColorManagerWidget(LabelFrame):
 
 	@var _camera The camera object for getting frames
 	@var _frame The frame got from _camera
-	@var _color_pos_finder The ColorPositionFinder for updating
-	     the target colors to be found in the frame
 	@var _show_result_image_thread A thread that displaying the
 	     recognition result
 	@var _is_show_result_thread_started Is the _show_result_image_thread
@@ -137,13 +136,11 @@ class ColorManagerWidget(LabelFrame):
 	     ColorLabel buttons
 	"""
 
-	def __init__(self, master, camera: WebCamera, \
-		color_pos_finder: ColorPositionFinder, **options):
+	def __init__(self, master, camera: WebCamera, **options):
 		"""Constructor
 
 		@param master The parent widget of the ColorManagerWidget
 		@param camera The WebCamera object
-		@param color_pos_finder The ColorPositionFinder object
 		@param options Additional options for the LabelFrame
 		"""
 		super().__init__(master, text = "Color Manager", **options)
@@ -151,7 +148,11 @@ class ColorManagerWidget(LabelFrame):
 
 		self._camera = camera
 		self._frame = None
-		self._color_position_finder = color_pos_finder
+		# Each for maze, car team A, and car team B
+		self._color_pos_finders = ColorPositionFinderHolder( \
+			ColorPositionFinder(camera), \
+			ColorPositionFinder(camera), \
+			ColorPositionFinder(camera))
 
 		self._show_result_image_thread = None
 		self._is_show_result_thread_started = False
