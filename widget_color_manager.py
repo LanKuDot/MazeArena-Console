@@ -22,6 +22,9 @@ class ColorLabel(Button):
 	@var _color The color managed by this widget in BGR domain
 	@var _color_type The color type. See ColorLabel.Type
 	@var _selected_color_type The color type selected in the setting window
+	@var _fn_update_color The function hook that will do futher updates when
+	     the color information is updated. It will be
+	     ColorManagerWidget._update_color_finder().
 	@var _setting_panel The setting panel widget
 	"""
 
@@ -40,7 +43,8 @@ class ColorLabel(Button):
 		MAZE_CAR_TEAM_A = 3
 		MAZE_CAR_TEAM_B = 4
 
-	def __init__(self, master = None, color_bgr = [0, 0, 0], **options):
+	def __init__(self, master = None, color_bgr = [0, 0, 0], fn_update_color = None, \
+		**options):
 		"""Constructor
 
 		The text of the button will be set to "[B, G, R]" and the background
@@ -49,6 +53,8 @@ class ColorLabel(Button):
 
 		@param master Specify the parent widget
 		@param color_bgr Specify the color in BGR domain
+		@param fn_update_color The function that needs the updated information of
+		       color
 		@param options Other options for the Button widget
 		"""
 		super().__init__(master, text = color_bgr.__str__(), \
@@ -59,6 +65,7 @@ class ColorLabel(Button):
 		self._color = color_bgr
 		self._color_type = ColorLabel.Type.NOT_DEFINED.name
 		self._selected_color_type = StringVar(self, ColorLabel.Type.NOT_DEFINED.name)
+		self._fn_update_color = fn_update_color
 
 		self._setting_panel = None
 
@@ -117,7 +124,9 @@ class ColorLabel(Button):
 		The callback function of the confirm option in the setting window.
 		The color type selected in the setting will be updated to ColorLabel._color_type
 		"""
+		_old_color_type = self._color_type
 		self._color_type = self._selected_color_type.get()
+		self._fn_update_color(self._color, _old_color_type, self._color_type)
 		self._close_setting_panel()
 
 class ColorManagerWidget(LabelFrame):
@@ -248,14 +257,46 @@ class ColorManagerWidget(LabelFrame):
 		"""The callback function of select new color in self._select_color()
 
 		When the left mouse click releases, store the color at where
-		the mouse point is in the frame to ColorPositionFinder._colors_to_find.
+		the mouse point is in the frame. And then create a new ColorLabel for
+		user to do futher configuration.
 		"""
 		if event == cv2.EVENT_LBUTTONUP:
 			target_color = [self._frame[y, x][0], self._frame[y, x][1], self._frame[y, x][2]]
-			self._color_position_finder.add_target_color( \
-				self._frame[y, x][0], self._frame[y, x][1], self._frame[y, x][2])
-			new_color_label = ColorLabel(self._color_label_panel, target_color)
+			new_color_label = ColorLabel(self._color_label_panel, target_color, self._update_color_finder)
 			new_color_label.pack(fill = X)
+
+	def _update_color_finder(self, color_bgr, old_type, new_type):
+		def _get_color_finder_by_type(color_type):
+			"""Get the corresponding ColorPositionFinder by the type of the color
+
+			The mapping of the color type to the ColorPositionFinder in the
+			ColorPositionFinderHolder:
+			* NOT_DEFINED -> None
+			* MAZE_LOWER_PLANE -> ColorPositionFinderHolder.maze
+			* MAZE_UPPER_PLANE -> ColorPositionFinderHolder.maze
+			* MAZE_CAR_TEAM_A -> ColorPositionFinderHolder.car_team_a
+			* MAZE_CAR_TEAM_B -> ColorPositionFinderHolder.car_team_b
+
+			@param color_type The type of the color
+			@return The corresponding ColorPositionFinder. None if the color type
+			        is NOT_DEFINED or not existing.
+			"""
+			return {
+				ColorLabel.Type.MAZE_LOWER_PLANE.name: self._color_pos_finders.maze,
+				ColorLabel.Type.MAZE_UPPER_PLANE.name: self._color_pos_finders.maze,
+				ColorLabel.Type.MAZE_CAR_TEAM_A.name:  self._color_pos_finders.car_team_a,
+				ColorLabel.Type.MAZE_CAR_TEAM_B.name:  self._color_pos_finders.car_team_b
+			}.get(color_type)
+
+		old_color_finder = _get_color_finder_by_type(old_type)
+		new_color_finder = _get_color_finder_by_type(new_type)
+
+		if old_color_finder == new_color_finder:
+			return
+		if not old_color_finder == None:
+			old_color_finder.delete_target_color(*color_bgr)
+		if not new_color_finder == None:
+			new_color_finder.add_target_color(*color_bgr)
 
 	def _toggle_color_recognition(self):
 		"""Toggle the color recognition thread in ColorPositionFinder
