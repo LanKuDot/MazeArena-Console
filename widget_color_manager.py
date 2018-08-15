@@ -375,9 +375,14 @@ class ColorManagerWidget(LabelFrame):
 		ColorPosition.pixel_position of each color in the target color list
 		and mark red dots at these positions.
 		"""
-		colors = self._color_position_finder.get_all_target_colors()
-		for color_id in range(len(colors)):
-			posFound = colors[color_id].pixel_position
-			for i in range(len(posFound)):
-				cv2.circle(self._frame, (posFound[i].x, posFound[i].y), \
-					5, (0, 0, 150), -1)
+		def _mark_dots(color_pos_finder, marking_color):
+			colors = color_pos_finder.get_all_target_colors()
+			for color_id in range(len(colors)):
+				posFound = colors[color_id].pixel_position
+				for i in range(len(posFound)):
+					cv2.circle(self._frame, (posFound[i].x, posFound[i].y), \
+						5, marking_color, -1)
+
+		_mark_dots(self._color_pos_finders.maze, (0, 0, 150))
+		_mark_dots(self._color_pos_finders.car_team_a, (0, 150, 0))
+		_mark_dots(self._color_pos_finders.car_team_b, (150, 0, 0))
