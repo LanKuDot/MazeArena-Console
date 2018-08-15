@@ -116,7 +116,7 @@ class ColorPositionFinder:
 			print("[ColorPositionFinder] Color ({0}, {1}, {2}) " \
 				"is not in the target colors".format(color_b, color_g, color_r))
 		else:
-			self._colors_to_find.remove(where)
+			self._colors_to_find.remove(self._colors_to_find[where])
 			print("[ColorPositionFinder] Target color removed:" \
 			" ({0}, {1}, {2})".format(color_b, color_g, color_r))
 
