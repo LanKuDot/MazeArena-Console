@@ -178,7 +178,8 @@ class ColorManagerWidget(LabelFrame):
 		| options             | color labels |
 		+---------------------+--------------+
 		| select color        | colors to    |
-		| Toggle recognition  | be found     |
+		| recognize maze      | be found     |
+		| recognize maze cars |              |
 		| show result         |              |
 		+---------------------+--------------+
 		"""
@@ -191,10 +192,14 @@ class ColorManagerWidget(LabelFrame):
 			text = "Select color", command = self._start_select_color_thread, \
 			name = "btn_select_color")
 		button_select_color.pack(fill = X)
-		button_toggle_recognition = Button(self._option_panel, \
-			text = "Start recognition", command = self._toggle_color_recognition, \
-			name = "btn_toggle_recognition")
-		button_toggle_recognition.pack(fill = X)
+		button_recognize_maze = Button(self._option_panel, \
+			text = "Recognize maze", command = self._maze_recognition, \
+			name = "btn_recognize_maze")
+		button_recognize_maze.pack(fill = X)
+		button_recognize_maze_car = Button(self._option_panel, \
+			text = "Recognize maze cars", command = self._toggle_car_recognition, \
+			name = "btn_recognize_maze_cars")
+		button_recognize_maze_car.pack(fill = X)
 		button_show_result_img = Button(self._option_panel, \
 			text = "Show detect image", command = self._toggle_show_result_image, \
 			state = DISABLED, \
@@ -213,12 +218,13 @@ class ColorManagerWidget(LabelFrame):
 		The callback function of the color selection option. The method will:
 		* disable color selection option to prevent user from
 		  clicking it more than twice;
-		* disable recognition toggling option to avoid starting recognition
+		* disable recognition toggling options to avoid starting recognition
 		  before the color selection.
 		The new thread will run ColorManagerWidget._select_color().
 		"""
 		self._option_panel.children["btn_select_color"].config(state = DISABLED)
-		self._option_panel.children["btn_toggle_recognition"].config(state = DISABLED)
+		self._option_panel.children["btn_recognize_maze"].config(state = DISABLED)
+		self._option_panel.children["btn_recognize_maze_cars"].config(state = DISABLED)
 		select_color_thread = Thread(target = self._select_color)
 		select_color_thread.start()
 
@@ -231,7 +237,7 @@ class ColorManagerWidget(LabelFrame):
 		Use left mouse click to specify the color and press 'q' to confirm
 		the selection, close the window, and automatically stop the thread
 		create by self._start_select_color_thread().
-		And then the color selection option and recognition toggling option
+		And then the color selection option and recognition toggling options
 		will be enabled again.
 		"""
 		windowName = "Select target color (q to quit)"
@@ -251,7 +257,8 @@ class ColorManagerWidget(LabelFrame):
 
 		cv2.destroyWindow(windowName)
 		self._option_panel.children["btn_select_color"].config(state = NORMAL)
-		self._option_panel.children["btn_toggle_recognition"].config(state = NORMAL)
+		self._option_panel.children["btn_recognize_maze"].config(state = NORMAL)
+		self._option_panel.children["btn_recognize_maze_cars"].config(state = NORMAL)
 
 	def _click_new_color(self, event, x, y, flags, param):
 		"""The callback function of select new color in self._select_color()
@@ -298,30 +305,35 @@ class ColorManagerWidget(LabelFrame):
 		if not new_color_finder == None:
 			new_color_finder.add_target_color(*color_bgr)
 
-	def _toggle_color_recognition(self):
-		"""Toggle the color recognition thread in ColorPositionFinder
+	def _maze_recognition(self):
+		"""Recognize the maze
 
-		If the recognition thread is started:
-		* enable show recognition result option;
-		* disable selecting color option.
-		If the thread is stopped:
-		* toggle two options mentioned above;
-		* stop the show result thread if it's running.
+		The recognition will be automatically stopped when the maze manger
+		finished generating maze position transform matrix.
+		"""
+		if not self._color_pos_finders.maze.is_recognition_thread_started():
+			self._color_pos_finders.maze.start_recognition_thread()
+			self._option_panel.children["btn_recognize_maze"].config(text = "Stop recognizing maze")
+		else:
+			self._color_pos_finders.maze.stop_recognition_thread()
+			self._option_panel.children["btn_recognize_maze"].config(text = "Recognize maze")
+
+	def _toggle_car_recognition(self):
+		"""Toggle the color recognition of maze cars
+
+		ColorPositionFinders of car_team_a and car_team_b will be toggled.
 		"""
 		# Start color recognition
-		if not self._color_position_finder.is_recognition_thread_started():
-			self._color_position_finder.start_recognition_thread()
-			# TODO Currently you cannot select new color while recognizing
-			self._option_panel.children["btn_select_color"].config(state = DISABLED)
-			self._option_panel.children["btn_toggle_recognition"].config(text = "Stop recogniton")
+		if not self._color_pos_finders.car_team_a.is_recognition_thread_started():
+			self._color_pos_finders.car_team_a.start_recognition_thread()
+			self._color_pos_finders.car_team_b.start_recognition_thread()
+			self._option_panel.children["btn_recognize_maze_cars"].config(text = "Stop recognizing cars")
 			self._option_panel.children["btn_show_result_img"].config(state = NORMAL)
 		# Stop color recognition
 		else:
-			if self._is_show_result_thread_started:
-				self._toggle_show_result_image()
-			self._color_position_finder.stop_recognition_thread()
-			self._option_panel.children["btn_select_color"].config(state = NORMAL)
-			self._option_panel.children["btn_toggle_recognition"].config(text = "Start recognition")
+			self._color_pos_finders.car_team_a.stop_recognition_thread()
+			self._color_pos_finders.car_team_b.stop_recognition_thread()
+			self._option_panel.children["btn_recognize_maze_cars"].config(text = "Recognize maze cars")
 			self._option_panel.children["btn_show_result_img"].config(state = DISABLED)
 
 	def _toggle_show_result_image(self):
