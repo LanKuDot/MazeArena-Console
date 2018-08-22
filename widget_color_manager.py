@@ -101,7 +101,8 @@ class ColorLabel(Button):
 
 		bottom_panel = Frame(self._setting_panel)
 		bottom_panel.pack(side = BOTTOM, padx = 2)
-		btn_delete = Button(bottom_panel, text = "Delete", foreground = "red")
+		btn_delete = Button(bottom_panel, text = "Delete", foreground = "red", \
+			command = self._delete_color)
 		btn_delete.pack(side = LEFT)
 		btn_confirm = Button(bottom_panel, text = "Confirm", \
 			command = self._setup_confirm)
@@ -119,15 +120,29 @@ class ColorLabel(Button):
 		self._setting_panel = None
 
 	def _setup_confirm(self):
-		"""Reflect the modification and close the setting window
+		"""Confirm and reflect the modification to the color manager
 
 		The callback function of the confirm option in the setting window.
-		The color type selected in the setting will be updated to ColorLabel._color_type
+		The color type selected in the setting will be updated to ColorLabel._color_type,
+		and invoke ColorLabel._fn_update_color() to update changes.
 		"""
 		_old_color_type = self._color_type
 		self._color_type = self._selected_color_type.get()
 		self._fn_update_color(self._color, _old_color_type, self._color_type)
 		self._close_setting_panel()
+
+	def _delete_color(self):
+		"""Delete the color and reflect the modification to the color manager
+
+		The callback function of the delete option in the setting window.
+		Invoke ColorLabel._fn_update_color() to update changes, and
+		the ColorLabel this color belongs will be deleted.
+		"""
+		if not self._color_type == self.Type.NOT_DEFINED:
+			self._fn_update_color(self._color, self._color_type, None)
+		self._close_setting_panel()
+		self.pack_forget()
+		self.destroy()
 
 class ColorManagerWidget(LabelFrame):
 	"""A widget that manage the colors to be found in the video stream
