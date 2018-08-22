@@ -287,8 +287,24 @@ class ColorManagerWidget(LabelFrame):
 			new_color_label = ColorLabel(self._color_label_panel, target_color, self._update_color_finder)
 			new_color_label.pack(fill = X)
 
-	def _update_color_finder(self, color_bgr, old_type, new_type):
-		def _get_color_finder_by_type(color_type):
+	def _update_color_finder(self, color_bgr, \
+		old_type: ColorLabel.Type, new_type: ColorLabel.Type):
+		"""Assign, change, or delete the color in ColorPositionFinders
+
+		The action will be taken accroding to old_type and new_type.
+		For example:
+		* `(color_A, None, ColorLabel.Type.MAZE_LOWER_PLANE)`:
+		  color_A is assigned to the ColorPositionFinder of maze
+		* `(color_A, ColorLabel.Type.MAZE_LOWER_PLANE, ColorLabel.Type.MAZE_CAR_TEAM_A)`:
+		  color_A is moved from the ColorPositionFinder of maze to that of car_team_a
+		* `(color_A, ColorLabel.Type.MAZE_CAR_TEAM_A, None)`:
+		  color_A is deleted from the ColorPositionFinder of car_team_a
+
+		@param color_bgr Specify the target color in BGR domain
+		@param old_type Specify the previous type of the color_bgr
+		@param new_type Specify the new type of the color_bgr
+		"""
+		def _get_color_finder_by_type(color_type: ColorLabel.Type):
 			"""Get the corresponding ColorPositionFinder by the type of the color
 
 			The mapping of the color type to the ColorPositionFinder in the
