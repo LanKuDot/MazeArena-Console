@@ -260,7 +260,7 @@ class ColorPositionFinder:
 
 		print("[ColorPosFinder] The color recognition thread is stopped.")
 
-class ColorPositionFinderHolder(namedtuple('ColorPositionFinderHolder', \
+class ColorPosFinderHolder(namedtuple('ColorPosFinderHolder', \
 	['maze', 'car_team_a', 'car_team_b'])):
 	"""A data structure for accessing different ColorPositionFinder by type
 

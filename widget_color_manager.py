@@ -4,7 +4,7 @@ And manage the colors to be found in the maze.
 """
 
 from color_position_finder import ColorPositionFinder
-from color_position_finder import ColorPositionFinderHolder
+from color_position_finder import ColorPosFinderHolder
 from webcam import WebCamera
 
 from enum import Enum
@@ -173,7 +173,7 @@ class ColorManagerWidget(LabelFrame):
 		self._camera = camera
 		self._frame = None
 		# Each for maze, car team A, and car team B
-		self._color_pos_finders = ColorPositionFinderHolder( \
+		self._color_pos_finders = ColorPosFinderHolder( \
 			ColorPositionFinder(camera), \
 			ColorPositionFinder(camera), \
 			ColorPositionFinder(camera))
