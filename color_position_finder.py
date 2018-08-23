@@ -268,7 +268,7 @@ class ColorPositionFinderHolder(namedtuple('ColorPositionFinderHolder', \
 	This is the data structure which helps the program to access these
 	ColorPositionFinder by the name of the type.
 
-	@sa ColorLabel.Type
+	@sa ColorType
 	"""
 	__slots__ = ()
 

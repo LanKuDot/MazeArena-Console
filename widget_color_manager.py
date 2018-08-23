@@ -12,6 +12,21 @@ from threading import Thread
 from tkinter import *
 import cv2
 
+class ColorType(Enum):
+	"""The representation of colors in the maze arena
+
+	@var NOT_DEFINED enum = 0 The color that haven't be defined yet
+	@var MAZE_UPPER_PLANE enum = 1 The color that marks the upper plane of the maze
+	@var MAZE_LOWER_PLANE enum = 2 The color that marks the lower plane of the maze
+	@var MAZEC_CAR_TEAM_A enum = 3 The color that marks the maze cars of one team
+	@var MAZEC_CAR_TEAM_B enum = 4 The color that marks the maze cars of another team
+	"""
+	NOT_DEFINED = 0
+	MAZE_UPPER_PLANE = 1
+	MAZE_LOWER_PLANE = 2
+	MAZE_CAR_TEAM_A = 3
+	MAZE_CAR_TEAM_B = 4
+
 class ColorLabel(Button):
 	"""A button widget that manage a color
 
@@ -20,28 +35,13 @@ class ColorLabel(Button):
 	or delete that color.
 
 	@var _color The color managed by this widget in BGR domain
-	@var _color_type The color type. See ColorLabel.Type
+	@var _color_type The color type. See ColorType
 	@var _selected_color_type The color type selected in the setting window
 	@var _fn_update_color The function hook that will do futher updates when
 	     the color information is updated. It will be
 	     ColorManagerWidget._update_color_finder().
 	@var _setting_panel The setting panel widget
 	"""
-
-	class Type(Enum):
-		"""The representation of colors in the maze arena
-
-		@var NOT_DEFINED enum = 0 The color that haven't be defined yet
-		@var MAZE_UPPER_PLANE enum = 1 The color that marks the upper plane of the maze
-		@var MAZE_LOWER_PLANE enum = 2 The color that marks the lower plane of the maze
-		@var MAZEC_CAR_TEAM_A enum = 3 The color that marks the maze cars of one team
-		@var MAZEC_CAR_TEAM_B enum = 4 The color that marks the maze cars of another team
-		"""
-		NOT_DEFINED = 0
-		MAZE_UPPER_PLANE = 1
-		MAZE_LOWER_PLANE = 2
-		MAZE_CAR_TEAM_A = 3
-		MAZE_CAR_TEAM_B = 4
 
 	def __init__(self, master = None, color_bgr = [0, 0, 0], fn_update_color = None, \
 		**options):
@@ -63,8 +63,8 @@ class ColorLabel(Button):
 		self.pack()
 
 		self._color = color_bgr
-		self._color_type = ColorLabel.Type.NOT_DEFINED.name
-		self._selected_color_type = StringVar(self, ColorLabel.Type.NOT_DEFINED.name)
+		self._color_type = ColorType.NOT_DEFINED.name
+		self._selected_color_type = StringVar(self, ColorType.NOT_DEFINED.name)
 		self._fn_update_color = fn_update_color
 
 		self._setting_panel = None
@@ -95,7 +95,7 @@ class ColorLabel(Button):
 		title = Label(main_panel, text = "Color Type", anchor = W)
 		title.pack(side = LEFT)
 		self._selected_color_type.set(self._color_type)	# Set display text to the type of color
-		color_type_list = [name for name, member in ColorLabel.Type.__members__.items()]
+		color_type_list = [name for name, member in ColorType.__members__.items()]
 		om_set_color_type = OptionMenu(main_panel, self._selected_color_type, *color_type_list)
 		om_set_color_type.pack(side = LEFT, expand = TRUE, anchor = W)
 
@@ -138,7 +138,7 @@ class ColorLabel(Button):
 		Invoke ColorLabel._fn_update_color() to update changes, and
 		the ColorLabel this color belongs will be deleted.
 		"""
-		if not self._color_type == self.Type.NOT_DEFINED:
+		if not self._color_type == ColorType.NOT_DEFINED:
 			self._fn_update_color(self._color, self._color_type, None)
 		self._close_setting_panel()
 		self.pack_forget()
@@ -288,23 +288,23 @@ class ColorManagerWidget(LabelFrame):
 			new_color_label.pack(fill = X)
 
 	def _update_color_finder(self, color_bgr, \
-		old_type: ColorLabel.Type, new_type: ColorLabel.Type):
+		old_type: ColorType, new_type: ColorType):
 		"""Assign, change, or delete the color in ColorPositionFinders
 
 		The action will be taken accroding to old_type and new_type.
 		For example:
-		* `(color_A, None, ColorLabel.Type.MAZE_LOWER_PLANE)`:
+		* `(color_A, None, ColorType.MAZE_LOWER_PLANE)`:
 		  color_A is assigned to the ColorPositionFinder of maze
-		* `(color_A, ColorLabel.Type.MAZE_LOWER_PLANE, ColorLabel.Type.MAZE_CAR_TEAM_A)`:
+		* `(color_A, ColorType.MAZE_LOWER_PLANE, ColorType.MAZE_CAR_TEAM_A)`:
 		  color_A is moved from the ColorPositionFinder of maze to that of car_team_a
-		* `(color_A, ColorLabel.Type.MAZE_CAR_TEAM_A, None)`:
+		* `(color_A, ColorType.MAZE_CAR_TEAM_A, None)`:
 		  color_A is deleted from the ColorPositionFinder of car_team_a
 
 		@param color_bgr Specify the target color in BGR domain
 		@param old_type Specify the previous type of the color_bgr
 		@param new_type Specify the new type of the color_bgr
 		"""
-		def _get_color_finder_by_type(color_type: ColorLabel.Type):
+		def _get_color_finder_by_type(color_type: ColorType):
 			"""Get the corresponding ColorPositionFinder by the type of the color
 
 			The mapping of the color type to the ColorPositionFinder in the
@@ -320,10 +320,10 @@ class ColorManagerWidget(LabelFrame):
 			        is NOT_DEFINED or not existing.
 			"""
 			return {
-				ColorLabel.Type.MAZE_LOWER_PLANE.name: self._color_pos_finders.maze,
-				ColorLabel.Type.MAZE_UPPER_PLANE.name: self._color_pos_finders.maze,
-				ColorLabel.Type.MAZE_CAR_TEAM_A.name:  self._color_pos_finders.car_team_a,
-				ColorLabel.Type.MAZE_CAR_TEAM_B.name:  self._color_pos_finders.car_team_b
+				ColorType.MAZE_LOWER_PLANE.name: self._color_pos_finders.maze,
+				ColorType.MAZE_UPPER_PLANE.name: self._color_pos_finders.maze,
+				ColorType.MAZE_CAR_TEAM_A.name:  self._color_pos_finders.car_team_a,
+				ColorType.MAZE_CAR_TEAM_B.name:  self._color_pos_finders.car_team_b
 			}.get(color_type)
 
 		old_color_finder = _get_color_finder_by_type(old_type)
