@@ -9,6 +9,7 @@ from collections import namedtuple
 from threading import Thread, Lock
 
 from point import Point2D
+from color_type import ColorType
 
 class ColorPosition:
 	"""Data structure storing the position of the color found in the frame
@@ -262,16 +263,36 @@ class ColorPositionFinder:
 
 class ColorPosFinderHolder(namedtuple('ColorPosFinderHolder', \
 	['maze', 'car_team_a', 'car_team_b'])):
-	"""A data structure for accessing different ColorPositionFinder by type
+	"""A data structure for holding seperate ColorPositionFinders
 
-	Different types of colors are assgined to seperate ColorPositionFinders.
-	This is the data structure which helps the program to access these
-	ColorPositionFinder by the name of the type.
+	There are three ColorPositionFinders which are for maze,
+	for car team A, and for car team B. The colors are assigned to related
+	ColorPositionFinders by their ColorType:
+	* maze: Store the colors that mark the maze
+	* car team A: Store the color of cars in team A
+	* car team B: Store the color of cars in team B
 
 	@sa ColorType
 	"""
 	__slots__ = ()
 
-	@property
-	def num_of_finders(self):
-		return 3
+	def get_posFinder_by_type(self, color_type):
+		"""Get the corresponding ColorPositionFinder by the type of the color
+
+		The mapping is shown as below:
+		* NOT_DEFINED -> None
+		* MAZE_LOWER_PLANE -> ColorPosFinderHolder.maze
+		* MAZE_UPPER_PLANE -> ColorPosFinderHolder.maze
+		* MAZE_CAR_TEAM_A -> ColorPosFinderHolder.car_team_a
+		* MAZE_CAR_TEAM_B -> ColorPosFinderHolder.car_team_b
+
+		@param color_type The type of the color
+		@return The corresponding ColorPositionFinder. None if the color type
+			    is NOT_DEFINED or not existing.
+		"""
+		return {
+			ColorType.MAZE_LOWER_PLANE.name: self.maze,
+			ColorType.MAZE_UPPER_PLANE.name: self.maze,
+			ColorType.MAZE_CAR_TEAM_A.name:  self.car_team_a,
+			ColorType.MAZE_CAR_TEAM_B.name:  self.car_team_b
+		}.get(color_type)

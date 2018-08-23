@@ -4,8 +4,7 @@ And manage the colors to be found in the maze.
 """
 
 from color_type import ColorType
-from color_position_finder import ColorPositionFinder
-from color_position_finder import ColorPosFinderHolder
+from color_position_finder import ColorPositionFinder, ColorPosFinderHolder
 from webcam import WebCamera
 
 from threading import Thread
@@ -289,30 +288,8 @@ class ColorManagerWidget(LabelFrame):
 		@param old_type Specify the previous type of the color_bgr
 		@param new_type Specify the new type of the color_bgr
 		"""
-		def _get_color_finder_by_type(color_type: ColorType):
-			"""Get the corresponding ColorPositionFinder by the type of the color
-
-			The mapping of the color type to the ColorPositionFinder in the
-			ColorPositionFinderHolder:
-			* NOT_DEFINED -> None
-			* MAZE_LOWER_PLANE -> ColorPositionFinderHolder.maze
-			* MAZE_UPPER_PLANE -> ColorPositionFinderHolder.maze
-			* MAZE_CAR_TEAM_A -> ColorPositionFinderHolder.car_team_a
-			* MAZE_CAR_TEAM_B -> ColorPositionFinderHolder.car_team_b
-
-			@param color_type The type of the color
-			@return The corresponding ColorPositionFinder. None if the color type
-			        is NOT_DEFINED or not existing.
-			"""
-			return {
-				ColorType.MAZE_LOWER_PLANE.name: self._color_pos_finders.maze,
-				ColorType.MAZE_UPPER_PLANE.name: self._color_pos_finders.maze,
-				ColorType.MAZE_CAR_TEAM_A.name:  self._color_pos_finders.car_team_a,
-				ColorType.MAZE_CAR_TEAM_B.name:  self._color_pos_finders.car_team_b
-			}.get(color_type)
-
-		old_color_finder = _get_color_finder_by_type(old_type)
-		new_color_finder = _get_color_finder_by_type(new_type)
+		old_color_finder = self._color_pos_finders.get_posFinder_by_type(old_type)
+		new_color_finder = self._color_pos_finders.get_posFinder_by_type(new_type)
 
 		if old_color_finder == new_color_finder:
 			return
