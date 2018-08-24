@@ -1,35 +1,34 @@
 """@package docstring
 The user interface of the application.
-Provide the information or set up application variables
+Display the information or set up application variables
 in the gui.
 """
 
 import tkinter as tk
 
+from webcam import WebCamera
 from widget_color_manager import ColorManagerWidget
 
-class ApplicationGUI:
-	"""The user interface of the application.
+# Workers
+_camera = WebCamera(src = 0, width = 1080, height = 720)
 
-	@var _main_window The object of the top level window
+def start_gui():
+	"""Start the gui
+	"""
+	main_window = tk.Tk()
+	_setup_gui(main_window)
+
+	_camera.start_camera_thread()
+
+	main_window.mainloop()
+
+	_camera.stop_camera_thread()
+
+def _setup_gui(main_window):
+	"""Set up the layout of the gui
 	"""
 
-	def __init__(self, camera):
-		"""Constructor
-		"""
-		self._camera = camera
-		self._main_window = tk.Tk()
-		self._setup_gui()
-
-	def _setup_gui(self):
-		"""Set up the layout of the gui
-		"""
-		color_manager = ColorManagerWidget(self._main_window, \
-			self._camera, name = "color_manager")
-		color_manager.pack()
-
-	def start_gui(self):
-		"""Start the gui
-		"""
-		self._main_window.mainloop()
-		return self
+	# Set up layouts
+	color_manager = ColorManagerWidget(main_window, \
+		_camera, name = "color_manager")
+	color_manager.pack()
