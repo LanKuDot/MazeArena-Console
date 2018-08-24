@@ -12,6 +12,7 @@ from widget_color_manager import ColorManagerWidget
 
 ### Workers ###
 _camera = WebCamera(src = 0, width = 1080, height = 720)
+# Each for maze, car_team_a, car_team_b
 _color_pos_finders = ColorPosFinderHolder( \
 	ColorPositionFinder(_camera), \
 	ColorPositionFinder(_camera), \
@@ -31,9 +32,9 @@ def start_gui():
 
 def _setup_gui(main_window):
 	"""Set up the layout of the gui
-	"""
 
-	# Set up layouts
+	@param main_window The main window of the application
+	"""
 	color_manager = ColorManagerWidget(main_window, \
 		_camera, _color_pos_finders, name = "color_manager")
 	color_manager.pack()
