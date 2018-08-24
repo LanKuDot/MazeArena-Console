@@ -7,10 +7,15 @@ in the gui.
 import tkinter as tk
 
 from webcam import WebCamera
+from color_position_finder import *
 from widget_color_manager import ColorManagerWidget
 
-# Workers
+### Workers ###
 _camera = WebCamera(src = 0, width = 1080, height = 720)
+_color_pos_finders = ColorPosFinderHolder( \
+	ColorPositionFinder(_camera), \
+	ColorPositionFinder(_camera), \
+	ColorPositionFinder(_camera))
 
 def start_gui():
 	"""Start the gui
@@ -30,5 +35,5 @@ def _setup_gui(main_window):
 
 	# Set up layouts
 	color_manager = ColorManagerWidget(main_window, \
-		_camera, name = "color_manager")
+		_camera, _color_pos_finders, name = "color_manager")
 	color_manager.pack()

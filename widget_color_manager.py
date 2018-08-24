@@ -144,11 +144,13 @@ class ColorManagerWidget(LabelFrame):
 	     ColorLabel buttons
 	"""
 
-	def __init__(self, master, camera: WebCamera, **options):
+	def __init__(self, master, camera: WebCamera, \
+		color_pos_finders: ColorPosFinderHolder, **options):
 		"""Constructor
 
 		@param master The parent widget of the ColorManagerWidget
 		@param camera The WebCamera object
+		@param color_pos_finders The color position finders
 		@param options Additional options for the LabelFrame
 		"""
 		super().__init__(master, text = "Color Manager", **options)
@@ -156,11 +158,7 @@ class ColorManagerWidget(LabelFrame):
 
 		self._camera = camera
 		self._frame = None
-		# Each for maze, car team A, and car team B
-		self._color_pos_finders = ColorPosFinderHolder( \
-			ColorPositionFinder(camera), \
-			ColorPositionFinder(camera), \
-			ColorPositionFinder(camera))
+		self._color_pos_finders = color_pos_finders
 
 		self._show_result_image_thread = None
 		self._is_show_result_thread_started = False
