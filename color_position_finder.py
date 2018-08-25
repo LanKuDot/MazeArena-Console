@@ -60,7 +60,6 @@ class ColorPositionFinder:
 
 	@var _colors_to_find A list stores colors to be find in the frame
 	@var _camera The camera object for getting frames
-	@var _frame Store the frame got from the camera
 	@var _color_finding_thread The thread for finding colors in the frame
 	@var _is_thread_started Is the _color_finding_thread started?
 	@var _colors_to_find_lock The read lock of _colors_to_find
@@ -73,7 +72,6 @@ class ColorPositionFinder:
 		"""
 		self._colors_to_find = []
 		self._camera = camera
-		self._frame = None
 
 		self._color_recognition_thread = None
 		self._is_thread_started = False
@@ -244,8 +242,8 @@ class ColorPositionFinder:
 		print("[ColorPosFinder] The color recognition thread is started.")
 
 		while self._is_thread_started:
-			self._frame = self._camera.get_frame()
-			frame_hsv = cv2.cvtColor(self._frame, cv2.COLOR_BGR2HSV)
+			frame = self._camera.get_frame()
+			frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 			# TODO Create multiple thread to find colors if there are
 			# too many colors to be found
 			posFound = []
