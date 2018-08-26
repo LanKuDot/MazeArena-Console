@@ -69,14 +69,14 @@ class ColorLabel(Button):
 			return
 
 		self._setting_panel = Toplevel()
-		self._setting_panel.title("Color config")
+		self._setting_panel.title("顏色設定")
 		self._setting_panel.geometry("%dx%d%+d%+d" % (250, 100, 100, 50))
 		# Run _close_setting_panel when the user click X on the window
 		self._setting_panel.protocol("WM_DELETE_WINDOW", self._close_setting_panel)
 
 		main_panel = Frame(self._setting_panel)
 		main_panel.pack(side = TOP, fill = X)
-		title = Label(main_panel, text = "Color Type", anchor = W)
+		title = Label(main_panel, text = "顏色類別", anchor = W)
 		title.pack(side = LEFT)
 		self._selected_color_type.set(self._color_type)	# Set display text to the type of color
 		color_type_list = [name for name, member in ColorType.__members__.items()]
@@ -85,13 +85,13 @@ class ColorLabel(Button):
 
 		bottom_panel = Frame(self._setting_panel)
 		bottom_panel.pack(side = BOTTOM, padx = 2)
-		btn_delete = Button(bottom_panel, text = "Delete", foreground = "red", \
+		btn_delete = Button(bottom_panel, text = "刪除", foreground = "red", \
 			command = self._delete_color)
 		btn_delete.pack(side = LEFT)
-		btn_confirm = Button(bottom_panel, text = "Confirm", \
+		btn_confirm = Button(bottom_panel, text = "確認", \
 			command = self._setup_confirm)
 		btn_confirm.pack(side = LEFT)
-		btn_cancel = Button(bottom_panel, text = "Cancel", \
+		btn_cancel = Button(bottom_panel, text = "取消", \
 			command = self._close_setting_panel)	# Do nothing when canceled
 		btn_cancel.pack(side = LEFT)
 
@@ -153,7 +153,7 @@ class ColorManagerWidget(LabelFrame):
 		@param color_pos_finders The color position finders
 		@param options Additional options for the LabelFrame
 		"""
-		super().__init__(master, text = "Color Manager", **options)
+		super().__init__(master, text = "顏色管理", **options)
 		self.pack()
 
 		self._camera = camera
@@ -183,22 +183,22 @@ class ColorManagerWidget(LabelFrame):
 		self._option_panel = Frame(self)
 		self._option_panel.pack(side = LEFT, fill = Y)
 		label_option = Label(self._option_panel, \
-			text = "Option", anchor = W)
+			text = "功能", anchor = W)
 		label_option.pack(fill = X)
 		button_select_color = Button(self._option_panel, \
-			text = "Select color", command = self._start_select_color_thread, \
+			text = "選取顏色", command = self._start_select_color_thread, \
 			name = "btn_select_color")
 		button_select_color.pack(fill = X)
 		button_recognize_maze = Button(self._option_panel, \
-			text = "Recognize maze", command = self._maze_recognition, \
+			text = "辨識迷宮", command = self._maze_recognition, \
 			name = "btn_recognize_maze")
 		button_recognize_maze.pack(fill = X)
 		button_recognize_maze_car = Button(self._option_panel, \
-			text = "Recognize maze cars", command = self._toggle_car_recognition, \
+			text = "辨識車輛位置", command = self._toggle_car_recognition, \
 			name = "btn_recognize_maze_cars")
 		button_recognize_maze_car.pack(fill = X)
 		button_show_result_img = Button(self._option_panel, \
-			text = "Show detect image", command = self._toggle_show_result_image, \
+			text = "顯示標記影像", command = self._toggle_show_result_image, \
 			state = DISABLED, \
 			name = "btn_show_result_img")
 		button_show_result_img.pack(fill = X)
@@ -206,7 +206,7 @@ class ColorManagerWidget(LabelFrame):
 		self._color_label_panel = Frame(self)
 		self._color_label_panel.pack(side = RIGHT, fill = Y)
 		label_color = Label(self._color_label_panel, \
-			text = "Colors", anchor = W)
+			text = "目標辨識顏色", anchor = W)
 		label_color.pack(fill = X)
 
 	def _start_select_color_thread(self):
@@ -304,10 +304,10 @@ class ColorManagerWidget(LabelFrame):
 		"""
 		if not self._color_pos_finders.maze.is_recognition_thread_started():
 			self._color_pos_finders.maze.start_recognition_thread()
-			self._option_panel.children["btn_recognize_maze"].config(text = "Stop recognizing maze")
+			self._option_panel.children["btn_recognize_maze"].config(text = "停止辨識迷宮")
 		else:
 			self._color_pos_finders.maze.stop_recognition_thread()
-			self._option_panel.children["btn_recognize_maze"].config(text = "Recognize maze")
+			self._option_panel.children["btn_recognize_maze"].config(text = "辨識迷宮")
 
 	def _toggle_car_recognition(self):
 		"""Toggle the color recognition of maze cars
@@ -318,13 +318,13 @@ class ColorManagerWidget(LabelFrame):
 		if not self._color_pos_finders.car_team_a.is_recognition_thread_started():
 			self._color_pos_finders.car_team_a.start_recognition_thread()
 			self._color_pos_finders.car_team_b.start_recognition_thread()
-			self._option_panel.children["btn_recognize_maze_cars"].config(text = "Stop recognizing cars")
+			self._option_panel.children["btn_recognize_maze_cars"].config(text = "停止辨識位置")
 			self._option_panel.children["btn_show_result_img"].config(state = NORMAL)
 		# Stop color recognition
 		else:
 			self._color_pos_finders.car_team_a.stop_recognition_thread()
 			self._color_pos_finders.car_team_b.stop_recognition_thread()
-			self._option_panel.children["btn_recognize_maze_cars"].config(text = "Recognize maze cars")
+			self._option_panel.children["btn_recognize_maze_cars"].config(text = "辨識車輛位置")
 			self._option_panel.children["btn_show_result_img"].config(state = DISABLED)
 
 	def _toggle_show_result_image(self):
@@ -332,14 +332,14 @@ class ColorManagerWidget(LabelFrame):
 		"""
 		# Start showing recognition result
 		if not self._is_show_result_thread_started:
-			self._option_panel.children["btn_show_result_img"].config(text = "Hide detect image")
+			self._option_panel.children["btn_show_result_img"].config(text = "關閉標記影像")
 			self._show_result_image_thread = \
 				Thread(target = self._show_result_image)
 			self._show_result_image_thread.start()
 			self._is_show_result_thread_started = True
 		# Stop showing recognition result
 		else:
-			self._option_panel.children["btn_show_result_img"].config(text = "Show detect image")
+			self._option_panel.children["btn_show_result_img"].config(text = "顯示標記影像")
 			self._is_show_result_thread_started = False
 			self._show_result_image_thread.join()
 
@@ -357,7 +357,7 @@ class ColorManagerWidget(LabelFrame):
 		while self._is_show_result_thread_started:
 			if cv2.waitKey(1) & 0xFF == ord('q'):
 				self._option_panel.children["btn_show_result_img"]. \
-					config(text = "Show detect image")
+					config(text = "顯示標記影像")
 				self._is_show_result_thread_started = False
 				break
 
