@@ -5,6 +5,7 @@ And manage the colors to be found in the maze.
 
 from color_type import ColorType
 from color_position_finder import ColorPositionFinder, ColorPosFinderHolder
+from maze_manager import MazeManager
 from webcam import WebCamera
 
 from threading import Thread
@@ -135,6 +136,8 @@ class ColorManagerWidget(LabelFrame):
 
 	@var _camera The camera object for getting frames
 	@var _frame The frame got from _camera
+	@var _color_pos_finders The instance of class ColorPosFinderHolder
+	@var _maze_manager The instance of class MazeManager
 	@var _show_result_image_thread A thread that displaying the
 	     recognition result
 	@var _is_show_result_thread_started Is the _show_result_image_thread
@@ -142,15 +145,19 @@ class ColorManagerWidget(LabelFrame):
 	@var _option_panel The Frame widget that contains option buttons
 	@var _color_label_panel The Frame widget that contains the
 	     ColorLabel buttons
+	@var _maze_info_entries The dict that stores the Entry widgets for
+	     gathering the information of the maze
 	"""
 
 	def __init__(self, master, camera: WebCamera, \
-		color_pos_finders: ColorPosFinderHolder, **options):
+		color_pos_finders: ColorPosFinderHolder, \
+		maze_manager: MazeManager, **options):
 		"""Constructor
 
 		@param master The parent widget of the ColorManagerWidget
 		@param camera The WebCamera object
-		@param color_pos_finders The color position finders
+		@param color_pos_finders The instance of class ColorPosFinderHolder
+		@param maze_manager The instance of class MazeManager
 		@param options Additional options for the LabelFrame
 		"""
 		super().__init__(master, text = "顏色管理", **options)
@@ -159,12 +166,17 @@ class ColorManagerWidget(LabelFrame):
 		self._camera = camera
 		self._frame = None
 		self._color_pos_finders = color_pos_finders
+		self._maze_manager = maze_manager
 
 		self._show_result_image_thread = None
 		self._is_show_result_thread_started = False
 
 		self._option_panel = None
 		self._color_label_panel = None
+		self._maze_info_entries = {
+			'x_scale': None, \
+			'y_scale': None, \
+			'wall_height': None}
 		self._setup_layout()
 
 	def _setup_layout(self):
@@ -176,6 +188,8 @@ class ColorManagerWidget(LabelFrame):
 		+---------------------+--------------+
 		| select color        | colors to    |
 		| recognize maze      | be found     |
+		| scale: x [ ] y [ ]  |              |
+		| height: [  ] cm     |              |
 		| recognize maze cars |              |
 		| show result         |              |
 		+---------------------+--------------+
@@ -193,6 +207,31 @@ class ColorManagerWidget(LabelFrame):
 			text = "辨識迷宮", command = self._maze_recognition, \
 			name = "btn_recognize_maze")
 		button_recognize_maze.pack(fill = X)
+		#-----
+		maze_scale_frame = Frame(self._option_panel)
+		label_ms_1 = Label(maze_scale_frame, text = "迷宮座標：X ")
+		label_ms_1.pack(side = LEFT)
+		entry_maze_scale_x = Entry(maze_scale_frame, width = 3)
+		entry_maze_scale_x.pack(side = LEFT)
+		label_ms_2 = Label(maze_scale_frame, text = " Y ")
+		label_ms_2.pack(side = LEFT)
+		entry_maze_scale_y = Entry(maze_scale_frame, width = 3)
+		entry_maze_scale_y.pack(side = LEFT)
+		maze_scale_frame.pack()
+
+		maze_height_frame = Frame(self._option_panel)
+		label_mh_1 = Label(maze_height_frame, text = "迷宮牆高：")
+		label_mh_1.pack(side = LEFT)
+		entry_maze_height = Entry(maze_height_frame, width = 5)
+		entry_maze_height.pack(side = LEFT)
+		label_mh_2 = Label(maze_height_frame, text = " 公分")
+		label_mh_2.pack(side = LEFT)
+		maze_height_frame.pack(fill = X)
+
+		self._maze_info_entries['x_scale'] = entry_maze_scale_x
+		self._maze_info_entries['y_scale'] = entry_maze_scale_y
+		self._maze_info_entries['wall_height'] = entry_maze_height
+		#-----
 		button_recognize_maze_car = Button(self._option_panel, \
 			text = "辨識車輛位置", command = self._toggle_car_recognition, \
 			name = "btn_recognize_maze_cars")
@@ -217,7 +256,8 @@ class ColorManagerWidget(LabelFrame):
 		  clicking it more than twice;
 		* disable recognition toggling options to avoid starting recognition
 		  before the color selection.
-		The new thread will run ColorManagerWidget._select_color().
+		The new thread will run ColorManagerWidget._select_color(), and
+		the thread will be automatically stopped after finishing color selection.
 		"""
 		self._option_panel.children["btn_select_color"].config(state = DISABLED)
 		self._option_panel.children["btn_recognize_maze"].config(state = DISABLED)
@@ -302,6 +342,17 @@ class ColorManagerWidget(LabelFrame):
 		The recognition will be automatically stopped when the maze manger
 		finished generating maze position transform matrix.
 		"""
+		# Check if the input value is vaild
+		x_scale = self._maze_info_entries['x_scale'].get()
+		y_scale = self._maze_info_entries['y_scale'].get()
+		wall_height = self._maze_info_entries['wall_height'].get()
+		if not (x_scale.isdigit() and y_scale.isdigit() and \
+			wall_height.replace('.', '', 1).isdigit()):
+			print('[ColorManagerWidget] There are some invalid input value. ' \
+				'x: %s, y: %s, wall_height: %s' % (x_scale, y_scale, wall_height,))
+			return
+
+		self._maze_manager.set_maze(int(x_scale), int(y_scale), float(wall_height))
 		if not self._color_pos_finders.maze.is_recognition_thread_started():
 			self._color_pos_finders.maze.start_recognition_thread()
 			self._option_panel.children["btn_recognize_maze"].config(text = "停止辨識迷宮")

@@ -8,6 +8,7 @@ import tkinter as tk
 
 from webcam import WebCamera
 from color_position_finder import *
+from maze_manager import MazeManager
 from widget_color_manager import ColorManagerWidget
 
 ### Workers ###
@@ -17,6 +18,7 @@ _color_pos_finders = ColorPosFinderHolder( \
 	ColorPositionFinder(_camera), \
 	ColorPositionFinder(_camera), \
 	ColorPositionFinder(_camera))
+_maze_manager = MazeManager(_color_pos_finders)
 
 def start_gui():
 	"""Start the gui
@@ -36,5 +38,6 @@ def _setup_gui(main_window):
 	@param main_window The main window of the application
 	"""
 	color_manager = ColorManagerWidget(main_window, \
-		_camera, _color_pos_finders, name = "color_manager")
+		_camera, _color_pos_finders, _maze_manager, \
+		name = "color_manager")
 	color_manager.pack()
