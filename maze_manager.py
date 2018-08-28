@@ -94,9 +94,9 @@ class MazeManager:
 		@param old_color_type The previous color type of the target color
 		@param new_color_type The new color type of the target color
 		"""
-		if new_color_type == ColorType.MAZE_UPPER_PLANE.name:
+		if new_color_type == ColorType.MAZE_UPPER_PLANE:
 			self._upper_plane_color = color_bgr
-		elif new_color_type == ColorType.MAZE_LOWER_PLANE.name:
+		elif new_color_type == ColorType.MAZE_LOWER_PLANE:
 			self._lower_plane_color = color_bgr
 
 	def recognize_maze(self):
@@ -106,7 +106,7 @@ class MazeManager:
 			return
 
 		color_finder_of_maze: ColorPositionFinder = \
-			self._color_pos_finders.get_posFinder_by_type(ColorType.MAZE_UPPER_PLANE.name)
+			self._color_pos_finders.get_posFinder_by_type(ColorType.MAZE_UPPER_PLANE)
 		self._upper_transform_mat = None
 		self._lower_transform_mat = None
 

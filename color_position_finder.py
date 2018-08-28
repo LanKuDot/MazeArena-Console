@@ -274,7 +274,7 @@ class ColorPosFinderHolder(namedtuple('ColorPosFinderHolder', \
 	"""
 	__slots__ = ()
 
-	def get_posFinder_by_type(self, color_type):
+	def get_posFinder_by_type(self, color_type: ColorType):
 		"""Get the corresponding ColorPositionFinder by the type of the color
 
 		The mapping is shown as below:
@@ -289,8 +289,8 @@ class ColorPosFinderHolder(namedtuple('ColorPosFinderHolder', \
 			    is NOT_DEFINED or not existing.
 		"""
 		return {
-			ColorType.MAZE_LOWER_PLANE.name: self.maze,
-			ColorType.MAZE_UPPER_PLANE.name: self.maze,
-			ColorType.MAZE_CAR_TEAM_A.name:  self.car_team_a,
-			ColorType.MAZE_CAR_TEAM_B.name:  self.car_team_b
+			ColorType.MAZE_LOWER_PLANE: self.maze,
+			ColorType.MAZE_UPPER_PLANE: self.maze,
+			ColorType.MAZE_CAR_TEAM_A:  self.car_team_a,
+			ColorType.MAZE_CAR_TEAM_B:  self.car_team_b
 		}.get(color_type)

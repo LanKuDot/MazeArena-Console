@@ -48,7 +48,7 @@ class ColorLabel(Button):
 		self.pack()
 
 		self._color = color_bgr
-		self._color_type = ColorType.NOT_DEFINED.name
+		self._color_type = ColorType.NOT_DEFINED
 		self._selected_color_type = StringVar(self, ColorType.NOT_DEFINED.name)
 		self._fn_update_color = fn_update_color
 
@@ -79,7 +79,8 @@ class ColorLabel(Button):
 		main_panel.pack(side = TOP, fill = X)
 		title = Label(main_panel, text = "顏色類別", anchor = W)
 		title.pack(side = LEFT)
-		self._selected_color_type.set(self._color_type)	# Set display text to the type of color
+		# Set display text to the type of color
+		self._selected_color_type.set(self._color_type.name)
 		color_type_list = [name for name, member in ColorType.__members__.items()]
 		om_set_color_type = OptionMenu(main_panel, self._selected_color_type, *color_type_list)
 		om_set_color_type.pack(side = LEFT, expand = TRUE, anchor = W)
@@ -112,7 +113,7 @@ class ColorLabel(Button):
 		and invoke ColorLabel._fn_update_color() to update changes.
 		"""
 		_old_color_type = self._color_type
-		self._color_type = self._selected_color_type.get()
+		self._color_type = ColorType[self._selected_color_type.get()]
 		self._fn_update_color(self._color, _old_color_type, self._color_type)
 		self._close_setting_panel()
 
