@@ -306,12 +306,12 @@ class ColorManagerWidget(LabelFrame):
 		"""
 		if event == cv2.EVENT_LBUTTONUP:
 			target_color = [self._frame[y, x][0], self._frame[y, x][1], self._frame[y, x][2]]
-			new_color_label = ColorLabel(self._color_label_panel, target_color, self._update_color_finder)
+			new_color_label = ColorLabel(self._color_label_panel, target_color, self._update_color)
 			new_color_label.pack(fill = X)
 
-	def _update_color_finder(self, color_bgr, \
+	def _update_color(self, color_bgr, \
 		old_type: ColorType, new_type: ColorType):
-		"""Assign, change, or delete the color in ColorPositionFinders
+		"""Assign, change, or delete the color in ColorPositionFinders and MazeManager
 
 		The action will be taken accroding to old_type and new_type.
 		For example:
@@ -326,6 +326,8 @@ class ColorManagerWidget(LabelFrame):
 		@param old_type Specify the previous type of the color_bgr
 		@param new_type Specify the new type of the color_bgr
 		"""
+		self._maze_manager.set_color(color_bgr, old_type, new_type)
+
 		old_color_finder = self._color_pos_finders.get_posFinder_by_type(old_type)
 		new_color_finder = self._color_pos_finders.get_posFinder_by_type(new_type)
 
@@ -347,18 +349,20 @@ class ColorManagerWidget(LabelFrame):
 		y_scale = self._maze_info_entries['y_scale'].get()
 		wall_height = self._maze_info_entries['wall_height'].get()
 		if not (x_scale.isdigit() and y_scale.isdigit() and \
-			wall_height.replace('.', '', 1).isdigit()):
-			print('[ColorManagerWidget] There are some invalid input value. ' \
+			wall_height.replace('.', '', 1).isdigit()) or \
+			int(x_scale) <= 0 or int(y_scale) <= 0 or float(wall_height) <= 0.0:
+			print('[Widget ColorManager] There are some invalid input value. ' \
 				'x: %s, y: %s, wall_height: %s' % (x_scale, y_scale, wall_height,))
 			return
 
+		self._color_pos_finders.maze.start_recognition_thread()
+		self._option_panel.children["btn_recognize_maze"].config(text = "辨識中...")
+
 		self._maze_manager.set_maze(int(x_scale), int(y_scale), float(wall_height))
-		if not self._color_pos_finders.maze.is_recognition_thread_started():
-			self._color_pos_finders.maze.start_recognition_thread()
-			self._option_panel.children["btn_recognize_maze"].config(text = "停止辨識迷宮")
-		else:
-			self._color_pos_finders.maze.stop_recognition_thread()
-			self._option_panel.children["btn_recognize_maze"].config(text = "辨識迷宮")
+		self._maze_manager.recognize_maze()
+
+		self._color_pos_finders.maze.stop_recognition_thread()
+		self._option_panel.children["btn_recognize_maze"].config(text = "辨識迷宮")
 
 	def _toggle_car_recognition(self):
 		"""Toggle the color recognition of maze cars
