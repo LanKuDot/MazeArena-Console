@@ -112,14 +112,18 @@ class MazeManager:
 
 		# Generate transform matrix of the upper plane
 		while self._upper_transform_mat is None:
-			corner_poses = color_finder_of_maze.get_target_color(*self._upper_plane_color).pixel_position
-			self._upper_transform_mat = self._generate_transform_matrix(corner_poses)
+			corner_poses = color_finder_of_maze \
+				.get_target_color(*self._upper_plane_color).pixel_position
+			self._upper_transform_mat = \
+				self._generate_transform_matrix(corner_poses)
 		print("[MazeManager] Transform matrix of the upper plane is generated.")
 
 		# Generate transform matrix of the lower plane
 		while self._lower_transform_mat is None:
-			corner_poses = color_finder_of_maze.get_target_color(*self._lower_plane_color).pixel_position
-			self._lower_transform_mat = self._generate_transform_matrix(corner_poses)
+			corner_poses = color_finder_of_maze \
+				.get_target_color(*self._lower_plane_color).pixel_position
+			self._lower_transform_mat = \
+				self._generate_transform_matrix(corner_poses)
 		print("[MazeManager] Transform matrix of the lower plane is generated.")
 
 	def _generate_transform_matrix(self, corner_pos_4: list):
