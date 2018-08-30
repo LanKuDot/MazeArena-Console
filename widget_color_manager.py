@@ -26,6 +26,8 @@ class ColorLabel(Button):
 	@var _fn_update_color The function hook that will do futher updates when
 	     the color information is updated. It will be
 	     ColorManagerWidget._update_color_finder().
+	@var _entry_LED_height The Entry widget for entering the height of the LED
+	     on the car
 	@var _setting_panel The setting panel widget
 	"""
 
@@ -51,7 +53,10 @@ class ColorLabel(Button):
 		self._color = color_bgr
 		self._color_type = ColorType.NOT_DEFINED
 		self._selected_color_type = StringVar(self, ColorType.NOT_DEFINED.name)
+		self._selected_color_type.trace("w", self._toggle_entry_LED_height)
 		self._fn_update_color = fn_update_color
+		self._LED_height = 0.0
+		self._entry_LED_height = None
 
 		self._setting_panel = None
 
@@ -63,6 +68,7 @@ class ColorLabel(Button):
 		It looks like:
 		+-----------------------------+
 		| Color Type: [Not Defined -] |
+		| Car height: [ ] cm          |
 		|  [Delete][Confirm][Cancel]  |
 		+-----------------------------+
 		"""
@@ -72,7 +78,7 @@ class ColorLabel(Button):
 
 		self._setting_panel = Toplevel()
 		self._setting_panel.title("顏色設定")
-		self._setting_panel.geometry("%dx%d%+d%+d" % (250, 100, 100, 50))
+		self._setting_panel.geometry("%dx%d%+d%+d" % (250, 80, 100, 50))
 		# Run _close_setting_panel when the user click X on the window
 		self._setting_panel.protocol("WM_DELETE_WINDOW", self._close_setting_panel)
 
@@ -85,6 +91,17 @@ class ColorLabel(Button):
 		color_type_list = [name for name, member in ColorType.__members__.items()]
 		om_set_color_type = OptionMenu(main_panel, self._selected_color_type, *color_type_list)
 		om_set_color_type.pack(side = LEFT, expand = TRUE, anchor = W)
+
+		LED_height_panel = Frame(self._setting_panel)
+		LED_height_panel.pack(fill = X)
+		lhp_label_1 = Label(LED_height_panel, text = "車輛高度: ")
+		lhp_label_1.pack(side = LEFT)
+		self._entry_LED_height = NonNegativeFloatEntry(LED_height_panel, width = 4)
+		self._entry_LED_height.insert(0, str(self._LED_height)) # Set previous value
+		self._entry_LED_height.pack(side = LEFT)
+		lhp_label_2 = Label(LED_height_panel, text = " 公分")
+		lhp_label_2.pack(side = LEFT)
+		self._toggle_entry_LED_height()
 
 		bottom_panel = Frame(self._setting_panel)
 		bottom_panel.pack(side = BOTTOM, padx = 2)
@@ -100,6 +117,27 @@ class ColorLabel(Button):
 
 		# TopLevel automatically runs without mainloop() call
 
+	def _toggle_entry_LED_height(self, *args):
+		"""Enable LED height entry if color type of maze car is selected
+
+		The callback function of StringVar ColorLabel._selected_color_type if
+		its value is changed. When _selected_color_type is set to
+		ColorType.MAZE_CAR_TEAM_A or ColorType.MAZE_CAR_TEAM_B,
+		ColorLabel._entry_LED_height is enabled for entering value.
+		Otherwise, it will be disabled.
+		"""
+		try:
+			self._entry_LED_height.focus()
+		except Exception:
+			return
+
+		cur_color_type = ColorType[self._selected_color_type.get()]
+		toggle = {
+			ColorType.MAZE_CAR_TEAM_A: NORMAL,
+			ColorType.MAZE_CAR_TEAM_B: NORMAL
+		}.get(cur_color_type, DISABLED)
+		self._entry_LED_height.config(state = toggle)
+
 	def _close_setting_panel(self):
 		"""Destory the setting window and set ColorLabel._setting_panel to None
 		"""
@@ -107,14 +145,16 @@ class ColorLabel(Button):
 		self._setting_panel = None
 
 	def _setup_confirm(self):
-		"""Confirm and reflect the modification to the color manager
+		"""Confirm and reflect the modification to the color manager and Mazemanager
 
 		The callback function of the confirm option in the setting window.
-		The color type selected in the setting will be updated to ColorLabel._color_type,
-		and invoke ColorLabel._fn_update_color() to update changes.
+		The color type selected in the setting is updated to ColorLabel._color_type
+		and the valid LED height value is updated to ColorLabel._LED_height
+		Then invoke ColorLabel._fn_update_color() to update changes.
 		"""
 		_old_color_type = self._color_type
 		self._color_type = ColorType[self._selected_color_type.get()]
+		self._LED_height = float(self._entry_LED_height.get())
 		self._fn_update_color(self._color, _old_color_type, self._color_type)
 		self._close_setting_panel()
 
