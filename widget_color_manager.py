@@ -5,6 +5,7 @@ And manage the colors to be found in the maze.
 
 from color_type import ColorType
 from color_position_finder import ColorPositionFinder, ColorPosFinderHolder
+from util.number_entry import *
 from maze_manager import MazeManager
 from webcam import WebCamera
 
@@ -212,18 +213,18 @@ class ColorManagerWidget(LabelFrame):
 		maze_scale_frame = Frame(self._option_panel)
 		label_ms_1 = Label(maze_scale_frame, text = "迷宮座標：X ")
 		label_ms_1.pack(side = LEFT)
-		entry_maze_scale_x = Entry(maze_scale_frame, width = 3)
+		entry_maze_scale_x = PositiveIntEntry(maze_scale_frame, width = 3)
 		entry_maze_scale_x.pack(side = LEFT)
 		label_ms_2 = Label(maze_scale_frame, text = " Y ")
 		label_ms_2.pack(side = LEFT)
-		entry_maze_scale_y = Entry(maze_scale_frame, width = 3)
+		entry_maze_scale_y = PositiveIntEntry(maze_scale_frame, width = 3)
 		entry_maze_scale_y.pack(side = LEFT)
 		maze_scale_frame.pack()
 
 		maze_height_frame = Frame(self._option_panel)
 		label_mh_1 = Label(maze_height_frame, text = "迷宮牆高：")
 		label_mh_1.pack(side = LEFT)
-		entry_maze_height = Entry(maze_height_frame, width = 5)
+		entry_maze_height = NonNegativeFloatEntry(maze_height_frame, width = 5)
 		entry_maze_height.pack(side = LEFT)
 		label_mh_2 = Label(maze_height_frame, text = " 公分")
 		label_mh_2.pack(side = LEFT)
@@ -349,9 +350,7 @@ class ColorManagerWidget(LabelFrame):
 		x_scale = self._maze_info_entries['x_scale'].get()
 		y_scale = self._maze_info_entries['y_scale'].get()
 		wall_height = self._maze_info_entries['wall_height'].get()
-		if not (x_scale.isdigit() and y_scale.isdigit() and \
-			wall_height.replace('.', '', 1).isdigit()) or \
-			int(x_scale) <= 0 or int(y_scale) <= 0 or float(wall_height) <= 0.0:
+		if not x_scale or not y_scale or not wall_height:
 			print('[Widget ColorManager] There are some invalid input value. ' \
 				'x: %s, y: %s, wall_height: %s' % (x_scale, y_scale, wall_height,))
 			return
