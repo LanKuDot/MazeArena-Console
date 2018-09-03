@@ -44,11 +44,17 @@ class CarPosition:
 	def __ne__(self, other):
 		return not self.__eq__(other)
 
-class MazeManager:
-	"""
+class MazePositionFinder:
+	"""Find the position of the colors in the maze
 
-	@var _color_pos_finders The ColorPositionFinders for getting the position
-	     of colors found in the video stream
+	MazePositionFinder uses the position of the colors found in the video stream
+	(which is from ColorPositionFinder) to find the position of the colors in
+	the maze.
+
+	@var _maze_color_pos_finder The ColorPosFinder that contains the reference color
+	     of the maze
+	@var _color_pos_finder The ColorPosFinder that contains the colors to be found
+	     in the MazePositionFinder
 	@var _maze_scale A Point2D(x, y) which represents the coordinate scale of
 	     the maze (0 ~ x, 0 ~ y)
 	@var _wall_height The height of the maze wall
@@ -60,19 +66,18 @@ class MazeManager:
 	     the lower plane of the maze
 	"""
 
-	def __init__(self, color_pos_finders: ColorPosFinderHolder):
-		"""Constructor
-
-		@param color_pos_finders The instance of class ColorPosFinderHolder
-		"""
-		self._color_pos_finders = color_pos_finders
+	def __init__(self, maze_color_pos_finder: ColorPositionFinder, \
+		color_pos_finder: ColorPositionFinder):
+		self._maze_color_pos_finder = maze_color_pos_finder
+		self._color_pos_finder = color_pos_finder
 
 		self._maze_scale = None
-		self._wall_height = 0
+		self._wall_height = None
 		self._upper_plane_color = None
 		self._lower_plane_color = None
 		self._upper_transform_mat = None
 		self._lower_transform_mat = None
+		self._colors_to_find = []
 
 	def set_maze(self, scale_x, scale_y, wall_height):
 		"""Set the information of the maze
@@ -100,31 +105,29 @@ class MazeManager:
 			self._lower_plane_color = color_bgr
 
 	def recognize_maze(self):
-		if self._upper_plane_color == None or self._lower_plane_color == None:
-			print("[MazeManager] The color of the upper plane or the lower plane " \
+		if self._upper_plane_color is None or self._lower_plane_color is None:
+			print("[MazePositionFinder] The color of the upper plane or the lower plane " \
 				"has not been specified yet.")
 			return
 
-		color_finder_of_maze: ColorPositionFinder = \
-			self._color_pos_finders.get_posFinder_by_type(ColorType.MAZE_UPPER_PLANE)
 		self._upper_transform_mat = None
 		self._lower_transform_mat = None
 
 		# Generate transform matrix of the upper plane
 		while self._upper_transform_mat is None:
-			corner_poses = color_finder_of_maze \
+			corner_poses = self._maze_color_pos_finder \
 				.get_target_color(*self._upper_plane_color).pixel_position
 			self._upper_transform_mat = \
 				self._generate_transform_matrix(corner_poses)
-		print("[MazeManager] Transform matrix of the upper plane is generated.")
+		print("[MazePositionFinder] Transform matrix of the upper plane is generated.")
 
 		# Generate transform matrix of the lower plane
 		while self._lower_transform_mat is None:
-			corner_poses = color_finder_of_maze \
+			corner_poses = self._maze_color_pos_finder \
 				.get_target_color(*self._lower_plane_color).pixel_position
 			self._lower_transform_mat = \
 				self._generate_transform_matrix(corner_poses)
-		print("[MazeManager] Transform matrix of the lower plane is generated.")
+		print("[MazePositionFinder] Transform matrix of the lower plane is generated.")
 
 	def _generate_transform_matrix(self, corner_pos_4: list):
 		"""Get a transform matrix which converts coordinates in the video stream
@@ -166,3 +169,50 @@ class MazeManager:
 			[self._maze_scale.x, self._maze_scale.y] ])
 
 		return cv2.getPerspectiveTransform(from_coordinate, to_coordinate)
+
+class MazeManager:
+	"""Manage the maze information and MazePositionFinders of team A and B
+	"""
+
+	def __init__(self, color_pos_finders: ColorPosFinderHolder):
+		"""Constructor
+
+		@param color_pos_finders The instance of class ColorPosFinderHolder
+		"""
+		maze_color_finder = color_pos_finders.get_posFinder_by_type(ColorType.MAZE_LOWER_PLANE)
+		team_a_color_finder = color_pos_finders.get_posFinder_by_type(ColorType.MAZE_CAR_TEAM_A)
+		team_b_color_finder = color_pos_finders.get_posFinder_by_type(ColorType.MAZE_CAR_TEAM_B)
+		self._maze_pos_finders = {
+			'A': MazePositionFinder(maze_color_finder, team_a_color_finder),
+			'B': MazePositionFinder(maze_color_finder, team_b_color_finder)}
+
+	def set_maze(self, scale_x, scale_y, wall_height):
+		"""Set the information of the maze to each MazePositionFinder
+
+		@param scale_x The x scale of the maze
+		@param scale_y The y scale of the maze
+		@param wall_height The height of the maze wall
+		"""
+		for maze_pos_finder in self._maze_pos_finders.values():
+			maze_pos_finder.set_maze(scale_x, scale_y, wall_height)
+
+	def set_color(self, color_bgr, \
+		old_color_type: ColorType, new_color_type: ColorType):
+		"""Set the target color to the corresponding MazePositionFinder
+
+		This method is similar to ColorManagerWidger._update_color_finder.
+
+		@param color_bgr The target color in BGR domain
+		@param old_color_type The previous color type of the target color
+		@param new_color_type The new color type of the target color
+		"""
+		if new_color_type == ColorType.MAZE_LOWER_PLANE or \
+			new_color_type == ColorType.MAZE_UPPER_PLANE:
+			for maze_pos_finder in self._maze_pos_finders.values():
+				maze_pos_finder.set_color(color_bgr, old_color_type, new_color_type)
+
+	def recognize_maze(self):
+		"""Make each MazePositionFinder to recognize the maze
+		"""
+		for maze_pos_finder in self._maze_pos_finders.values():
+			maze_pos_finder.recognize_maze()
