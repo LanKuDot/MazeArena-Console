@@ -155,7 +155,7 @@ class ColorLabel(Button):
 		_old_color_type = self._color_type
 		self._color_type = ColorType[self._selected_color_type.get()]
 		self._LED_height = float(self._entry_LED_height.get())
-		self._fn_update_color(self._color, _old_color_type, self._color_type)
+		self._fn_update_color(self._color, _old_color_type, self._color_type, self._LED_height)
 		self._close_setting_panel()
 
 	def _delete_color(self):
@@ -352,7 +352,7 @@ class ColorManagerWidget(LabelFrame):
 			new_color_label.pack(fill = X)
 
 	def _update_color(self, color_bgr, \
-		old_type: ColorType, new_type: ColorType):
+		old_type: ColorType, new_type: ColorType, LED_height = 0.0):
 		"""Assign, change, or delete the color in ColorPositionFinders and MazeManager
 
 		The action will be taken accroding to old_type and new_type.
@@ -367,9 +367,13 @@ class ColorManagerWidget(LabelFrame):
 		@param color_bgr Specify the target color in BGR domain
 		@param old_type Specify the previous type of the color_bgr
 		@param new_type Specify the new type of the color_bgr
+		@param LED_height Specify the height of the LED on the maze car
+		       (if the new_type is MAZE_CAR_TEAM_A or MAZE_CAR_TEAM_B, this value is needed.)
 		"""
-		self._maze_manager.set_color(color_bgr, old_type, new_type)
+		# Update MazeManager
+		self._maze_manager.set_color(color_bgr, old_type, new_type, LED_height)
 
+		# Update ColorPositionFinder
 		old_color_finder = self._color_pos_finders.get_posFinder_by_type(old_type)
 		new_color_finder = self._color_pos_finders.get_posFinder_by_type(new_type)
 

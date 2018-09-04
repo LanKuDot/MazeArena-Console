@@ -15,19 +15,19 @@ class CarPosition:
 	"""A data structure for the position of the maze car in the maze
 
 	@var color_bgr The LED color of the maze car in BGR domain
-	@var car_height The height of the LED on the maze car
+	@var LED_height The height of the LED on the maze car
 	@var ratio_to_wall_height The ratio of the car height to the wall height
 	@var position The position of the maze car in the maze
 	"""
 
-	def __init__(self, color_bgr, car_height):
+	def __init__(self, color_bgr, LED_height):
 		"""Constructor
 
 		@param color_bgr Specify the color of the LED on the maze car
-		@param car_height Specify the height of the LED on the maze car
+		@param LED_height Specify the height of the LED on the maze car
 		"""
 		self.color_bgr = color_bgr
-		self.car_height = car_height
+		self.LED_height = LED_height
 		self.ratio_to_wall_height = 1.0
 		self.position = None
 
@@ -89,20 +89,26 @@ class MazePositionFinder:
 		self._maze_scale = Point2D(scale_x, scale_y)
 		self._wall_height = wall_height
 
-	def set_color(self, color_bgr, \
-		old_color_type: ColorType, new_color_type: ColorType):
-		"""Set the target color in the maze
+	def add_target_color(self, color_bgr, color_type: ColorType, LED_height = 0.0):
+		"""Add a target color to the position finding list
 
-		This method is similar to ColorManagerWidger._update_color_finder.
+		Accroding the color_type:
+		- MAZE_UPPER_PLANE: The color is assigned to the
+		  MazePositionFinder._upper_plane_color
+		- MAZE_LOWER_PLANE: The color is assigned to the
+		  MazePositionFinder._lower_plane_color
+		- Others: The color is added to the MazePositionFinder._colors_to_find
 
 		@param color_bgr The target color in BGR domain
-		@param old_color_type The previous color type of the target color
-		@param new_color_type The new color type of the target color
+		@param color_type The ColorType of the target color
+		@param LED_height The height of the LED on the maze car
 		"""
-		if new_color_type == ColorType.MAZE_UPPER_PLANE:
+		if color_type == ColorType.MAZE_UPPER_PLANE:
 			self._upper_plane_color = color_bgr
-		elif new_color_type == ColorType.MAZE_LOWER_PLANE:
+		elif color_type == ColorType.MAZE_LOWER_PLANE:
 			self._lower_plane_color = color_bgr
+		else:	# Team_X
+			self._colors_to_find.append(CarPosition(color_bgr, LED_height))
 
 	def recognize_maze(self):
 		if self._upper_plane_color is None or self._lower_plane_color is None:
@@ -183,8 +189,8 @@ class MazeManager:
 		team_a_color_finder = color_pos_finders.get_posFinder_by_type(ColorType.MAZE_CAR_TEAM_A)
 		team_b_color_finder = color_pos_finders.get_posFinder_by_type(ColorType.MAZE_CAR_TEAM_B)
 		self._maze_pos_finders = {
-			'A': MazePositionFinder(maze_color_finder, team_a_color_finder),
-			'B': MazePositionFinder(maze_color_finder, team_b_color_finder)}
+			'team A': MazePositionFinder(maze_color_finder, team_a_color_finder),
+			'team B': MazePositionFinder(maze_color_finder, team_b_color_finder)}
 
 	def set_maze(self, scale_x, scale_y, wall_height):
 		"""Set the information of the maze to each MazePositionFinder
@@ -197,22 +203,29 @@ class MazeManager:
 			maze_pos_finder.set_maze(scale_x, scale_y, wall_height)
 
 	def set_color(self, color_bgr, \
-		old_color_type: ColorType, new_color_type: ColorType):
+		old_color_type: ColorType, new_color_type: ColorType, LED_height = 0.0):
 		"""Set the target color to the corresponding MazePositionFinder
 
-		This method is similar to ColorManagerWidger._update_color_finder.
+		This method is similar to ColorManagerWidger._update_color.
 
 		@param color_bgr The target color in BGR domain
 		@param old_color_type The previous color type of the target color
 		@param new_color_type The new color type of the target color
+		@param LED_height The height of the LED on the maze car
 		"""
 		if new_color_type == ColorType.MAZE_LOWER_PLANE or \
 			new_color_type == ColorType.MAZE_UPPER_PLANE:
 			for maze_pos_finder in self._maze_pos_finders.values():
-				maze_pos_finder.set_color(color_bgr, old_color_type, new_color_type)
+				maze_pos_finder.add_target_color(color_bgr, new_color_type)
+		elif new_color_type == ColorType.MAZE_CAR_TEAM_A:
+			self._maze_pos_finders['team A'] \
+				.add_target_color(color_bgr, new_color_type, LED_height)
+		elif new_color_type == ColorType.MAZE_CAR_TEAM_B:
+			self._maze_pos_finders['team B'] \
+				.add_target_color(color_bgr, new_color_type, LED_height)
 
 	def recognize_maze(self):
-		"""Make each MazePositionFinder to recognize the maze
+		"""Make every MazePositionFinder to recognize the maze
 		"""
 		for maze_pos_finder in self._maze_pos_finders.values():
 			maze_pos_finder.recognize_maze()
