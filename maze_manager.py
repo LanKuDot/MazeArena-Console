@@ -16,20 +16,30 @@ class CarPosition:
 
 	@var color_bgr The LED color of the maze car in BGR domain
 	@var LED_height The height of the LED on the maze car
-	@var ratio_to_wall_height The ratio of the car height to the wall height
+	@var ratio_to_wall_height The ratio of the LED height on the maze car
+	     to the wall height. This value will be caluclated later.
 	@var position The position of the maze car in the maze
 	"""
 
-	def __init__(self, color_bgr, LED_height):
+	def __init__(self, color_bgr, LED_height: float):
 		"""Constructor
 
 		@param color_bgr Specify the color of the LED on the maze car
-		@param LED_height Specify the height of the LED on the maze car
+		@param LED_height Specify the height of LED on the maze car
 		"""
 		self.color_bgr = color_bgr
 		self.LED_height = LED_height
 		self.ratio_to_wall_height = 1.0
 		self.position = None
+
+	def cal_ratio_to_wall_height(self, wall_height):
+		"""Calculate the ratio of LED height to the wall height of the maze
+
+		Result is stored to CarPosition.ratio_to_wall_height
+
+		@param wall_height Specify the height of the maze wall
+		"""
+		self.ratio_to_wall_height = self.LED_height / wall_height
 
 	def __eq__(self, other):
 		"""Predefined equal comparsion method
