@@ -164,8 +164,8 @@ class MazePositionFinder:
 			return None
 
 		# Sort the input coordinate to the order of
-		# (0, 0), (x, 0), (0, y), (x, y)
-		corner_pos_4.sort(key = attrgetter('y'))
+		# (0, 0), (x, 0), (0, y), (x, y), The origin is set to left-bottom corner.
+		corner_pos_4.sort(key = attrgetter('y'), reverse = True)
 		if corner_pos_4[0].x > corner_pos_4[1].x:
 			corner_pos_4[0], corner_pos_4[1] = \
 				corner_pos_4[1], corner_pos_4[0]
