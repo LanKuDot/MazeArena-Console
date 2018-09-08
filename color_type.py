@@ -14,3 +14,14 @@ class ColorType(Enum):
 	MAZE_LOWER_PLANE = 2
 	MAZE_CAR_TEAM_A = 3
 	MAZE_CAR_TEAM_B = 4
+
+	def __str__(self):
+		"""The string represenation of each value
+		"""
+		return {
+			self.NOT_DEFINED: "未指定",
+			self.MAZE_UPPER_PLANE: "迷宮上平面",
+			self.MAZE_LOWER_PLANE: "迷宮下平面",
+			self.MAZE_CAR_TEAM_A: "隊伍 A",
+			self.MAZE_CAR_TEAM_B: "隊伍 B"
+		}.get(self)
