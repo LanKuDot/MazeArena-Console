@@ -12,6 +12,7 @@ from webcam import WebCamera
 from threading import Thread
 from tkinter import *
 import cv2
+import numpy as np
 
 class ColorLabel(Button):
 	"""A button widget that manage a color
@@ -35,9 +36,9 @@ class ColorLabel(Button):
 		**options):
 		"""Constructor
 
-		The text of the button will be set to "[B, G, R]" and the background
-		color will be set to the color_bgr. The callback function of the
-		button is ColorLabel._show_setting_panel().
+		The text of the button will be set to default ColorType (ColorType.NOT_DEFINED)
+		and the background color will be set to the color_bgr.
+		The callback function of the button is ColorLabel._show_setting_panel().
 
 		@param master Specify the parent widget
 		@param color_bgr Specify the color in BGR domain
@@ -45,12 +46,13 @@ class ColorLabel(Button):
 		       color
 		@param options Other options for the Button widget
 		"""
-		super().__init__(master, text = color_bgr.__str__(), \
+		super().__init__(master, text = ColorType.NOT_DEFINED.__str__(), \
 			bg = "#%02x%02x%02x" % (color_bgr[2], color_bgr[1], color_bgr[0]), \
 			command = self._show_setting_panel, **options) # bg is in RGB domain
 		self.pack()
 
 		self._color = color_bgr
+		self._color_hsv = cv2.cvtColor(np.uint8([[color_bgr]]), cv2.COLOR_BGR2HSV)[0][0]
 		self._color_type = ColorType.NOT_DEFINED
 		self._selected_color_type = StringVar(self, ColorType.NOT_DEFINED.name)
 		self._selected_color_type.trace("w", self._toggle_entry_LED_height)
@@ -67,6 +69,8 @@ class ColorLabel(Button):
 
 		It looks like:
 		+-----------------------------+
+		| BGR: #BGR                   |
+		| HSV: #HSV                   |
 		| Color Type: [Not Defined -] |
 		| Car height: [ ] cm          |
 		|  [Delete][Confirm][Cancel]  |
@@ -78,18 +82,31 @@ class ColorLabel(Button):
 
 		self._setting_panel = Toplevel()
 		self._setting_panel.title("顏色設定")
-		self._setting_panel.geometry("%dx%d%+d%+d" % (250, 80, 100, 50))
+		self._setting_panel.geometry("%dx%d%+d%+d" % (250, 120, 100, 50))
 		# Run _close_setting_panel when the user click X on the window
 		self._setting_panel.protocol("WM_DELETE_WINDOW", self._close_setting_panel)
 
-		main_panel = Frame(self._setting_panel)
-		main_panel.pack(side = TOP, fill = X)
-		title = Label(main_panel, text = "顏色類別", anchor = W)
-		title.pack(side = LEFT)
+		# Display color information
+		label_bgr = Label(self._setting_panel, \
+			text = "BGR: ({:03d}, {:03d}, {:03d})" \
+			.format(self._color[0], self._color[1], self._color[2]), \
+			anchor = W)
+		label_bgr.pack(side = TOP, fill = X)
+		label_hsv = Label(self._setting_panel, \
+			text = "HSV: ({:03d}, {:03d}, {:03d})" \
+			.format(self._color_hsv[0], self._color_hsv[1], self._color_hsv[2]), \
+			anchor = W)
+		label_hsv.pack(side = TOP, fill = X)
+
+		color_type_panel = Frame(self._setting_panel)
+		color_type_panel.pack(side = TOP, fill = X)
+		ct_title = Label(color_type_panel, text = "顏色類別", anchor = W)
+		ct_title.pack(side = LEFT)
 		# Set display text to the type of color
 		self._selected_color_type.set(self._color_type.name)
 		color_type_list = [name for name, member in ColorType.__members__.items()]
-		om_set_color_type = OptionMenu(main_panel, self._selected_color_type, *color_type_list)
+		om_set_color_type = OptionMenu(color_type_panel, self._selected_color_type, \
+			*color_type_list)
 		om_set_color_type.pack(side = LEFT, expand = TRUE, anchor = W)
 
 		LED_height_panel = Frame(self._setting_panel)
@@ -149,11 +166,13 @@ class ColorLabel(Button):
 
 		The callback function of the confirm option in the setting window.
 		The color type selected in the setting is updated to ColorLabel._color_type
-		and the valid LED height value is updated to ColorLabel._LED_height
+		and set the button text to the selected color type.
+		The valid LED height value is updated to ColorLabel._LED_height.
 		Then invoke ColorLabel._fn_update_color() to update changes.
 		"""
 		_old_color_type = self._color_type
 		self._color_type = ColorType[self._selected_color_type.get()]
+		self.config(text = self._color_type.__str__())
 		self._LED_height = float(self._entry_LED_height.get())
 		self._fn_update_color(self._color, _old_color_type, self._color_type, self._LED_height)
 		self._close_setting_panel()
