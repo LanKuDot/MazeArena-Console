@@ -121,6 +121,16 @@ class MazePositionFinder:
 			self._colors_to_find.append(CarPosition(color_bgr, LED_height))
 
 	def recognize_maze(self):
+		"""Recognize the position of the maze and generate the transform matrix
+
+		The method uses MazePositionFinder._upper_plane_color and
+		MazePositionFinder._lower_plane_color to get the position from the
+		corresponding ColrPositionFinder. Then, invoke
+		MazeManager._generate_transform_matrix() to generate the transform matrix
+		of upper plane and lower plane. The result will be stored in both
+		MazePositionFinder._upper_transform_mat and MazePositionFinder._lower_transform_mat.
+		This method will wait until both transform matrixes are generated.
+		"""
 		if self._upper_plane_color is None or self._lower_plane_color is None:
 			print("[MazePositionFinder] The color of the upper plane or the lower plane " \
 				"has not been specified yet.")
