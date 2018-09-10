@@ -16,8 +16,6 @@ class CarPosition:
 
 	@var color_bgr The LED color of the maze car in BGR domain
 	@var LED_height The height of the LED on the maze car
-	@var ratio_to_wall_height The ratio of the LED height on the maze car
-	     to the wall height. This value will be caluclated later.
 	@var position The position of the maze car in the maze
 	"""
 
@@ -29,17 +27,7 @@ class CarPosition:
 		"""
 		self.color_bgr = color_bgr
 		self.LED_height = LED_height
-		self.ratio_to_wall_height = 1.0
 		self.position = None
-
-	def cal_ratio_to_wall_height(self, wall_height):
-		"""Calculate the ratio of LED height to the wall height of the maze
-
-		Result is stored to CarPosition.ratio_to_wall_height
-
-		@param wall_height Specify the height of the maze wall
-		"""
-		self.ratio_to_wall_height = self.LED_height / wall_height
 
 	def __eq__(self, other):
 		"""Predefined equal comparsion method
@@ -74,6 +62,9 @@ class MazePositionFinder:
 	     coordinate to the coordinate of the upper plane of the maze
 	@var _lower_transform_mat Similar to _upper_transform_mat, but for
 	     the lower plane of the maze
+	@var _colors_to_find A list of CarPosition
+	@var _ratio_to_wall_height_array An array of the ratio of LED height to the
+	     maze wall height of each color in _colors_to_find
 	"""
 
 	def __init__(self, maze_color_pos_finder: ColorPositionFinder, \
@@ -88,6 +79,7 @@ class MazePositionFinder:
 		self._upper_transform_mat = None
 		self._lower_transform_mat = None
 		self._colors_to_find = []
+		self._ratio_to_wall_height_array = []
 
 	def set_maze(self, scale_x, scale_y, wall_height):
 		"""Set the information of the maze
@@ -195,6 +187,16 @@ class MazePositionFinder:
 			[self._maze_scale.x, self._maze_scale.y] ])
 
 		return cv2.getPerspectiveTransform(from_coordinate, to_coordinate)
+
+	def _generate_ratio_to_wall_height(self):
+		"""Generate ratio to of the LED height to the maze wall height for all colors
+
+		The result will be stored to MazePositionFinder._ratio_to_wall_height_array
+		"""
+		self._ratio_to_wall_height_array.clear()
+		for i in range(len(self._colors_to_find)):
+			self._ratio_to_wall_height_array \
+				.append(self._colors_to_find[i].LED_height / self._wall_height)
 
 class MazeManager:
 	"""Manage the maze information and MazePositionFinders of team A and B
