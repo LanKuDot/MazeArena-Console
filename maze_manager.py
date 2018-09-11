@@ -10,6 +10,7 @@ from operator import attrgetter
 from point import Point2D
 from color_type import ColorType
 from color_position_finder import *
+from util.job_thread import JobThread
 
 class CarPosition:
 	"""A data structure for the position of the maze car in the maze
@@ -17,6 +18,7 @@ class CarPosition:
 	@var color_bgr The LED color of the maze car in BGR domain
 	@var LED_height The height of the LED on the maze car
 	@var position The position of the maze car in the maze
+	@var position_lock The lock for CarPosition.position
 	"""
 
 	def __init__(self, color_bgr, LED_height: float):
@@ -27,7 +29,8 @@ class CarPosition:
 		"""
 		self.color_bgr = color_bgr
 		self.LED_height = LED_height
-		self.position = None
+		self.position = Point2D(-1, -1)
+		self.position_lock = Lock()
 
 	def __eq__(self, other):
 		"""Predefined equal comparsion method
@@ -65,6 +68,7 @@ class MazePositionFinder:
 	@var _colors_to_find A list of CarPosition
 	@var _ratio_to_wall_height_array An array of the ratio of LED height to the
 	     maze wall height of each color in _colors_to_find
+	@var _recognition_thread A JobThread for recognizing the car position
 	"""
 
 	def __init__(self, maze_color_pos_finder: ColorPositionFinder, \
@@ -80,6 +84,9 @@ class MazePositionFinder:
 		self._lower_transform_mat = None
 		self._colors_to_find = []
 		self._ratio_to_wall_height_array = []
+
+		self._recognition_thread = JobThread(self._recognize_pos_in_maze, \
+			"Car position recognition")
 
 	def set_maze(self, scale_x, scale_y, wall_height):
 		"""Set the information of the maze
@@ -198,8 +205,67 @@ class MazePositionFinder:
 			self._ratio_to_wall_height_array \
 				.append(self._colors_to_find[i].LED_height / self._wall_height)
 
+	def start_recognize_car_pos(self):
+		# Generate an array og the ratio of the LED height to the maze height
+		# of all colors
+		self._generate_ratio_to_wall_height()
+		self._recognition_thread.start()
+
+	def stop_recognize_car_pos(self):
+		self._recognition_thread.stop()
+
+	def _recognize_pos_in_maze(self):
+		"""Recognize the position in the maze in the maze coordinate
+
+		The method will calculate the position of the maze car whose LED color is
+		stored at MazePositionFinder._colors_to_find.
+		Get the pixel position found in the video stream from corresponding
+		ColorPositionFinder by the LED color, and then calculate the car position
+		by MazePositionFinder._recognize_position_in_maze._get_pos().
+		The result is stored in CarPosition.postion.
+		"""
+		def _get_pos(pos_in_frame, ratio_to_wall_height) -> Point2D:
+			""" Transform the pixel position to the maze coordinate
+
+			First, transfrom the pixel position by MazePositionFinder._upper_transform_mat
+			for upper plane (wall level), and MazePositionFinder._lower_transform_mat
+			for lower plane (groud level). It will generate two coordinates,
+			pos_upper_plane and pos_lower_plane.
+			Then, get the maze coordinate by interploting these two coordinates.
+			The formula is:
+			pos_lower_plane + (pos_upper_plane - pos_lower_plane) * ratio_to_wall_height.
+
+			@param pos_in_frame Specify the position found in the video stream
+			@param ratio_to_wall_height Specify the ratio of the LED height to the wall
+			       height
+			@return A Point2D object that stores the maze position in integer
+			"""
+			pos = np.array([[[pos_in_frame.x, pos_in_frame.y]]], dtype = np.float32)
+			pos_upper_plane = cv2.perspectiveTransform(pos, self._upper_transform_mat)
+			pos_lower_plane = cv2.perspectiveTransform(pos, self._lower_transform_mat)
+			pos_in_maze = pos_lower_plane + \
+				(pos_upper_plane - pos_lower_plane) * ratio_to_wall_height
+			return Point2D(int(round(pos_in_maze[0][0][0])), \
+				int(round(pos_in_maze[0][0][1])))
+
+		# Calculate the maze position for each color
+		for i in range(len(self._colors_to_find)):
+			target_color_pos = self._color_pos_finder \
+				.get_target_color(*(self._colors_to_find[i].color_bgr))
+
+			# Hope that there is only one position found in the video stream
+			if len(target_color_pos.pixel_position) > 0:
+				carPos = _get_pos(target_color_pos.pixel_position[0], \
+					self._ratio_to_wall_height_array[i])
+
+				self._colors_to_find[i].position_lock.acquire()
+				self._colors_to_find[i].position = carPos
+				self._colors_to_find[i].position_lock.release()
+
 class MazeManager:
 	"""Manage the maze information and MazePositionFinders of team A and B
+
+	@var _maze_position_finders The container for MazePositionFinders
 	"""
 
 	def __init__(self, color_pos_finders: ColorPosFinderHolder):
@@ -251,3 +317,11 @@ class MazeManager:
 		"""
 		for maze_pos_finder in self._maze_pos_finders.values():
 			maze_pos_finder.recognize_maze()
+
+	def start_recognize_car_pos(self):
+		for maze_pos_finder in self._maze_pos_finders.values():
+			maze_pos_finder.start_recognize_car_pos()
+
+	def stop_recognize_car_pos(self):
+		for maze_pos_finder in self._maze_pos_finders.values():
+			maze_pos_finder.stop_recognize_car_pos()

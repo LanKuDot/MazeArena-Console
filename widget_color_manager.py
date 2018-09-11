@@ -436,12 +436,14 @@ class ColorManagerWidget(LabelFrame):
 		if not self._color_pos_finders.car_team_a.is_recognition_thread_started():
 			self._color_pos_finders.car_team_a.start_recognition_thread()
 			self._color_pos_finders.car_team_b.start_recognition_thread()
+			self._maze_manager.start_recognize_car_pos()
 			self._option_panel.children["btn_recognize_maze_cars"].config(text = "停止辨識位置")
 			self._option_panel.children["btn_show_result_img"].config(state = NORMAL)
 		# Stop color recognition
 		else:
 			self._color_pos_finders.car_team_a.stop_recognition_thread()
 			self._color_pos_finders.car_team_b.stop_recognition_thread()
+			self._maze_manager.stop_recognize_car_pos()
 			self._option_panel.children["btn_recognize_maze_cars"].config(text = "辨識車輛位置")
 			self._option_panel.children["btn_show_result_img"].config(state = DISABLED)
 
