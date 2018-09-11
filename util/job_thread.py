@@ -1,13 +1,20 @@
 from threading import Thread
+from time import sleep
 
 class JobThread():
-	def __init__(self, target, name = ""):
+	def __init__(self, target, name = "", call_every_sec = 0.0):
 		self._fn_target = target
 		self._is_thread_started = False
 		# If name is not specified, set name to the target func name
 		if not name:
 			name = target.__name__
-		self._thread = Thread(target = self._thread_loop, name = name)
+
+		if call_every_sec <= 0.0:
+			self._thread = Thread(target = self._thread_loop, name = name)
+		else:
+			self._thread = Thread( \
+				target = lambda: self._thread_loop_every_sec(call_every_sec), \
+				name = name)
 
 	def start(self):
 		if self._thread.is_alive():
@@ -32,3 +39,8 @@ class JobThread():
 	def _thread_loop(self):
 		while self._is_thread_started:
 			self._fn_target()
+
+	def _thread_loop_every_sec(self, timestep):
+		while self._is_thread_started:
+			self._fn_target()
+			sleep(timestep)

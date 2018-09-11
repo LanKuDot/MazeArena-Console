@@ -86,7 +86,7 @@ class MazePositionFinder:
 		self._ratio_to_wall_height_array = []
 
 		self._recognition_thread = JobThread(self._recognize_pos_in_maze, \
-			"Car position recognition")
+			"Car position recognition", 0.01)
 
 	def set_maze(self, scale_x, scale_y, wall_height):
 		"""Set the information of the maze
