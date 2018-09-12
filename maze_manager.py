@@ -120,11 +120,11 @@ class MazePositionFinder:
 
 		if color_type == ColorType.MAZE_UPPER_PLANE:
 			self._upper_plane_color = color_bgr
-			print("[MazePosFinder] Set the color of upper plane to ({0}, {1}, {2})." \
+			print("[MazePosFinder] Set the color of upper plane to ({0}, {1}, {2})" \
 				.format(*color_bgr))
 		elif color_type == ColorType.MAZE_LOWER_PLANE:
 			self._lower_plane_color = color_bgr
-			print("[MazePosFinder] Set the color of lower plane to ({0}, {1}, {2})." \
+			print("[MazePosFinder] Set the color of lower plane to ({0}, {1}, {2})" \
 				.format(*color_bgr))
 		else:	# Team_X
 			where = -1
@@ -132,11 +132,39 @@ class MazePositionFinder:
 				where = self._colors_to_find.index(CarPosition(color_bgr, 0))
 			except ValueError:
 				self._colors_to_find.append(CarPosition(color_bgr, LED_height))
-				print("[MazePosFinder] New color added: ({0}, {1}, {2})." \
+				print("[MazePosFinder] New color added: ({0}, {1}, {2})" \
 					.format(*color_bgr))
 			else:
 				self._colors_to_find[where].LED_height = LED_height
-				print("[MazePosFinder] LED height of color ({0}, {1}, {2}) is updated." \
+				print("[MazePosFinder] LED height of color ({0}, {1}, {2}) is updated" \
+					.format(*color_bgr))
+
+	def delete_target_color(self, color_bgr, color_type: ColorType):
+		"""Delete the target color from the MazePositionFinder._colors_to_find
+
+		@param color_bgr Specify the color to be removed in BGR domain
+		@param color_type Specify the type of the color
+		"""
+		if self._recognition_thread.is_running:
+			print("[MazePosFinder] Cannot update colors while recognizing.")
+			return
+
+		if color_type == ColorType.MAZE_UPPER_PLANE:
+			self._upper_plane_color = None
+			print("[MazePosFinder] Delete the color of upper plane")
+		elif color_type == ColorType.MAZE_LOWER_PLANE:
+			self._lower_plane_color = None
+			print("[MazePosFinder] Delete the color of lower plane")
+		else:
+			where = -1
+			try:
+				where = self._colors_to_find.index(CarPosition(color_bgr, 0))
+			except ValueError:
+				print("[MazePosFinder] Color ({0}, {1}, {2}) is not existing" \
+					.format(*color_bgr))
+			else:
+				self._colors_to_find.remove(where)
+				print("[MazePosFinder] Color ({0}, {1}, {2}) is removed" \
 					.format(*color_bgr))
 
 	def recognize_maze(self):
@@ -331,6 +359,17 @@ class MazeManager:
 		elif new_color_type == ColorType.MAZE_CAR_TEAM_B:
 			self._maze_pos_finders['team B'] \
 				.add_target_color(color_bgr, new_color_type, LED_height)
+
+		if old_color_type == ColorType.MAZE_LOWER_PLANE or \
+			old_color_type == ColorType.MAZE_UPPER_PLANE:
+			for maze_pos_finder in self._maze_pos_finders.values():
+				maze_pos_finder.delete_target_color(color_bgr, old_color_type)
+		elif old_color_type == ColorType.MAZE_CAR_TEAM_A:
+			self._maze_pos_finders['team A'] \
+				.delete_target_color(color_bgr, old_color_type)
+		elif old_color_type == ColorType.MAZE_CAR_TEAM_B:
+			self._maze_pos_finders['team B'] \
+				.delete_target_color(color_bgr, old_color_type)
 
 	def recognize_maze(self):
 		"""Make every MazePositionFinder to recognize the maze
