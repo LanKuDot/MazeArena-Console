@@ -107,17 +107,37 @@ class MazePositionFinder:
 		- MAZE_LOWER_PLANE: The color is assigned to the
 		  MazePositionFinder._lower_plane_color
 		- Others: The color is added to the MazePositionFinder._colors_to_find
+		  if it is not in there. Otherwise, update the CarPosition.LED_height
+		  value.
 
 		@param color_bgr The target color in BGR domain
 		@param color_type The ColorType of the target color
 		@param LED_height The height of the LED on the maze car
 		"""
+		if self._recognition_thread.is_running:
+			print("[MazePosFinder] Cannot update colors while recognizing.")
+			return
+
 		if color_type == ColorType.MAZE_UPPER_PLANE:
 			self._upper_plane_color = color_bgr
+			print("[MazePosFinder] Set the color of upper plane to ({0}, {1}, {2})." \
+				.format(*color_bgr))
 		elif color_type == ColorType.MAZE_LOWER_PLANE:
 			self._lower_plane_color = color_bgr
+			print("[MazePosFinder] Set the color of lower plane to ({0}, {1}, {2})." \
+				.format(*color_bgr))
 		else:	# Team_X
-			self._colors_to_find.append(CarPosition(color_bgr, LED_height))
+			where = -1
+			try:
+				where = self._colors_to_find.index(CarPosition(color_bgr, 0))
+			except ValueError:
+				self._colors_to_find.append(CarPosition(color_bgr, LED_height))
+				print("[MazePosFinder] New color added: ({0}, {1}, {2})." \
+					.format(*color_bgr))
+			else:
+				self._colors_to_find[where].LED_height = LED_height
+				print("[MazePosFinder] LED height of color ({0}, {1}, {2}) is updated." \
+					.format(*color_bgr))
 
 	def recognize_maze(self):
 		"""Recognize the position of the maze and generate the transform matrix
