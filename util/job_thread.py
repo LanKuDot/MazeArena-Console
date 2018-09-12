@@ -41,6 +41,12 @@ class JobThread():
 				target = lambda: self._thread_loop_every_sec(call_every_sec), \
 				name = name)
 
+	@property
+	def is_running(self):
+		"""Is the job thread running?
+		"""
+		return self._is_thread_started
+
 	def start(self):
 		"""Start the job thread
 
