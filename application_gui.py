@@ -10,6 +10,7 @@ from webcam import WebCamera
 from color_position_finder import *
 from maze_manager import MazeManager
 from widget_color_manager import ColorManagerWidget
+from widget_server_manager import WidgetServerManager
 
 ### Workers ###
 _camera = WebCamera(src = 0, width = 1080, height = 720)
@@ -40,4 +41,8 @@ def _setup_gui(main_window):
 	color_manager = ColorManagerWidget(main_window, \
 		_camera, _color_pos_finders, _maze_manager, \
 		name = "color_manager")
-	color_manager.pack()
+	color_manager.pack(side = tk.LEFT)
+	server_manager = WidgetServerManager(main_window, \
+		name = "server_manager")
+	server_manager.pack(side = tk.RIGHT, expand = tk.Y, \
+		anchor = tk.N)
