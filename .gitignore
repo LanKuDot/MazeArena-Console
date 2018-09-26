@@ -2,5 +2,5 @@
 *.sln
 *.swp
 __pycache__/*
-util/__pycache__
+*/__pycache__
 MazeArena-Console/*
