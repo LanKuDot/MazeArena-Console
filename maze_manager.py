@@ -178,6 +178,34 @@ class MazePositionFinder:
 				print("[MazePosFinder] Color ({0}, {1}, {2}) is removed" \
 					.format(*color_bgr))
 
+	def get_pos_in_maze(self, color_bgr) -> Point2D:
+		"""Get the maze position of the specified color
+
+		@param color_bgr Specify the color in BGR domain
+		@return The maze position found in the maze
+		"""
+		try:
+			where = self._colors_to_find.index(CarPosition(color_bgr, 0))
+		except ValueError:
+			return None
+		else:
+			self._colors_to_find_lock.acquire()
+			car_pos = _colors_to_find[where].position
+			self._colors_to_find_lock.release()
+			return car_pos
+
+	def get_all_target_colors(self) -> list:
+		"""Get a copy of all the target colors and their maze positions
+
+		@return A copy of MazePositionFinder._colors_to_find
+		"""
+		target_colors = []
+		self._colors_to_find_lock.acquire()
+		for i in range(len(self._colors_to_find)):
+			target_colors.append(self._colors_to_find[i].copy())
+		self._colors_to_find_lock.release()
+		return target_colors
+
 	def recognize_maze(self):
 		"""Recognize the position of the maze and generate the transform matrix
 
@@ -389,6 +417,27 @@ class MazeManager:
 		elif old_color_type == ColorType.MAZE_CAR_TEAM_B:
 			self._maze_pos_finders['team B'] \
 				.delete_target_color(color_bgr, old_color_type)
+
+	def get_car_pos_in_maze(self, color_bgr, team) -> Point2D:
+		"""Get the position in the maze of the spcified maze car
+
+		@param color_bgr Specify the LED color of the maze car in BGR domain
+		@param team Specify the team of the maze car. Should be 'A' or 'B'
+		@return The position found in the maze
+		@exception KeyError If the specified team name is neither 'A' nor 'B'
+		"""
+		return self._maze_pos_finders["team " + team] \
+			.get_pos_in_maze(color_bgr)
+
+	def get_team_car_pos(self, team):
+		"""Get the position of all the maze cars in a team
+
+		@param team Specify the team of the maze cars. Should be 'A' or 'B'
+		@return A list of CarPosition objects of the team
+		@exception KeyError If the specified team name is neither 'A' nor 'B'
+		"""
+		return self._maze_pos_finders["team " + team] \
+			.get_all_target_colors()
 
 	def recognize_maze(self):
 		"""Make every MazePositionFinder to recognize the maze
