@@ -44,6 +44,16 @@ class CarPosition:
 	def __ne__(self, other):
 		return not self.__eq__(other)
 
+	def copy(self):
+		"""Return a clone of itself
+
+		@return A clone of CarPosition object
+		"""
+		new_item = CarPosition(self.color_bgr.copy(), self.LED_height)
+		# namedtuple cannot be modified
+		new_item.position = self.position
+		return new_item
+
 class MazePositionFinder:
 	"""Find the position of the colors in the maze
 
