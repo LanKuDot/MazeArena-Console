@@ -6,6 +6,7 @@ such as the size of the maze, the position of the maze cars.
 import cv2
 import numpy as np
 from operator import attrgetter
+from threading import Lock
 
 from point import Point2D
 from color_type import ColorType
@@ -18,7 +19,6 @@ class CarPosition:
 	@var color_bgr The LED color of the maze car in BGR domain
 	@var LED_height The height of the LED on the maze car
 	@var position The position of the maze car in the maze
-	@var position_lock The lock for CarPosition.position
 	"""
 
 	def __init__(self, color_bgr, LED_height: float):
@@ -30,7 +30,6 @@ class CarPosition:
 		self.color_bgr = color_bgr
 		self.LED_height = LED_height
 		self.position = Point2D(-1, -1)
-		self.position_lock = Lock()
 
 	def __eq__(self, other):
 		"""Predefined equal comparsion method
@@ -66,6 +65,7 @@ class MazePositionFinder:
 	@var _lower_transform_mat Similar to _upper_transform_mat, but for
 	     the lower plane of the maze
 	@var _colors_to_find A list of CarPosition
+	@var _colors_to_find_lock A lock for accessing _colors_to_find
 	@var _ratio_to_wall_height_array An array of the ratio of LED height to the
 	     maze wall height of each color in _colors_to_find
 	@var _recognition_thread A JobThread for recognizing the car position
@@ -83,6 +83,7 @@ class MazePositionFinder:
 		self._upper_transform_mat = None
 		self._lower_transform_mat = None
 		self._colors_to_find = []
+		self._colors_to_find_lock = Lock()
 		self._ratio_to_wall_height_array = []
 
 		self._recognition_thread = JobThread(self._recognize_pos_in_maze, \
@@ -297,18 +298,26 @@ class MazePositionFinder:
 				int(round(pos_in_maze[0][0][1])))
 
 		# Calculate the maze position for each color
+		car_pos = []
 		for i in range(len(self._colors_to_find)):
 			target_color_pos = self._color_pos_finder \
 				.get_target_color(*(self._colors_to_find[i].color_bgr))
 
 			# Hope that there is only one position found in the video stream
 			if len(target_color_pos.pixel_position) > 0:
-				carPos = _get_pos(target_color_pos.pixel_position[0], \
-					self._ratio_to_wall_height_array[i])
+				car_pos.append(_get_pos(target_color_pos.pixel_position[0], \
+					self._ratio_to_wall_height_array[i]))
+			# If there is no position found in the video stream,
+			# remain the last result
+			else:
+				car_pos.append(self._colors_to_find[i].position)
 
-				self._colors_to_find[i].position_lock.acquire()
-				self._colors_to_find[i].position = carPos
-				self._colors_to_find[i].position_lock.release()
+		# Update the result
+		self._colors_to_find_lock.acquire()
+		for i in range(len(car_pos)):
+			self._colors_to_find[i].position = car_pos[i]
+		self._colors_to_find_lock.release()
+
 
 class MazeManager:
 	"""Manage the maze information and MazePositionFinders of team A and B
