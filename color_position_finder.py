@@ -5,7 +5,7 @@ Find the position of the specified color in the image.
 import cv2
 import imutils
 import numpy as np
-from collections import namedtuple
+from enum import Enum, auto
 from threading import Thread, Lock
 
 from point import Point2D
@@ -259,38 +259,105 @@ class ColorPositionFinder:
 
 		print("[ColorPosFinder] The color recognition thread is stopped.")
 
-class ColorPosFinderHolder(namedtuple('ColorPosFinderHolder', \
-	['maze', 'car_team_a', 'car_team_b'])):
-	"""A data structure for holding seperate ColorPositionFinders
+class ColorPosFinderType(Enum):
+	"""An enum defines different types of ColorPositionFinder
 
-	There are three ColorPositionFinders which are for maze,
-	for car team A, and for car team B. The colors are assigned to related
-	ColorPositionFinders by their ColorType:
-	* maze: Store the colors that mark the maze
-	* car team A: Store the color of cars in team A
-	* car team B: Store the color of cars in team B
+	It is similar to ColorType, but the MAZE_UPPER_PLANE and MAZE_LOWER_PLANE
+	are both belongs to MAZE.
 
-	@sa ColorType
+	@sa ColorPosManager.set_color()
 	"""
-	__slots__ = ()
 
-	def get_posFinder_by_type(self, color_type: ColorType):
-		"""Get the corresponding ColorPositionFinder by the type of the color
+	MAZE = auto()
+	CAR_TEAM_A = auto()	
+	CAR_TEAM_B = auto()
 
-		The mapping is shown as below:
-		* NOT_DEFINED -> None
-		* MAZE_LOWER_PLANE -> ColorPosFinderHolder.maze
-		* MAZE_UPPER_PLANE -> ColorPosFinderHolder.maze
-		* MAZE_CAR_TEAM_A -> ColorPosFinderHolder.car_team_a
-		* MAZE_CAR_TEAM_B -> ColorPosFinderHolder.car_team_b
+	@staticmethod
+	def get_color_pos_type(color_type: ColorType):
+		"""Get the ColorPosFinderType by ColorType
 
-		@param color_type The type of the color
-		@return The corresponding ColorPositionFinder. None if the color type
-			    is NOT_DEFINED or not existing.
+		The mapping of ColorType to the ColorPosFinderType:
+		* MAZE_UPPER_PLANE -> MAZE
+		* MAZE_LOWER_PLANE -> MAZE
+		* MAZE_CAR_TEAM_A -> CAR_TEAM_A
+		* MAZE_CAR_TEAM_B -> CAR_TEAM_B
 		"""
 		return {
-			ColorType.MAZE_LOWER_PLANE: self.maze,
-			ColorType.MAZE_UPPER_PLANE: self.maze,
-			ColorType.MAZE_CAR_TEAM_A:  self.car_team_a,
-			ColorType.MAZE_CAR_TEAM_B:  self.car_team_b
+			ColorType.MAZE_LOWER_PLANE: ColorPosFinderType.MAZE,
+			ColorType.MAZE_UPPER_PLANE: ColorPosFinderType.MAZE,
+			ColorType.MAZE_CAR_TEAM_A: ColorPosFinderType.CAR_TEAM_A,
+			ColorType.MAZE_CAR_TEAM_B: ColorPosFinderType.CAR_TEAM_B
 		}.get(color_type)
+
+class ColorPosManager:
+	"""Manage the ColorPositionFinders and provide accessing interface.
+
+	@var _color_pos_finders A dict contains name-ColorPositionFinder pairs
+	"""
+
+	def __init__(self, camera):
+		"""Constructor
+
+		@param camera Specify the WebCam object
+		"""
+		self._is_car_color_recognition_started = False
+		self._color_pos_finders = {
+			ColorPosFinderType.MAZE: ColorPositionFinder(camera),
+			ColorPosFinderType.CAR_TEAM_A: ColorPositionFinder(camera),
+			ColorPosFinderType.CAR_TEAM_B: ColorPositionFinder(camera)
+		}
+
+	@property
+	def is_car_color_recognition_started(self):
+		return self._is_car_color_recognition_started
+
+	def get_finder(self, finder_type: ColorPosFinderType) -> ColorPositionFinder:
+		"""Get the ColorPositionFinder by the ColorPosFinderType
+
+		@param finder_type One of ColorPosFinderType
+		@return The corresponding ColorPositionFinder
+		"""
+		return self._color_pos_finders[finder_type]
+
+	def set_color(self, color_bgr, old_type: ColorType, new_type: ColorType):
+		"""Set the color to the specific ColorPositionFinder accroding to its ColorType
+
+		@param color_bgr Specify the target color in BGR domain
+		@param old_type Specify the previous type of the color_bgr
+		@param new_type Specify the new type of the color_bgr
+		"""
+		old_finder = ColorPosFinderType.get_color_pos_type(old_type)
+		new_finder = ColorPosFinderType.get_color_pos_type(new_type)
+
+		if old_finder == new_finder:
+			return
+		if old_finder is not None:
+			self._color_pos_finders[old_finder].delete_target_color(*color_bgr)
+		if new_finder is not None:
+			self._color_pos_finders[new_finder].add_target_color(*color_bgr)
+
+	def start_maze_color_recognition(self):
+		"""Start the recognition thread of the ColorPositionFinder of type MAZE
+		"""
+		self._color_pos_finders[ColorPosFinderType.MAZE].start_recognition_thread()
+
+	def stop_maze_color_recognition(self):
+		"""Stop the recognition thread of the ColorPositionFinder of type MAZE
+		"""
+		self._color_pos_finders[ColorPosFinderType.MAZE].stop_recognition_thread()
+
+	def start_car_color_recognition(self):
+		"""Start the recognition thread of the ColorPositionFinders of car colors
+		"""
+		for finder_type in self._color_pos_finders.keys():
+			if finder_type is not ColorPosFinderType.MAZE:
+				self._color_pos_finders[finder_type].start_recognition_thread()
+		self._is_car_color_recognition_started = True
+
+	def stop_car_color_recognition(self):
+		"""Stop the recognition thread of the ColorPositionFinders of car colors
+		"""
+		for finder_type in self._color_pos_finders.keys():
+			if finder_type is not ColorPosFinderType.MAZE:
+				self._color_pos_finders[finder_type].stop_recognition_thread()
+		self._is_car_color_recognition_started = False

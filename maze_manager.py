@@ -360,17 +360,17 @@ class MazePositionFinder:
 class MazeManager:
 	"""Manage the maze information and MazePositionFinders of team A and B
 
-	@var _maze_position_finders The container for MazePositionFinders
+	@var _maze_pos_finders The container for MazePositionFinders
 	"""
 
-	def __init__(self, color_pos_finders: ColorPosFinderHolder):
+	def __init__(self, color_pos_manager: ColorPosManager):
 		"""Constructor
 
-		@param color_pos_finders The instance of class ColorPosFinderHolder
+		@param color_pos_manager The instance of class ColorPosManager
 		"""
-		maze_color_finder = color_pos_finders.get_posFinder_by_type(ColorType.MAZE_LOWER_PLANE)
-		team_a_color_finder = color_pos_finders.get_posFinder_by_type(ColorType.MAZE_CAR_TEAM_A)
-		team_b_color_finder = color_pos_finders.get_posFinder_by_type(ColorType.MAZE_CAR_TEAM_B)
+		maze_color_finder = color_pos_manager.get_finder(ColorPosFinderType.MAZE)
+		team_a_color_finder = color_pos_manager.get_finder(ColorPosFinderType.CAR_TEAM_A)
+		team_b_color_finder = color_pos_manager.get_finder(ColorPosFinderType.CAR_TEAM_B)
 		self._maze_pos_finders = {
 			'team A': MazePositionFinder(maze_color_finder, team_a_color_finder),
 			'team B': MazePositionFinder(maze_color_finder, team_b_color_finder)}

@@ -14,12 +14,8 @@ from widget_server_manager import WidgetServerManager
 
 ### Workers ###
 _camera = WebCamera(src = 0, width = 1080, height = 720)
-# Each for maze, car_team_a, car_team_b
-_color_pos_finders = ColorPosFinderHolder( \
-	ColorPositionFinder(_camera), \
-	ColorPositionFinder(_camera), \
-	ColorPositionFinder(_camera))
-_maze_manager = MazeManager(_color_pos_finders)
+_color_pos_manager = ColorPosManager(_camera)
+_maze_manager = MazeManager(_color_pos_manager)
 
 def start_gui():
 	"""Start the gui
@@ -39,7 +35,7 @@ def _setup_gui(main_window):
 	@param main_window The main window of the application
 	"""
 	color_manager = ColorManagerWidget(main_window, \
-		_camera, _color_pos_finders, _maze_manager, \
+		_camera, _color_pos_manager, _maze_manager, \
 		name = "color_manager")
 	color_manager.pack(side = tk.LEFT)
 	server_manager = WidgetServerManager(main_window, \
