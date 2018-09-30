@@ -3,7 +3,7 @@ The widget for displaying the status of the maze.
 And manage the colors to be found in the maze.
 """
 
-from color_type import ColorType
+from color_type import *
 from color_position_finder import *
 from util.number_entry import *
 from maze_manager import MazeManager
@@ -493,9 +493,9 @@ class ColorManagerWidget(LabelFrame):
 					cv2.circle(self._frame, (posFound[i].x, posFound[i].y), \
 						5, marking_color, -1)
 
-		_mark_dots(self._color_pos_manager.get_finder(ColorPosFinderType.MAZE), \
+		_mark_dots(self._color_pos_manager.get_finder(PosFinderType.MAZE), \
 			(0, 0, 150))
-		_mark_dots(self._color_pos_manager.get_finder(ColorPosFinderType.CAR_TEAM_A), \
+		_mark_dots(self._color_pos_manager.get_finder(PosFinderType.CAR_TEAM_A), \
 			(0, 150, 0))
-		_mark_dots(self._color_pos_manager.get_finder(ColorPosFinderType.CAR_TEAM_B), \
+		_mark_dots(self._color_pos_manager.get_finder(PosFinderType.CAR_TEAM_B), \
 			(150, 0, 0))

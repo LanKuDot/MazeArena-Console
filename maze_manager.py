@@ -9,7 +9,7 @@ from operator import attrgetter
 from threading import Lock
 
 from point import Point2D
-from color_type import ColorType
+from color_type import *
 from color_position_finder import *
 from util.job_thread import JobThread
 
@@ -368,9 +368,9 @@ class MazeManager:
 
 		@param color_pos_manager The instance of class ColorPosManager
 		"""
-		maze_color_finder = color_pos_manager.get_finder(ColorPosFinderType.MAZE)
-		team_a_color_finder = color_pos_manager.get_finder(ColorPosFinderType.CAR_TEAM_A)
-		team_b_color_finder = color_pos_manager.get_finder(ColorPosFinderType.CAR_TEAM_B)
+		maze_color_finder = color_pos_manager.get_finder(PosFinderType.MAZE)
+		team_a_color_finder = color_pos_manager.get_finder(PosFinderType.CAR_TEAM_A)
+		team_b_color_finder = color_pos_manager.get_finder(PosFinderType.CAR_TEAM_B)
 		self._maze_pos_finders = {
 			'team A': MazePositionFinder(maze_color_finder, team_a_color_finder),
 			'team B': MazePositionFinder(maze_color_finder, team_b_color_finder)}

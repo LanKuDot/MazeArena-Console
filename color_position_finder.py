@@ -5,11 +5,10 @@ Find the position of the specified color in the image.
 import cv2
 import imutils
 import numpy as np
-from enum import Enum, auto
 from threading import Thread, Lock
 
 from point import Point2D
-from color_type import ColorType
+from color_type import *
 
 class ColorPosition:
 	"""Data structure storing the position of the color found in the frame
@@ -259,36 +258,6 @@ class ColorPositionFinder:
 
 		print("[ColorPosFinder] The color recognition thread is stopped.")
 
-class ColorPosFinderType(Enum):
-	"""An enum defines different types of ColorPositionFinder
-
-	It is similar to ColorType, but the MAZE_UPPER_PLANE and MAZE_LOWER_PLANE
-	are both belongs to MAZE.
-
-	@sa ColorPosManager.set_color()
-	"""
-
-	MAZE = auto()
-	CAR_TEAM_A = auto()	
-	CAR_TEAM_B = auto()
-
-	@staticmethod
-	def get_color_pos_type(color_type: ColorType):
-		"""Get the ColorPosFinderType by ColorType
-
-		The mapping of ColorType to the ColorPosFinderType:
-		* MAZE_UPPER_PLANE -> MAZE
-		* MAZE_LOWER_PLANE -> MAZE
-		* MAZE_CAR_TEAM_A -> CAR_TEAM_A
-		* MAZE_CAR_TEAM_B -> CAR_TEAM_B
-		"""
-		return {
-			ColorType.MAZE_LOWER_PLANE: ColorPosFinderType.MAZE,
-			ColorType.MAZE_UPPER_PLANE: ColorPosFinderType.MAZE,
-			ColorType.MAZE_CAR_TEAM_A: ColorPosFinderType.CAR_TEAM_A,
-			ColorType.MAZE_CAR_TEAM_B: ColorPosFinderType.CAR_TEAM_B
-		}.get(color_type)
-
 class ColorPosManager:
 	"""Manage the ColorPositionFinders and provide accessing interface.
 
@@ -302,19 +271,19 @@ class ColorPosManager:
 		"""
 		self._is_car_color_recognition_started = False
 		self._color_pos_finders = {
-			ColorPosFinderType.MAZE: ColorPositionFinder(camera),
-			ColorPosFinderType.CAR_TEAM_A: ColorPositionFinder(camera),
-			ColorPosFinderType.CAR_TEAM_B: ColorPositionFinder(camera)
+			PosFinderType.MAZE: ColorPositionFinder(camera),
+			PosFinderType.CAR_TEAM_A: ColorPositionFinder(camera),
+			PosFinderType.CAR_TEAM_B: ColorPositionFinder(camera)
 		}
 
 	@property
 	def is_car_color_recognition_started(self):
 		return self._is_car_color_recognition_started
 
-	def get_finder(self, finder_type: ColorPosFinderType) -> ColorPositionFinder:
-		"""Get the ColorPositionFinder by the ColorPosFinderType
+	def get_finder(self, finder_type: PosFinderType) -> ColorPositionFinder:
+		"""Get the ColorPositionFinder by the PosFinderType
 
-		@param finder_type One of ColorPosFinderType
+		@param finder_type One of PosFinderType
 		@return The corresponding ColorPositionFinder
 		"""
 		return self._color_pos_finders[finder_type]
@@ -326,8 +295,8 @@ class ColorPosManager:
 		@param old_type Specify the previous type of the color_bgr
 		@param new_type Specify the new type of the color_bgr
 		"""
-		old_finder = ColorPosFinderType.get_color_pos_type(old_type)
-		new_finder = ColorPosFinderType.get_color_pos_type(new_type)
+		old_finder = PosFinderType.get_finder_type(old_type)
+		new_finder = PosFinderType.get_finder_type(new_type)
 
 		if old_finder == new_finder:
 			return
@@ -339,18 +308,18 @@ class ColorPosManager:
 	def start_maze_color_recognition(self):
 		"""Start the recognition thread of the ColorPositionFinder of type MAZE
 		"""
-		self._color_pos_finders[ColorPosFinderType.MAZE].start_recognition_thread()
+		self._color_pos_finders[PosFinderType.MAZE].start_recognition_thread()
 
 	def stop_maze_color_recognition(self):
 		"""Stop the recognition thread of the ColorPositionFinder of type MAZE
 		"""
-		self._color_pos_finders[ColorPosFinderType.MAZE].stop_recognition_thread()
+		self._color_pos_finders[PosFinderType.MAZE].stop_recognition_thread()
 
 	def start_car_color_recognition(self):
 		"""Start the recognition thread of the ColorPositionFinders of car colors
 		"""
 		for finder_type in self._color_pos_finders.keys():
-			if finder_type is not ColorPosFinderType.MAZE:
+			if finder_type is not PosFinderType.MAZE:
 				self._color_pos_finders[finder_type].start_recognition_thread()
 		self._is_car_color_recognition_started = True
 
@@ -358,6 +327,6 @@ class ColorPosManager:
 		"""Stop the recognition thread of the ColorPositionFinders of car colors
 		"""
 		for finder_type in self._color_pos_finders.keys():
-			if finder_type is not ColorPosFinderType.MAZE:
+			if finder_type is not PosFinderType.MAZE:
 				self._color_pos_finders[finder_type].stop_recognition_thread()
 		self._is_car_color_recognition_started = False
