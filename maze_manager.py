@@ -174,7 +174,7 @@ class MazePositionFinder:
 				print("[MazePosFinder] Color ({0}, {1}, {2}) is not existing" \
 					.format(*color_bgr))
 			else:
-				self._colors_to_find.remove(where)
+				self._colors_to_find.remove(self._colors_to_find[where])
 				print("[MazePosFinder] Color ({0}, {1}, {2}) is removed" \
 					.format(*color_bgr))
 
