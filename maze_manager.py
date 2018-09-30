@@ -356,7 +356,6 @@ class MazePositionFinder:
 			self._colors_to_find[i].position = car_pos[i]
 		self._colors_to_find_lock.release()
 
-
 class MazeManager:
 	"""Manage the maze information and MazePositionFinders of team A and B
 
@@ -372,8 +371,9 @@ class MazeManager:
 		team_a_color_finder = color_pos_manager.get_finder(PosFinderType.CAR_TEAM_A)
 		team_b_color_finder = color_pos_manager.get_finder(PosFinderType.CAR_TEAM_B)
 		self._maze_pos_finders = {
-			'team A': MazePositionFinder(maze_color_finder, team_a_color_finder),
-			'team B': MazePositionFinder(maze_color_finder, team_b_color_finder)}
+			PosFinderType.CAR_TEAM_A: MazePositionFinder(maze_color_finder, team_a_color_finder),
+			PosFinderType.CAR_TEAM_B: MazePositionFinder(maze_color_finder, team_b_color_finder)
+		}
 
 	def set_maze(self, scale_x, scale_y, wall_height):
 		"""Set the information of the maze to each MazePositionFinder
@@ -396,51 +396,55 @@ class MazeManager:
 		@param new_color_type The new color type of the target color
 		@param LED_height The height of the LED on the maze car
 		"""
-		if new_color_type == ColorType.MAZE_LOWER_PLANE or \
-			new_color_type == ColorType.MAZE_UPPER_PLANE:
+		old_finder = PosFinderType.get_finder_type(old_color_type)
+		new_finder = PosFinderType.get_finder_type(new_color_type)
+
+		if new_finder == PosFinderType.MAZE:
 			for maze_pos_finder in self._maze_pos_finders.values():
 				maze_pos_finder.add_target_color(color_bgr, new_color_type)
-		elif new_color_type == ColorType.MAZE_CAR_TEAM_A:
-			self._maze_pos_finders['team A'] \
-				.add_target_color(color_bgr, new_color_type, LED_height)
-		elif new_color_type == ColorType.MAZE_CAR_TEAM_B:
-			self._maze_pos_finders['team B'] \
+		elif new_finder is not None:
+			self._maze_pos_finders[new_finder] \
 				.add_target_color(color_bgr, new_color_type, LED_height)
 
+		# Avoid deleting the color from the same finder
 		if new_color_type == old_color_type:
 			return
 
-		if old_color_type == ColorType.MAZE_LOWER_PLANE or \
-			old_color_type == ColorType.MAZE_UPPER_PLANE:
+		if old_finder == PosFinderType.MAZE:
 			for maze_pos_finder in self._maze_pos_finders.values():
 				maze_pos_finder.delete_target_color(color_bgr, old_color_type)
-		elif old_color_type == ColorType.MAZE_CAR_TEAM_A:
-			self._maze_pos_finders['team A'] \
+		elif old_finder is not None:
+			self._maze_pos_finders[old_finder] \
 				.delete_target_color(color_bgr, old_color_type)
-		elif old_color_type == ColorType.MAZE_CAR_TEAM_B:
-			self._maze_pos_finders['team B'] \
-				.delete_target_color(color_bgr, old_color_type)
+
+	def _get_finder_by_team_name(self, team) -> MazePositionFinder:
+		"""Get the MazePositionFinder by the name of the team
+
+		@param team Specify the name of the team. Should be "A" or "B".
+		"""
+		return {
+			"A": self._maze_pos_finders[PosFinderType.CAR_TEAM_A],
+			"B": self._maze_pos_finders[PosFinderType.CAR_TEAM_B]
+		}.get(team)
 
 	def get_car_pos_in_maze(self, color_bgr, team) -> Point2D:
 		"""Get the position in the maze of the spcified maze car
 
 		@param color_bgr Specify the LED color of the maze car in BGR domain
-		@param team Specify the team of the maze car. Should be 'A' or 'B'
+		@param team Specify the team of the maze car. Should be "A" or "B"
 		@return The position found in the maze
-		@exception KeyError If the specified team name is neither 'A' nor 'B'
 		"""
-		return self._maze_pos_finders["team " + team] \
-			.get_pos_in_maze(color_bgr)
+		finder = self._get_finder_by_team_name(team)
+		return finder.get_pos_in_maze(color_bgr)
 
 	def get_team_car_pos(self, team):
 		"""Get the position of all the maze cars in a team
 
-		@param team Specify the team of the maze cars. Should be 'A' or 'B'
-		@return A list of CarPosition objects of the team
-		@exception KeyError If the specified team name is neither 'A' nor 'B'
+		@param team Specify the team of the maze cars. Should be "A" or "B"
+		@return A list of CarPosition objects of the specfied team
 		"""
-		return self._maze_pos_finders["team " + team] \
-			.get_all_target_colors()
+		finder = self._get_finder_by_team_name(team)
+		return finder.get_all_target_colors()
 
 	def recognize_maze(self):
 		"""Make every MazePositionFinder to recognize the maze
