@@ -407,6 +407,9 @@ class MazeManager:
 			self._maze_pos_finders['team B'] \
 				.add_target_color(color_bgr, new_color_type, LED_height)
 
+		if new_color_type == old_color_type:
+			return
+
 		if old_color_type == ColorType.MAZE_LOWER_PLANE or \
 			old_color_type == ColorType.MAZE_UPPER_PLANE:
 			for maze_pos_finder in self._maze_pos_finders.values():
