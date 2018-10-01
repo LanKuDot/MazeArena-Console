@@ -88,12 +88,12 @@ class ColorLabel(Button):
 
 		# Display color information
 		label_bgr = Label(self._setting_panel, \
-			text = "BGR: ({:03d}, {:03d}, {:03d})" \
+			text = "BGR: [{:03d}, {:03d}, {:03d}]" \
 			.format(self._color[0], self._color[1], self._color[2]), \
 			anchor = W)
 		label_bgr.pack(side = TOP, fill = X)
 		label_hsv = Label(self._setting_panel, \
-			text = "HSV: ({:03d}, {:03d}, {:03d})" \
+			text = "HSV: [{:03d}, {:03d}, {:03d}]" \
 			.format(self._color_hsv[0], self._color_hsv[1], self._color_hsv[2]), \
 			anchor = W)
 		label_hsv.pack(side = TOP, fill = X)
