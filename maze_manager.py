@@ -6,9 +6,10 @@ such as the size of the maze, the position of the maze cars.
 import cv2
 import numpy as np
 from operator import attrgetter
+from threading import Lock
 
 from point import Point2D
-from color_type import ColorType
+from color_type import *
 from color_position_finder import *
 from util.job_thread import JobThread
 
@@ -18,7 +19,6 @@ class CarPosition:
 	@var color_bgr The LED color of the maze car in BGR domain
 	@var LED_height The height of the LED on the maze car
 	@var position The position of the maze car in the maze
-	@var position_lock The lock for CarPosition.position
 	"""
 
 	def __init__(self, color_bgr, LED_height: float):
@@ -30,7 +30,6 @@ class CarPosition:
 		self.color_bgr = color_bgr
 		self.LED_height = LED_height
 		self.position = Point2D(-1, -1)
-		self.position_lock = Lock()
 
 	def __eq__(self, other):
 		"""Predefined equal comparsion method
@@ -44,6 +43,16 @@ class CarPosition:
 
 	def __ne__(self, other):
 		return not self.__eq__(other)
+
+	def copy(self):
+		"""Return a clone of itself
+
+		@return A clone of CarPosition object
+		"""
+		new_item = CarPosition(self.color_bgr.copy(), self.LED_height)
+		# namedtuple cannot be modified
+		new_item.position = self.position
+		return new_item
 
 class MazePositionFinder:
 	"""Find the position of the colors in the maze
@@ -66,6 +75,7 @@ class MazePositionFinder:
 	@var _lower_transform_mat Similar to _upper_transform_mat, but for
 	     the lower plane of the maze
 	@var _colors_to_find A list of CarPosition
+	@var _colors_to_find_lock A lock for accessing _colors_to_find
 	@var _ratio_to_wall_height_array An array of the ratio of LED height to the
 	     maze wall height of each color in _colors_to_find
 	@var _recognition_thread A JobThread for recognizing the car position
@@ -83,6 +93,7 @@ class MazePositionFinder:
 		self._upper_transform_mat = None
 		self._lower_transform_mat = None
 		self._colors_to_find = []
+		self._colors_to_find_lock = Lock()
 		self._ratio_to_wall_height_array = []
 
 		self._recognition_thread = JobThread(self._recognize_pos_in_maze, \
@@ -163,9 +174,37 @@ class MazePositionFinder:
 				print("[MazePosFinder] Color ({0}, {1}, {2}) is not existing" \
 					.format(*color_bgr))
 			else:
-				self._colors_to_find.remove(where)
+				self._colors_to_find.remove(self._colors_to_find[where])
 				print("[MazePosFinder] Color ({0}, {1}, {2}) is removed" \
 					.format(*color_bgr))
+
+	def get_pos_in_maze(self, color_bgr) -> Point2D:
+		"""Get the maze position of the specified color
+
+		@param color_bgr Specify the color in BGR domain
+		@return The maze position found in the maze
+		"""
+		try:
+			where = self._colors_to_find.index(CarPosition(color_bgr, 0))
+		except ValueError:
+			return None
+		else:
+			self._colors_to_find_lock.acquire()
+			car_pos = _colors_to_find[where].position
+			self._colors_to_find_lock.release()
+			return car_pos
+
+	def get_all_target_colors(self) -> list:
+		"""Get a copy of all the target colors and their maze positions
+
+		@return A copy of MazePositionFinder._colors_to_find
+		"""
+		target_colors = []
+		self._colors_to_find_lock.acquire()
+		for i in range(len(self._colors_to_find)):
+			target_colors.append(self._colors_to_find[i].copy())
+		self._colors_to_find_lock.release()
+		return target_colors
 
 	def recognize_maze(self):
 		"""Recognize the position of the maze and generate the transform matrix
@@ -297,36 +336,44 @@ class MazePositionFinder:
 				int(round(pos_in_maze[0][0][1])))
 
 		# Calculate the maze position for each color
+		car_pos = []
 		for i in range(len(self._colors_to_find)):
 			target_color_pos = self._color_pos_finder \
 				.get_target_color(*(self._colors_to_find[i].color_bgr))
 
 			# Hope that there is only one position found in the video stream
 			if len(target_color_pos.pixel_position) > 0:
-				carPos = _get_pos(target_color_pos.pixel_position[0], \
-					self._ratio_to_wall_height_array[i])
+				car_pos.append(_get_pos(target_color_pos.pixel_position[0], \
+					self._ratio_to_wall_height_array[i]))
+			# If there is no position found in the video stream,
+			# remain the last result
+			else:
+				car_pos.append(self._colors_to_find[i].position)
 
-				self._colors_to_find[i].position_lock.acquire()
-				self._colors_to_find[i].position = carPos
-				self._colors_to_find[i].position_lock.release()
+		# Update the result
+		self._colors_to_find_lock.acquire()
+		for i in range(len(car_pos)):
+			self._colors_to_find[i].position = car_pos[i]
+		self._colors_to_find_lock.release()
 
 class MazeManager:
 	"""Manage the maze information and MazePositionFinders of team A and B
 
-	@var _maze_position_finders The container for MazePositionFinders
+	@var _maze_pos_finders The container for MazePositionFinders
 	"""
 
-	def __init__(self, color_pos_finders: ColorPosFinderHolder):
+	def __init__(self, color_pos_manager: ColorPosManager):
 		"""Constructor
 
-		@param color_pos_finders The instance of class ColorPosFinderHolder
+		@param color_pos_manager The instance of class ColorPosManager
 		"""
-		maze_color_finder = color_pos_finders.get_posFinder_by_type(ColorType.MAZE_LOWER_PLANE)
-		team_a_color_finder = color_pos_finders.get_posFinder_by_type(ColorType.MAZE_CAR_TEAM_A)
-		team_b_color_finder = color_pos_finders.get_posFinder_by_type(ColorType.MAZE_CAR_TEAM_B)
+		maze_color_finder = color_pos_manager.get_finder(PosFinderType.MAZE)
+		team_a_color_finder = color_pos_manager.get_finder(PosFinderType.CAR_TEAM_A)
+		team_b_color_finder = color_pos_manager.get_finder(PosFinderType.CAR_TEAM_B)
 		self._maze_pos_finders = {
-			'team A': MazePositionFinder(maze_color_finder, team_a_color_finder),
-			'team B': MazePositionFinder(maze_color_finder, team_b_color_finder)}
+			PosFinderType.CAR_TEAM_A: MazePositionFinder(maze_color_finder, team_a_color_finder),
+			PosFinderType.CAR_TEAM_B: MazePositionFinder(maze_color_finder, team_b_color_finder)
+		}
 
 	def set_maze(self, scale_x, scale_y, wall_height):
 		"""Set the information of the maze to each MazePositionFinder
@@ -349,27 +396,55 @@ class MazeManager:
 		@param new_color_type The new color type of the target color
 		@param LED_height The height of the LED on the maze car
 		"""
-		if new_color_type == ColorType.MAZE_LOWER_PLANE or \
-			new_color_type == ColorType.MAZE_UPPER_PLANE:
+		old_finder = PosFinderType.get_finder_type(old_color_type)
+		new_finder = PosFinderType.get_finder_type(new_color_type)
+
+		if new_finder == PosFinderType.MAZE:
 			for maze_pos_finder in self._maze_pos_finders.values():
 				maze_pos_finder.add_target_color(color_bgr, new_color_type)
-		elif new_color_type == ColorType.MAZE_CAR_TEAM_A:
-			self._maze_pos_finders['team A'] \
-				.add_target_color(color_bgr, new_color_type, LED_height)
-		elif new_color_type == ColorType.MAZE_CAR_TEAM_B:
-			self._maze_pos_finders['team B'] \
+		elif new_finder is not None:
+			self._maze_pos_finders[new_finder] \
 				.add_target_color(color_bgr, new_color_type, LED_height)
 
-		if old_color_type == ColorType.MAZE_LOWER_PLANE or \
-			old_color_type == ColorType.MAZE_UPPER_PLANE:
+		# Avoid deleting the color from the same finder
+		if new_color_type == old_color_type:
+			return
+
+		if old_finder == PosFinderType.MAZE:
 			for maze_pos_finder in self._maze_pos_finders.values():
 				maze_pos_finder.delete_target_color(color_bgr, old_color_type)
-		elif old_color_type == ColorType.MAZE_CAR_TEAM_A:
-			self._maze_pos_finders['team A'] \
+		elif old_finder is not None:
+			self._maze_pos_finders[old_finder] \
 				.delete_target_color(color_bgr, old_color_type)
-		elif old_color_type == ColorType.MAZE_CAR_TEAM_B:
-			self._maze_pos_finders['team B'] \
-				.delete_target_color(color_bgr, old_color_type)
+
+	def _get_finder_by_team_name(self, team) -> MazePositionFinder:
+		"""Get the MazePositionFinder by the name of the team
+
+		@param team Specify the name of the team. Should be "A" or "B".
+		"""
+		return {
+			"A": self._maze_pos_finders[PosFinderType.CAR_TEAM_A],
+			"B": self._maze_pos_finders[PosFinderType.CAR_TEAM_B]
+		}.get(team)
+
+	def get_car_pos_in_maze(self, color_bgr, team) -> Point2D:
+		"""Get the position in the maze of the spcified maze car
+
+		@param color_bgr Specify the LED color of the maze car in BGR domain
+		@param team Specify the team of the maze car. Should be "A" or "B"
+		@return The position found in the maze
+		"""
+		finder = self._get_finder_by_team_name(team)
+		return finder.get_pos_in_maze(color_bgr)
+
+	def get_team_car_pos(self, team):
+		"""Get the position of all the maze cars in a team
+
+		@param team Specify the team of the maze cars. Should be "A" or "B"
+		@return A list of CarPosition objects of the specfied team
+		"""
+		finder = self._get_finder_by_team_name(team)
+		return finder.get_all_target_colors()
 
 	def recognize_maze(self):
 		"""Make every MazePositionFinder to recognize the maze

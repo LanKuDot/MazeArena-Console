@@ -3,8 +3,8 @@ The widget for displaying the status of the maze.
 And manage the colors to be found in the maze.
 """
 
-from color_type import ColorType
-from color_position_finder import ColorPositionFinder, ColorPosFinderHolder
+from color_type import *
+from color_position_finder import *
 from util.number_entry import *
 from maze_manager import MazeManager
 from webcam import WebCamera
@@ -197,7 +197,7 @@ class ColorManagerWidget(LabelFrame):
 
 	@var _camera The camera object for getting frames
 	@var _frame The frame got from _camera
-	@var _color_pos_finders The instance of class ColorPosFinderHolder
+	@var _color_pos_managder The instance of class ColorPosManager
 	@var _maze_manager The instance of class MazeManager
 	@var _show_result_image_thread A thread that displaying the
 	     recognition result
@@ -211,13 +211,13 @@ class ColorManagerWidget(LabelFrame):
 	"""
 
 	def __init__(self, master, camera: WebCamera, \
-		color_pos_finders: ColorPosFinderHolder, \
+		color_pos_manager: ColorPosManager, \
 		maze_manager: MazeManager, **options):
 		"""Constructor
 
 		@param master The parent widget of the ColorManagerWidget
 		@param camera The WebCamera object
-		@param color_pos_finders The instance of class ColorPosFinderHolder
+		@param color_pos_manager The instance of class ColorPosManager
 		@param maze_manager The instance of class MazeManager
 		@param options Additional options for the LabelFrame
 		"""
@@ -226,7 +226,7 @@ class ColorManagerWidget(LabelFrame):
 
 		self._camera = camera
 		self._frame = None
-		self._color_pos_finders = color_pos_finders
+		self._color_pos_manager = color_pos_manager
 		self._maze_manager = maze_manager
 
 		self._show_result_image_thread = None
@@ -389,19 +389,8 @@ class ColorManagerWidget(LabelFrame):
 		@param LED_height Specify the height of the LED on the maze car
 		       (if the new_type is MAZE_CAR_TEAM_A or MAZE_CAR_TEAM_B, this value is needed.)
 		"""
-		# Update MazeManager
 		self._maze_manager.set_color(color_bgr, old_type, new_type, LED_height)
-
-		# Update ColorPositionFinder
-		old_color_finder = self._color_pos_finders.get_posFinder_by_type(old_type)
-		new_color_finder = self._color_pos_finders.get_posFinder_by_type(new_type)
-
-		if old_color_finder == new_color_finder:
-			return
-		if not old_color_finder == None:
-			old_color_finder.delete_target_color(*color_bgr)
-		if not new_color_finder == None:
-			new_color_finder.add_target_color(*color_bgr)
+		self._color_pos_manager.set_color(color_bgr, old_type, new_type)
 
 	def _maze_recognition(self):
 		"""Recognize the maze
@@ -418,13 +407,13 @@ class ColorManagerWidget(LabelFrame):
 				'x: %s, y: %s, wall_height: %s' % (x_scale, y_scale, wall_height,))
 			return
 
-		self._color_pos_finders.maze.start_recognition_thread()
+		self._color_pos_manager.start_maze_color_recognition()
 		self._option_panel.children["btn_recognize_maze"].config(text = "辨識中...")
 
 		self._maze_manager.set_maze(int(x_scale), int(y_scale), float(wall_height))
 		self._maze_manager.recognize_maze()
 
-		self._color_pos_finders.maze.stop_recognition_thread()
+		self._color_pos_manager.stop_maze_color_recognition()
 		self._option_panel.children["btn_recognize_maze"].config(text = "辨識迷宮")
 
 	def _toggle_car_recognition(self):
@@ -433,16 +422,14 @@ class ColorManagerWidget(LabelFrame):
 		ColorPositionFinders of car_team_a and car_team_b will be toggled.
 		"""
 		# Start color recognition
-		if not self._color_pos_finders.car_team_a.is_recognition_thread_started():
-			self._color_pos_finders.car_team_a.start_recognition_thread()
-			self._color_pos_finders.car_team_b.start_recognition_thread()
+		if not self._color_pos_manager.is_car_color_recognition_started:
+			self._color_pos_manager.start_car_color_recognition()
 			self._maze_manager.start_recognize_car_pos()
 			self._option_panel.children["btn_recognize_maze_cars"].config(text = "停止辨識位置")
 			self._option_panel.children["btn_show_result_img"].config(state = NORMAL)
 		# Stop color recognition
 		else:
-			self._color_pos_finders.car_team_a.stop_recognition_thread()
-			self._color_pos_finders.car_team_b.stop_recognition_thread()
+			self._color_pos_manager.stop_car_color_recognition()
 			self._maze_manager.stop_recognize_car_pos()
 			self._option_panel.children["btn_recognize_maze_cars"].config(text = "辨識車輛位置")
 			self._option_panel.children["btn_show_result_img"].config(state = DISABLED)
@@ -506,6 +493,9 @@ class ColorManagerWidget(LabelFrame):
 					cv2.circle(self._frame, (posFound[i].x, posFound[i].y), \
 						5, marking_color, -1)
 
-		_mark_dots(self._color_pos_finders.maze, (0, 0, 150))
-		_mark_dots(self._color_pos_finders.car_team_a, (0, 150, 0))
-		_mark_dots(self._color_pos_finders.car_team_b, (150, 0, 0))
+		_mark_dots(self._color_pos_manager.get_finder(PosFinderType.MAZE), \
+			(0, 0, 150))
+		_mark_dots(self._color_pos_manager.get_finder(PosFinderType.CAR_TEAM_A), \
+			(0, 150, 0))
+		_mark_dots(self._color_pos_manager.get_finder(PosFinderType.CAR_TEAM_B), \
+			(150, 0, 0))

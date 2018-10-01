@@ -16,8 +16,11 @@ class JobThread():
 
 	@var _fn_target The target method to be run in JobThread. Note that
 	     it don't need to add an additional while loop in the target method.
+	@var _thread The Thread object that runs the target method
 	@var _is_thread_started A flag controling the thread execution
-	@var _thread A Thread object to run the target method
+	@var _name The identification name of the thread
+	@var _call_every_sec The calling period of the target method. JobThread
+	     invokes sleep(_call_every_sec) in the loop.
 	"""
 
 	def __init__(self, target, name = "", call_every_sec = 0.0):
@@ -29,17 +32,14 @@ class JobThread():
 		       for running the target method
 		"""
 		self._fn_target = target
+		self._thread = None
 		self._is_thread_started = False
 		# If name is not specified, set name to the target func name
 		if not name:
-			name = target.__name__
-
-		if call_every_sec <= 0.0:
-			self._thread = Thread(target = self._thread_loop, name = name)
+			self._name = target.__name__
 		else:
-			self._thread = Thread( \
-				target = lambda: self._thread_loop_every_sec(call_every_sec), \
-				name = name)
+			self._name = name
+		self._call_every_sec = call_every_sec
 
 	@property
 	def is_running(self):
@@ -52,11 +52,19 @@ class JobThread():
 
 		If the thread has been already started, the method does nothing.
 		"""
-		if self._thread.is_alive():
+		if self._thread is not None and self._thread.is_alive():
 			print("[JobThread] {0} thread has been already started." \
 				.format(self._thread.name))
 		else:
 			self._is_thread_started = True
+
+			if self._call_every_sec <= 0.0:
+				self._thread = Thread(target = self._thread_loop, name = self._name)
+			else:
+				self._thread = Thread( \
+				target = lambda: self._thread_loop_every_sec(self._call_every_sec), \
+				name = self._name)
+
 			self._thread.start()
 			print("[JobThread] {0} thread is started." \
 				.format(self._thread.name))
@@ -66,7 +74,7 @@ class JobThread():
 
 		If the thread is not alive, the method does nothing.
 		"""
-		if self._thread.is_alive():
+		if self._thread is not None and self._thread.is_alive():
 			self._is_thread_started = False
 			self._thread.join()
 			print("[JobThread] {0} thread is stopped." \
