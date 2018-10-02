@@ -13,10 +13,11 @@ class PlayerInfoTable:
 		self._player_info_T = player_info_T
 		self._player_info_table = {}
 
-	def add_player_info(self, player_ip):
+	def add_player_info(self, player_ip) -> PlayerInfo:
 		new_player_info = self._player_info_T()
 		new_player_info.IP = player_ip
 		self._player_info_table[player_ip] = new_player_info
+		return new_player_info
 
 	def delete_player_info(self, player_ip):
 		target_player_info = self.get_player_info_by_IP(player_ip)
@@ -24,7 +25,7 @@ class PlayerInfoTable:
 		if target_player_info is not None:
 			self._player_info_table.pop(player_ip)
 
-	def get_player_info_by_IP(self, player_ip):
+	def get_player_info_by_IP(self, player_ip) -> PlayerInfo:
 		return self._player_info_table.get(player_ip)
 
 	def register_player_ID(self, player_ip, *args):
