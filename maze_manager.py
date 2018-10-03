@@ -332,8 +332,8 @@ class MazePositionFinder:
 			pos_lower_plane = cv2.perspectiveTransform(pos, self._lower_transform_mat)
 			pos_in_maze = pos_lower_plane + \
 				(pos_upper_plane - pos_lower_plane) * ratio_to_wall_height
-			return Point2D(int(round(pos_in_maze[0][0][0])), \
-				int(round(pos_in_maze[0][0][1])))
+			return Point2D(int(round(pos_in_maze[0][0][0] - 0.5)), \
+				int(round(pos_in_maze[0][0][1] - 0.5)))
 
 		# Calculate the maze position for each color
 		car_pos = []
