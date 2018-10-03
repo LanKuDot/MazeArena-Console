@@ -6,19 +6,18 @@ import tkinter as tk
 from game_essential.game_core import GameCore
 from game_essential.player_info_table import PlayerInfo
 
-class GameCommandWidget(Frame):
+class GameToggleButton(Button):
+	"""The button that makes game start or stop
+
+	@vat _game_core The GameCore object to be toggled
+	"""
+
 	def __init__(self, master, game_core: GameCore, **options):
-		super().__init__(master, **options)
+		super().__init__(master, text = "遊戲開始", \
+			command = self._toggle_game, **options)
 		self.pack()
 
 		self._game_core = game_core
-
-		self._setup_layout()
-
-	def _setup_layout(self):
-		btn_toggle_game = Button(self, text = "遊戲開始", \
-			command = self._toggle_game, name = "btn_toggle_game")
-		btn_toggle_game.pack()
 
 	def _toggle_game(self):
 		if not self._game_core.is_game_started:
@@ -28,11 +27,11 @@ class GameCommandWidget(Frame):
 
 	def game_start(self):
 		self._game_core.game_start()
-		self.children["btn_toggle_game"].config("遊戲停止")
+		self.config("遊戲停止")
 
 	def game_stop(self):
 		self._game_core.game_stop()
-		self.children["btn_toggle_game"].config("遊戲開始")
+		self.config("遊戲開始")
 
 class PlayerInfoWidget(Frame):
 	"""The widget for setting and displaying PlayerInfo
