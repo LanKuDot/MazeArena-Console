@@ -31,6 +31,9 @@ class GameCore:
 	def player_register_ID(self, player_ip, *args):
 		self._player_info_table.register_player_ID(player_ip, *args)
 
+	def player_set_color(self, player_ip, color_bgr):
+		self._player_info_table.set_player_color(player_ip, color_bgr)
+
 	def game_start(self):
 		if self._is_game_started:
 			return
