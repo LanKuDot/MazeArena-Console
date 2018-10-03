@@ -157,7 +157,7 @@ class ColorPositionFinder:
 			copied.append(self._colors_to_find[i].copy())
 		self._colors_to_find_lock.release()
 		return copied
-	
+
 	def start_recognition_thread(self):
 		"""Start a new thread to do color recognition
 
