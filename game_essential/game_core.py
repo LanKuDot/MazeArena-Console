@@ -2,7 +2,7 @@
 """
 
 import communication_server as comm_server
-from game_essential.player_info_table import BasicPlayerInfoTable
+from .player_info_table import BasicPlayerInfoTable
 from maze_manager import MazeManager
 
 class BasicGameCore:

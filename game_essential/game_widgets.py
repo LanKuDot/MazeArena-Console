@@ -3,8 +3,8 @@
 
 from tkinter import *
 import tkinter as tk
-from game_essential.game_core import BasicGameCore
-from game_essential.player_info_table import BasicPlayerInfo
+from .game_core import BasicGameCore
+from .player_info_table import BasicPlayerInfo
 
 class GameToggleButton(Button):
 	"""The button that makes game start or stop
