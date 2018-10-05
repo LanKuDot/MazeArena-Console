@@ -2,11 +2,11 @@
 """
 
 import communication_server as comm_server
-from game_essential.player_info_table import PlayerInfoTable
+from game_essential.player_info_table import BasicPlayerInfoTable
 from maze_manager import MazeManager
 
-class GameCore:
-	def __init__(self, player_info_table: PlayerInfoTable, \
+class BasicGameCore:
+	def __init__(self, player_info_table: BasicPlayerInfoTable, \
 		maze_manager: MazeManager):
 		self._player_info_table = player_info_table
 		self._maze_manager = maze_manager

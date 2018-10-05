@@ -3,8 +3,8 @@
 
 from tkinter import *
 import tkinter as tk
-from game_essential.game_core import GameCore
-from game_essential.player_info_table import PlayerInfo
+from game_essential.game_core import BasicGameCore
+from game_essential.player_info_table import BasicPlayerInfo
 
 class GameToggleButton(Button):
 	"""The button that makes game start or stop
@@ -12,7 +12,7 @@ class GameToggleButton(Button):
 	@vat _game_core The GameCore object to be toggled
 	"""
 
-	def __init__(self, master, game_core: GameCore, **options):
+	def __init__(self, master, game_core: BasicGameCore, **options):
 		super().__init__(master, text = "遊戲開始", \
 			command = self._toggle_game, **options)
 		self.pack()
@@ -27,13 +27,13 @@ class GameToggleButton(Button):
 
 	def game_start(self):
 		self._game_core.game_start()
-		self.config("遊戲停止")
+		self.config(text = "遊戲停止")
 
 	def game_stop(self):
 		self._game_core.game_stop()
-		self.config("遊戲開始")
+		self.config(text = "遊戲開始")
 
-class PlayerInfoWidget(Frame):
+class BasicPlayerInfoWidget(Frame):
 	"""The widget for setting and displaying PlayerInfo
 
 	Usage:
@@ -53,7 +53,7 @@ class PlayerInfoWidget(Frame):
 	@var _previous_selected_color_bgr The color selected at previous time
 	"""
 
-	def __init__(self, master, player_info: PlayerInfo, \
+	def __init__(self, master, player_info: BasicPlayerInfo, \
 		fn_set_player_color, **options):
 		"""Constructor
 
