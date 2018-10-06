@@ -22,14 +22,11 @@ class BasicGameCore:
 		self._comm_server.set_disconnection_handler(self.player_quit)
 		self._comm_server.add_command_handler("join", self.player_join)
 
-	def player_join(self, player_ip):
-		self._player_info_table.add_player_info(player_ip)
+	def player_join(self, player_ip, *args):
+		self._player_info_table.add_player_info(player_ip, *args)
 
 	def player_quit(self, player_ip):
 		self._player_info_table.delete_player_info(player_ip)
-
-	def player_register_ID(self, player_ip, *args):
-		self._player_info_table.register_player_ID(player_ip, *args)
 
 	def player_set_color(self, player_ip, color_bgr):
 		self._player_info_table.set_player_color(player_ip, color_bgr)
