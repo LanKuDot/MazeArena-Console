@@ -6,6 +6,7 @@ from enum import Enum, auto
 import communication_server as comm_server
 from .player_info_table import BasicPlayerInfoTable
 from maze_manager import MazeManager, MazePositionFinder
+from util.function_delegate import FunctionDelegate
 
 class TeamType(Enum):
 	A = auto()
@@ -37,11 +38,13 @@ class BasicGameCore:
 		self._teammates = {}
 		self._maze_manager = maze_manager
 		self._comm_server = comm_server
+		self._handlers = {}
 
 		self._is_game_started = False
 
 		self._set_handler_to_server()
 		self._team_init()
+		self._handler_init()
 
 	@property
 	def is_game_started(self):
@@ -58,6 +61,9 @@ class BasicGameCore:
 				self._maze_manager._get_finder_by_team_name(team_type.__str__())
 			team_info.player_info_table = \
 				self._player_info_table_T()
+
+	def _handler_init(self):
+		self._handlers["player-join"] = FunctionDelegate()
 
 	def team_set_name(self, team_type: TeamType, team_name):
 		self._teams[team_type].team_name = team_name
@@ -81,9 +87,12 @@ class BasicGameCore:
 		"""
 		team_type = self.team_get_type_by_name(args[1])
 		player_info_table = self._teams[team_type].player_info_table
-		player_info_table.add_player_info(player_ip, args[0])
+		player_info = player_info_table.add_player_info(player_ip, *args)
 
 		self._teammates[player_ip] = team_type
+		self._handlers["player-join"].invoke(player_info, team_type)
+
+		self._comm_server.send_message(player_ip, "server join ok")
 
 	def player_quit(self, player_ip):
 		for team_info in self._teams.values():
