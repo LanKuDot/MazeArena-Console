@@ -20,7 +20,7 @@ on_recv_msg = FunctionDelegate()
 
 ### Module variables ###
 # The server socket
-_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+_server_socket = None
 # The thread for running server. It will be _listen_to_client().
 _server_thread = None
 # Is server running?
@@ -94,6 +94,7 @@ def _listen_to_client(server_ip: str, server_port: int):
 	@param server_ip Specify the IP of the server
 	@param server_port Specify the port of the server
 	"""
+	_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	_server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 	_server_socket.bind((server_ip, server_port))
 	_server_socket.listen(MAX_CONNECTION)
