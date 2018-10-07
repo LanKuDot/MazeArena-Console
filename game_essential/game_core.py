@@ -53,6 +53,7 @@ class BasicGameCore:
 	def _set_handler_to_server(self):
 		self._comm_server.set_disconnection_handler(self.player_quit)
 		self._comm_server.add_command_handler("join", self.player_join)
+		self._comm_server.add_command_handler("position", self.player_position)
 
 	def _team_init(self):
 		for team_type, team_info in self._teams.items():
@@ -150,6 +151,17 @@ class BasicGameCore:
 			# If the player_ip is not in that table,
 			# it will do nothing.
 			team_info.player_info_table.set_player_color(player_ip, color_bgr)
+
+	def player_position(self, player_ip):
+		team_type = self._teammates[player_ip]
+		maze_pos_finder = self._teams[team_type].maze_pos_finder
+		player_info = self._teams[team_type].player_info_table \
+			.get_player_info_by_IP(player_ip)
+
+		pos = maze_pos_finder.get_pos_in_maze(player_info.color_bgr)
+
+		self._comm_server.send_message(player_ip, "server position {0} {1}" \
+			.format(*pos))
 
 	def game_start(self):
 		if self._is_game_started:
