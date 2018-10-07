@@ -39,49 +39,47 @@ class BasicPlayerInfoWidget(Frame):
 	Usage:
 	```
 	playerInfoWidget = PlayerInfoWidget(...)
-	playerInfowidget.setup_layout() # Must invoke this method
 	playerInfoWidget.pack()
 
 	playerInfoWidget.refresh() # To reflect the changes in PlayerInfo
 	```
 
 	@var _player_info The PlayerInfo object this widget binds
-	@var _fn_set_player_color The callback function for the changing
-	     of the player color in the widget
 	@var _selected_color_bgr The trace variable of the color selection
 	     in the OptionMenu
 	@var _previous_selected_color_bgr The color selected at previous time
 	"""
 
-	def __init__(self, master, player_info: BasicPlayerInfo, \
-		fn_set_player_color, **options):
+	def __init__(self, master, player_info: BasicPlayerInfo, color_list, \
+		**options):
 		"""Constructor
 
 		@param master The parent widget
 		@param player_info The target player information to be shwon
-		@param fn_set_player_color The callback function for the changing
-		       of the player color in the widget.
-			   It will be fn_set_player_color(player_ip, selected_color)
+		@param color_list The selectable color for this player.
+		       It will be a list of string representation of the color_bgr,
+		       such as ["[123, 123, 123]", "[100, 100, 100]"]
 		@param option Other options for Frame widget
 		"""
 		super().__init__(master, **options)
 		self.pack()
 
 		self._player_info = player_info
-		self._fn_set_player_color = fn_set_player_color
 		self._selected_color_bgr = StringVar(self, "顏色未定")
 		self._selected_color_bgr.trace("w", self._update_player_color)
 		self._previous_selected_color_bgr = self._selected_color_bgr.get()
 
-		self._color_menu = None
+		self._setup_layout(color_list)
 
-	def setup_layout(self):
+	def _setup_layout(self, color_list):
 		"""Set up the layout of the widget
 
 		It will be like:
 		+-------------------------+
-		| [] IP ID Team [Color +] |
+		| [] IP ID [Color +] |
 		+-------------------------+
+
+		@param color_list Specify the selectable color list in string
 		"""
 		color_label = Label(self, background = "gray", \
 			width = 1, name = "color_label")
@@ -94,28 +92,10 @@ class BasicPlayerInfoWidget(Frame):
 		id = Label(self, text = "-", \
 			width = 8, anchor = W, name = "id")
 		id.pack(side = LEFT)
-		team = Label(self, text = "-", \
-			width = 2, anchor = W, name = "team")
-		team.pack(side = LEFT)
-		color_list = ["顏色未定"]
 		color_menu = OptionMenu(self, self._selected_color_bgr, \
 			*color_list)
 		color_menu.configure(width = 13)
 		color_menu.pack(side = LEFT)
-		self._color_menu = color_menu
-
-	def update_color_select_menu(self, color_list):
-		"""Exchange the colors selectable for this player info
-
-		The method will destory the old options and fill
-		options that specified in color_list.
-
-		@param color_list Specify a list of colors
-		"""
-		self._color_menu.delete(0, 'end')
-		for color in color_list:
-			self._color_menu.add_command(label = color.__str__(), \
-				command = tk._setit(self._selected_color_bgr, color.__str__()))
 
 	def _update_player_color(self, *args):
 		"""Update the selected color into PlayerInfo.color_bgr
@@ -132,8 +112,7 @@ class BasicPlayerInfoWidget(Frame):
 		color_bgr = []
 		for color in color_bgr_str:
 			color_bgr.append(int(color))
-
-		self._fn_set_player_color(self._player_info.IP, color_bgr)
+		self._player_info.color_bgr = color_bgr
 
 	def refresh(self):
 		"""Make the widget refresh the displaying information
