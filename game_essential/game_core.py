@@ -34,6 +34,7 @@ class BasicGameCore:
 			TeamType.A: team_info_T(),
 			TeamType.B: team_info_T()
 		}
+		self._teammates = {}
 		self._maze_manager = maze_manager
 		self._comm_server = comm_server
 
@@ -69,7 +70,11 @@ class BasicGameCore:
 	def player_join(self, player_ip, *args):
 		"""The callback function when a player sends join command
 
-		The command is: "join <player ID> <team name>"
+		The command is: "join <player ID> <team name>".
+
+		The method will try to find the player's team and
+		create a new player info for that player in his team.
+		The BasicGameCore._teammates will record the player's team.
 
 		@param player_ip Specify the IP of the player
 		@param args Specify a tuple (player ID, team name)
@@ -77,6 +82,8 @@ class BasicGameCore:
 		team_type = self.team_get_type_by_name(args[1])
 		player_info_table = self._teams[team_type].player_info_table
 		player_info_table.add_player_info(player_ip, args[0])
+
+		self._teammates[player_ip] = team_type
 
 	def player_quit(self, player_ip):
 		for team_info in self._teams.values():
