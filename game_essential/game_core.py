@@ -40,14 +40,14 @@ class BasicGameCore:
 
 		self._is_game_started = False
 
-		self._set_handler()
+		self._set_handler_to_server()
 		self._team_init()
 
 	@property
 	def is_game_started(self):
 		return self._is_game_started
 
-	def _set_handler(self):
+	def _set_handler_to_server(self):
 		self._comm_server.set_disconnection_handler(self.player_quit)
 		self._comm_server.add_command_handler("join", self.player_join)
 
