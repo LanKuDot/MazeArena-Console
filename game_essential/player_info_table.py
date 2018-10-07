@@ -12,11 +12,12 @@ class BasicPlayerInfoTable:
 		self._player_info_T = player_info_T
 		self._table = {}
 
-	def add_player_info(self, player_ip, player_ID):
+	def add_player_info(self, player_ip, player_ID) -> BasicPlayerInfo:
 		new_player_info = self._player_info_T()
 		new_player_info.IP = player_ip
 		target_info.ID = player_ID
 		self._table[player_ip] = new_player_info
+		return new_player_info
 
 	def delete_player_info(self, player_ip):
 		target_player_info = self.get_player_info_by_IP(player_ip)
