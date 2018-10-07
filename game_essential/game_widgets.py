@@ -121,5 +121,3 @@ class BasicPlayerInfoWidget(Frame):
 		self.children["ip"].config(text = ip_text)
 		id_text = self._player_info.ID if self._player_info.ID else "-"
 		self.children["id"].config(text = id_text)
-		team_text = self._player_info.team if self._player_info.team else "-"
-		self.children["team"].config(text = team_text)
