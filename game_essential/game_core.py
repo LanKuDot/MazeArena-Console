@@ -67,10 +67,12 @@ class BasicGameCore:
 
 	def team_set_name(self, team_type: TeamType, team_name):
 		self._teams[team_type].team_name = team_name
+		print("[GameCore] Set the name of team {0} to \"{1}\"." \
+			.format(team_type, team_name))
 
 	def team_get_type_by_name(self, team_name) -> TeamType:
 		for team_info in self._teams.values():
-			if team_info.team_name is team_name:
+			if team_info.team_name == team_name:
 				return team_info.team_type
 
 	def player_join(self, player_ip, *args):
