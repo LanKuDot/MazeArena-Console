@@ -5,6 +5,7 @@ class BasicPlayerInfo:
 	def __init__(self):
 		self.ID = None
 		self.IP = None
+		self.team_name = ""
 		self.color_bgr = None
 
 class BasicPlayerInfoTable:
@@ -12,10 +13,11 @@ class BasicPlayerInfoTable:
 		self._player_info_T = player_info_T
 		self._table = {}
 
-	def add_player_info(self, player_ip, player_ID) -> BasicPlayerInfo:
+	def add_player_info(self, player_ip, *args) -> BasicPlayerInfo:
 		new_player_info = self._player_info_T()
 		new_player_info.IP = player_ip
-		target_info.ID = player_ID
+		new_player_info.ID = args[0]
+		new_player_info.team_name = args[1]
 		self._table[player_ip] = new_player_info
 		return new_player_info
 
