@@ -76,37 +76,74 @@ class BasicGameCore:
 			if team_info.team_name == team_name:
 				return team_info.team_type
 
+		try:
+			raise ValueError
+		except ValueError as err:
+			err.extra_info = "\"{0}\" is not a team name.".format(team_name)
+			raise
+
 	def player_join(self, player_ip, *args):
 		"""The callback function when a player sends join command
 
 		The command is: "join <player ID> <team name>".
+		The response is: "server join ok" if it's success.
+		or "server join fail" if one of the situations is occured:
+		1. The argument is not matched;
+		2. The specified <team name> is not found.
 
-		The method will try to find the player's team and
-		create a new player info for that player in his team.
-		The BasicGameCore._teammates will record the player's team.
+		The method will try to find the player's team and create a new
+		player info for that player in his team.
+		The BasicGameCore._teammates will record the player's team and then
+		invoke the handler:
+		`BasicGameCore._handler["player_join"](player_info, team_type)`
 
 		@param player_ip Specify the IP of the player
 		@param args Specify a tuple (player ID, team name)
 		"""
-		team_type = self.team_get_type_by_name(args[1])
-		player_info_table = self._teams[team_type].player_info_table
-		player_info = player_info_table.add_player_info(player_ip, *args)
+		try:
+			if len(args) != 2:
+				raise ValueError
 
-		self._teammates[player_ip] = team_type
-		self._handlers["player-join"].invoke(player_info, team_type)
+			team_type = self.team_get_type_by_name(args[1])
+		except ValueError:
+			self._comm_server.send_message(player_ip, "server join fail")
 
-		self._comm_server.send_message(player_ip, "server join ok")
+			if len(args) != 2:
+				print("[GameCore] The arguments for join the game is invaild.")
+			else:
+				print("[GameCore] Specified team name {0} is not found.".format(args[1]))
+		else:
+			player_info_table = self._teams[team_type].player_info_table
+			player_info = player_info_table.add_player_info(player_ip, *args)
+
+			self._teammates[player_ip] = team_type
+			self._handlers["player-join"].invoke(player_info, team_type)
+
+			self._comm_server.send_message(player_ip, "server join ok")
+
+			print("[GameCore] Player \"{0}\" from {1} joins the team \"{2}\"." \
+				.format(player_info.ID, player_info.IP, player_info.team_name))
 
 	def player_quit(self, player_ip):
+		"""The callback function when a player disconnection from the server
+
+		The information of that player will be removed. It will also be removed
+		from BasicGameCore._teammates. Then, invoke the handler:
+		`BasicGameCore._handler["player_quit"](player_info, team_type)`
+		"""
 		try:
-			team_type = self._teammates[player_ip]
+			team_type = self._teammates.pop(team_type)
 		except KeyError:
+			print("[GameCore] Specified player is not found.")
 			return
 		else:
 			player_info_table = self._teams[team_type].player_info_table
 			player_info = player_info_table.delete_player_info(player_ip)
 
 			self._handlers["player-quit"].invoke(player_info, team_type)
+
+			print("[GameCore] Player \"{0}\" from {1} quits the game." \
+				.format(player_info.ID, player_info.IP))
 
 	def player_set_color(self, player_ip, color_bgr):
 		for team_info in self._teams.values():
