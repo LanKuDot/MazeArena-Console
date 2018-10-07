@@ -190,7 +190,7 @@ class MazePositionFinder:
 			return None
 		else:
 			self._colors_to_find_lock.acquire()
-			car_pos = _colors_to_find[where].position
+			car_pos = self._colors_to_find[where].position
 			self._colors_to_find_lock.release()
 			return car_pos
 
