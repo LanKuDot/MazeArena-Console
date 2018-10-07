@@ -64,6 +64,7 @@ class BasicGameCore:
 
 	def _handler_init(self):
 		self._handlers["player-join"] = FunctionDelegate()
+		self._handlers["player-quit"] = FunctionDelegate()
 
 	def team_set_name(self, team_type: TeamType, team_name):
 		self._teams[team_type].team_name = team_name
@@ -97,10 +98,15 @@ class BasicGameCore:
 		self._comm_server.send_message(player_ip, "server join ok")
 
 	def player_quit(self, player_ip):
-		for team_info in self._teams.values():
-			# If the player_ip is not in that table,
-			# it will do nothing.
-			team_info.player_info_table.delete_player_info(player_ip)
+		try:
+			team_type = self._teammates[player_ip]
+		except KeyError:
+			return
+		else:
+			player_info_table = self._teams[team_type].player_info_table
+			player_info = player_info_table.delete_player_info(player_ip)
+
+			self._handlers["player-quit"].invoke(player_info, team_type)
 
 	def player_set_color(self, player_ip, color_bgr):
 		for team_info in self._teams.values():

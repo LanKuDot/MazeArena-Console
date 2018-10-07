@@ -21,11 +21,11 @@ class BasicPlayerInfoTable:
 		self._table[player_ip] = new_player_info
 		return new_player_info
 
-	def delete_player_info(self, player_ip):
+	def delete_player_info(self, player_ip) -> BasicPlayerInfo:
 		target_player_info = self.get_player_info_by_IP(player_ip)
 
 		if target_player_info is not None:
-			self._table.pop(player_ip)
+			return self._table.pop(player_ip, None)
 
 	def get_player_info_by_IP(self, player_ip) -> BasicPlayerInfo:
 		return self._table.get(player_ip)
