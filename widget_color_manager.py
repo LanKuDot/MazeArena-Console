@@ -46,9 +46,11 @@ class ColorLabel(Button):
 		       color
 		@param options Other options for the Button widget
 		"""
-		super().__init__(master, text = ColorType.NOT_DEFINED.__str__(), \
+		button_text = "[{:03d}, {:03d}, {:03d}]: ".format(*color_bgr)
+		button_text += ColorType.NOT_DEFINED.__str__()
+		super().__init__(master, text = button_text, \
 			bg = "#%02x%02x%02x" % (color_bgr[2], color_bgr[1], color_bgr[0]), \
-			command = self._show_setting_panel, **options) # bg is in RGB domain
+			command = self._show_setting_panel, width = 23, **options) # bg is in RGB domain
 		self.pack()
 
 		self._color = color_bgr
@@ -172,7 +174,9 @@ class ColorLabel(Button):
 		"""
 		_old_color_type = self._color_type
 		self._color_type = ColorType[self._selected_color_type.get()]
-		self.config(text = self._color_type.__str__())
+		button_text = "[{:03d}, {:03d}, {:03d}]: ".format(*(self._color))
+		button_text += self._color_type.__str__()
+		self.config(text = button_text)
 		self._LED_height = float(self._entry_LED_height.get())
 		self._fn_update_color(self._color, _old_color_type, self._color_type, self._LED_height)
 		self._close_setting_panel()
@@ -306,7 +310,7 @@ class ColorManagerWidget(LabelFrame):
 		self._color_label_panel = Frame(self)
 		self._color_label_panel.pack(side = RIGHT, fill = Y)
 		label_color = Label(self._color_label_panel, \
-			text = "目標辨識顏色", anchor = W)
+			text = "目標辨識顏色", width = 24, anchor = W)
 		label_color.pack(fill = X)
 
 	def _start_select_color_thread(self):
