@@ -1,36 +1,15 @@
 """The essential functions in the game.
 """
 
-from enum import Enum, auto
-
 import communication_server as comm_server
-from .player_info_table import BasicPlayerInfoTable
+from .player_info_table import BasicTeamInfo, TeamType
 from maze_manager import MazeManager, MazePositionFinder
 from util.function_delegate import FunctionDelegate
-
-class TeamType(Enum):
-	A = auto()
-	B = auto()
-
-	def __str__(self):
-		return {
-			self.A: "A",
-			self.B: "B"
-		}.get(self)
-
-class BasicTeamInfo:
-	def __init__(self):
-		self.team_type = None
-		self.team_name = ""
-		self.maze_pos_finder = None
-		self.player_info_table = None
-
+		
 class BasicGameCore:
 	def __init__(self, maze_manager: MazeManager, \
-		player_info_table_T = BasicPlayerInfoTable, \
 		team_info_T = BasicTeamInfo):
 
-		self._player_info_table_T = player_info_table_T
 		self._teams = {
 			TeamType.A: team_info_T(),
 			TeamType.B: team_info_T()
@@ -60,8 +39,6 @@ class BasicGameCore:
 			team_info.team_type = team_type
 			team_info.maze_pos_finder = \
 				self._maze_manager._get_finder_by_team_name(team_type.__str__())
-			team_info.player_info_table = \
-				self._player_info_table_T()
 
 	def _handler_init(self):
 		self._handlers["player-join"] = FunctionDelegate()
@@ -114,8 +91,7 @@ class BasicGameCore:
 			else:
 				print("[GameCore] Specified team name {0} is not found.".format(args[1]))
 		else:
-			player_info_table = self._teams[team_type].player_info_table
-			player_info = player_info_table.add_player_info(player_ip, *args)
+			player_info = self._teams[team_type].add_player_info(player_ip, *args)
 
 			self._teammates[player_ip] = team_type
 			self._handlers["player-join"].invoke(player_info, team_type)
@@ -138,8 +114,7 @@ class BasicGameCore:
 			print("[GameCore] Specified player is not found.")
 			return
 		else:
-			player_info_table = self._teams[team_type].player_info_table
-			player_info = player_info_table.delete_player_info(player_ip)
+			player_info = self._teams[team_type].delete_player_info(player_ip)
 
 			self._handlers["player-quit"].invoke(player_info, team_type)
 
@@ -150,13 +125,12 @@ class BasicGameCore:
 		for team_info in self._teams.values():
 			# If the player_ip is not in that table,
 			# it will do nothing.
-			team_info.player_info_table.set_player_color(player_ip, color_bgr)
+			team_info.set_player_color(player_ip, color_bgr)
 
 	def player_position(self, player_ip):
 		team_type = self._teammates[player_ip]
 		maze_pos_finder = self._teams[team_type].maze_pos_finder
-		player_info = self._teams[team_type].player_info_table \
-			.get_player_info_by_IP(player_ip)
+		player_info = self._teams[team_type].get_player_info_by_IP(player_ip)
 
 		pos = maze_pos_finder.get_pos_in_maze(player_info.color_bgr)
 
