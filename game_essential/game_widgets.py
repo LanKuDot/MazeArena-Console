@@ -4,7 +4,7 @@
 from tkinter import *
 import tkinter as tk
 from .game_core import BasicGameCore
-from .player_info_table import BasicPlayerInfo
+from .player_info import BasicPlayerInfo
 
 class GameToggleButton(Button):
 	"""The button that makes game start or stop

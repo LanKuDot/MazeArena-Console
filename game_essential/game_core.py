@@ -2,7 +2,7 @@
 """
 
 import communication_server as comm_server
-from .player_info_table import BasicTeamInfo, TeamType
+from .player_info import BasicTeamInfo, TeamType
 from maze_manager import MazeManager, MazePositionFinder
 from util.function_delegate import FunctionDelegate
 		
