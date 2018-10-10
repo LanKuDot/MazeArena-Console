@@ -84,7 +84,7 @@ class BasicGameCore:
 
 			team_type = self.team_get_type_by_name(args[1])
 		except ValueError:
-			self._comm_server.send_message(player_ip, "server join fail")
+			self._comm_server.send_message(player_ip, "join fail")
 
 			if len(args) != 2:
 				print("[GameCore] The arguments for join the game is invaild.")
@@ -96,7 +96,7 @@ class BasicGameCore:
 			self._teammates[player_ip] = team_type
 			self._handlers["player-join"].invoke(player_info, team_type)
 
-			self._comm_server.send_message(player_ip, "server join ok")
+			self._comm_server.send_message(player_ip, "join ok")
 
 			print("[GameCore] Player \"{0}\" from {1} joins the team \"{2}\"." \
 				.format(player_info.ID, player_info.IP, player_info.team_name))
@@ -134,19 +134,19 @@ class BasicGameCore:
 
 		pos = maze_pos_finder.get_pos_in_maze(player_info.color_bgr)
 
-		self._comm_server.send_message(player_ip, "server position {0} {1}" \
+		self._comm_server.send_message(player_ip, "position {0} {1}" \
 			.format(*pos))
 
 	def game_start(self):
 		if self._is_game_started:
 			return
 
-		self._comm_server.boardcast_message("server game-start")
+		self._comm_server.boardcast_message("game-start")
 		self._is_game_started = True
 
 	def game_stop(self):
 		if not self._is_game_started:
 			return
 
-		self._comm_server.boardcast_message("server game-stop")
+		self._comm_server.boardcast_message("game-stop")
 		self._is_game_started = False
