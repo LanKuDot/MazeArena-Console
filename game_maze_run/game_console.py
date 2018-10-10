@@ -6,9 +6,18 @@ in the maze if it requests.
 """
 
 from .game_core import GameCore, PlayerInfo, TeamType
-from game_essential import GameToggleButton, BasicPlayerInfoWidget
+from game_essential import GameToggleButton, BasicPlayerInfoWidget, BasicTeamPanelWidget
 from maze_manager import MazeManager
 from tkinter import *
+
+class PlayerInfoWidget(BasicPlayerInfoWidget):
+	def __init__(self, master, player_info: PlayerInfo, color_list, **options):
+		super().__init__(master, player_info, color_list, **options)
+
+class TeamPanelWidget(BasicTeamPanelWidget):
+	def __init__(self, master, team_title, team_type, fn_update_team_name, **options):
+		super().__init__(master, team_title, team_type, fn_update_team_name, \
+			PlayerInfoWidget, **options)
 
 class GameConsoleWidget(LabelFrame):
 	def __init__(self, master, game_core: GameCore, \
@@ -48,47 +57,3 @@ class GameConsoleWidget(LabelFrame):
 	def _delete_player_widget(self, player_info: PlayerInfo, team_type: TeamType):
 		if team_type is TeamType.A:
 			self._team_A_panel.delete_player(player_info)
-
-class PlayerInfoWidget(BasicPlayerInfoWidget):
-	def __init__(self, master, player_info: PlayerInfo, color_list, **options):
-		super().__init__(master, player_info, color_list, **options)
-
-class TeamPanelWidget(LabelFrame):
-	def __init__(self, master, team_title, team_type, \
-		fn_update_team_name, **options):
-		super().__init__(master, text = team_title, name = team_title, \
-			**options)
-		self.pack()
-
-		self._team_type = team_type
-		self._fn_update_team_name = fn_update_team_name
-		self._teammate_widget = {}
-		self._entry_team_name = None
-
-		self._setup_layout()
-
-	def _setup_layout(self):
-		setting_panel = Frame(self)
-		setting_panel.pack(fill = X)
-		name_title = Label(setting_panel, text = "Name: ")
-		name_title.pack(side = LEFT)
-		self._entry_team_name = Entry(setting_panel, width = 8)
-		self._entry_team_name.pack(side = LEFT)
-		btn_setting_confirm = Button(setting_panel, text = "更新", \
-			command = self._update_team_name)
-		btn_setting_confirm.pack(side = LEFT)
-
-	def _update_team_name(self):
-		new_team_name = self._entry_team_name.get()
-		self._fn_update_team_name(self._team_type, new_team_name)
-
-	def add_player(self, player_info, color_list):
-		player_widget = PlayerInfoWidget(self, player_info, color_list)
-		player_widget.pack()
-		player_widget.refresh()
-		self._teammate_widget[player_info.IP] = player_widget
-
-	def delete_player(self, player_info):
-		player_widget = self._teammate_widget[player_info.IP]
-		player_widget.pack_forget()
-		player_widget.destroy()

@@ -121,3 +121,46 @@ class BasicPlayerInfoWidget(Frame):
 		self.children["ip"].config(text = ip_text)
 		id_text = self._player_info.ID if self._player_info.ID else "-"
 		self.children["id"].config(text = id_text)
+
+class BasicTeamPanelWidget(LabelFrame):
+	def __init__(self, master, team_title, team_type, \
+		fn_update_team_name, player_info_widget_T = BasicPlayerInfoWidget, \
+		**options):
+		super().__init__(master, text = team_title, name = team_title, \
+			**options)
+		self.pack()
+
+		self._team_type = team_type
+		self._fn_update_team_name = fn_update_team_name
+		self._player_info_widget_T = player_info_widget_T
+
+		self._player_widgets = {}
+		self._entry_team_name = None
+
+		self._setup_layout()
+
+	def _setup_layout(self):
+		setting_panel = Frame(self)
+		setting_panel.pack(fill = X)
+		label_name = Label(setting_panel, text = "Name: ")
+		label_name.pack(side = LEFT)
+		self._entry_team_name = Entry(setting_panel, width = 8)
+		self._entry_team_name.pack(side = LEFT)
+		btn_setting_confirm = Button(setting_panel, text = "更新", \
+			command = self._update_team_name)
+		btn_setting_confirm.pack(side = LEFT)
+
+	def _update_team_name(self):
+		new_team_name = self._entry_team_name.get()
+		self._fn_update_team_name(self._team_type, new_team_name)
+
+	def add_player(self, player_info, color_list):
+		player_widget = self._player_info_widget_T(self, player_info, color_list)
+		player_widget.pack()
+		player_widget.refresh()
+		self._player_widgets[player_info.IP] = player_widget
+
+	def delete_player(self, player_info):
+		player_widget = self._player_widgets[player_info.IP]
+		player_widget.pack_forget()
+		player_widget.destroy()
