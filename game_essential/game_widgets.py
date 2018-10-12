@@ -3,16 +3,27 @@
 
 from tkinter import *
 import tkinter as tk
-from .game_core import BasicGameCore
+from .game_core import BasicGameCore, TeamType
 from .player_info import BasicPlayerInfo
 
 class GameToggleButton(Button):
-	"""The button that makes game start or stop
+	"""A button widget that makes game start or stop
 
-	@vat _game_core The GameCore object to be toggled
+	The button will invoke BasicGameCore.game_start() or BasicGameCore.game_stop()
+	to toggle the game.
+
+	@var _game_core The object of BasicGameCore or its derived class to be toggled
 	"""
 
 	def __init__(self, master, game_core: BasicGameCore, **options):
+		"""Constructor
+
+		The command of the Button is GameToggleButton._toggle_game()
+
+		@param master Specify the parent widget
+		@param game_core Specify the object of BasicGameCore or its derived class
+		@param options Other options for Button widget
+		"""
 		super().__init__(master, text = "遊戲開始", \
 			command = self._toggle_game, **options)
 		self.pack()
@@ -20,33 +31,50 @@ class GameToggleButton(Button):
 		self._game_core = game_core
 
 	def _toggle_game(self):
+		"""Toggle the game start or stop
+
+		The callback function of the GameToggleButton.
+		The method will check the flag BasicGameCore.is_game_started.
+		If it's set, GameToggleButton.game_start() is invoked, otherwise,
+		GameToggleButton.game_stop() is invoked.
+		"""
 		if not self._game_core.is_game_started:
 			self.game_start()
 		else:
 			self.game_stop()
 
 	def game_start(self):
+		"""Start the game
+
+		The method will invoke BasicGameCore.game_start().
+		"""
 		self._game_core.game_start()
 		self.config(text = "遊戲停止")
 
 	def game_stop(self):
+		"""Stop the game
+
+		The method will invoke BasicGameCore.game_stop().
+		"""
 		self._game_core.game_stop()
 		self.config(text = "遊戲開始")
 
 class BasicPlayerInfoWidget(Frame):
-	"""The widget for setting and displaying PlayerInfo
+	"""The widget for setting and displaying BasicPlayerInfo or its derived class
 
 	Usage:
 	```
 	playerInfoWidget = PlayerInfoWidget(...)
 	playerInfoWidget.pack()
 
-	playerInfoWidget.refresh() # To reflect the changes in PlayerInfo
+	playerInfoWidget.refresh() # To reflect the changes in BasicPlayerInfo
 	```
 
-	@var _player_info The PlayerInfo object this widget binds
+	@var _player_info The object of BasicPlayerInfo or its derived class that
+	     binds to this widget
 	@var _selected_color_bgr The trace variable of the color selection
-	     in the OptionMenu
+	     in the OptionMenu. The callback function when the new value is selected
+		 is BasicPlayerInfoWidget._update_player_color()
 	@var _previous_selected_color_bgr The color selected at previous time
 	"""
 
@@ -54,9 +82,12 @@ class BasicPlayerInfoWidget(Frame):
 		**options):
 		"""Constructor
 
-		@param master The parent widget
-		@param player_info The target player information to be shwon
-		@param color_list The selectable color for this player.
+		Constructor will invoke BasicPlayerInfoWidget._setup_layout() to
+		setup its layout.
+
+		@param master Specify he parent widget
+		@param player_info Specify the target player information to be shwon
+		@param color_list Specify he selectable color for this player.
 		       It will be a list of string representation of the color_bgr,
 		       such as ["[123, 123, 123]", "[100, 100, 100]"]
 		@param option Other options for Frame widget
@@ -98,7 +129,7 @@ class BasicPlayerInfoWidget(Frame):
 		color_menu.pack(side = LEFT)
 
 	def _update_player_color(self, *args):
-		"""Update the selected color into PlayerInfo.color_bgr
+		"""Set BasicPlayerInfo.color_bgr to the selected color
 		"""
 		color_bgr_str = self._selected_color_bgr.get()
 		if color_bgr_str == "顏色未定" or \
@@ -115,7 +146,7 @@ class BasicPlayerInfoWidget(Frame):
 		self._player_info.color_bgr = color_bgr
 
 	def refresh(self):
-		"""Make the widget refresh the displaying information
+		"""Make the widget reflect the changes of BasicPlayerInfo object
 		"""
 		ip_text = self._player_info.IP if self._player_info.IP else "-"
 		self.children["ip"].config(text = ip_text)
@@ -123,9 +154,33 @@ class BasicPlayerInfoWidget(Frame):
 		self.children["id"].config(text = id_text)
 
 class BasicTeamPanelWidget(LabelFrame):
-	def __init__(self, master, team_title, team_type, \
+	"""The widget that contains the PlayerWidgets of the same team
+
+	@var _team_type The TeamType of the team
+	@var _fn_udpate_team_name The callback function when the team name is set in
+	     the widget. It will be fn(team_type, team_name)
+	@var _player_info_widget_T The BasicPlayerInfoWidget ot its derived class
+	@var _player_widgets A dictionary that stores the player widgets created.
+	     Mapping the player IP to the players widgets.
+	@var _entry_team_name The Entry widget for entering the team name
+	"""
+
+	def __init__(self, master, team_title, team_type: TeamType, \
 		fn_update_team_name, player_info_widget_T = BasicPlayerInfoWidget, \
 		**options):
+		"""Constructor
+
+		Construtor will invoke BasicTeamPanelWidget._setup_layout() to setup
+		the layout.
+
+		@param master Specify he parent widget
+		@param team_title Specify the title of the team, such as "Team A", "Catcher"
+		@param team_type Specify the TeamType of the team
+		@param fn_update_team_name Specify the callback function
+		       when the team name is set. It will be fn(team_type, team_name)
+		@param player_info_widget_T Specify BasicPlayerInfoWidget or its derived class
+		@param options Other options for LabelFrame widget
+		"""
 		super().__init__(master, text = team_title, name = team_title, \
 			**options)
 		self.pack()
@@ -140,6 +195,13 @@ class BasicTeamPanelWidget(LabelFrame):
 		self._setup_layout()
 
 	def _setup_layout(self):
+		"""Setup the layout
+
+		It looks like:
+		+------------------------------+
+		| Team_title: [     ] [Update] |
+		+------------------------------+
+		"""
 		setting_panel = Frame(self)
 		setting_panel.pack(fill = X)
 		label_name = Label(setting_panel, text = "Name: ")
@@ -151,16 +213,32 @@ class BasicTeamPanelWidget(LabelFrame):
 		btn_setting_confirm.pack(side = LEFT)
 
 	def _update_team_name(self):
+		"""Invoke BasicTeamPanelWidget._fn_update_team_name()
+
+		The callback function of the update button.
+		"""
 		new_team_name = self._entry_team_name.get()
-		self._fn_update_team_name(self._team_type, new_team_name)
+		if new_team_name:
+			self._fn_update_team_name(self._team_type, new_team_name)
 
 	def add_player(self, player_info, color_list):
+		"""Add a player widget to the panel
+
+		@param player_info Specify the info that will be bind to new player widget.
+		       It is the object of BasicPlayerInfo or its derived class
+		@param color_list Specify a list of string representation of the
+		       selectable color. See BasicPlayerWidget.__init__().
+		"""
 		player_widget = self._player_info_widget_T(self, player_info, color_list)
 		player_widget.pack()
 		player_widget.refresh()
 		self._player_widgets[player_info.IP] = player_widget
 
 	def delete_player(self, player_info):
+		"""Delete a player widget from the panel
+
+		@param player_info The info of the player to be deleted.
+		"""
 		player_widget = self._player_widgets[player_info.IP]
 		player_widget.pack_forget()
 		player_widget.destroy()
