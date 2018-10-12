@@ -91,5 +91,5 @@ def get_current_connection_num():
 def send_message(to_ip: str, msg: str):
 	TCPServer.send_msg(to_ip, msg)
 
-def boardcast_message(msg: str):
-	TCPServer.boardcast_msg(msg)
+def broadcast_message(msg: str):
+	TCPServer.broadcast_msg(msg)

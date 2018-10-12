@@ -228,7 +228,7 @@ class BasicGameCore:
 		if self._is_game_started:
 			return
 
-		self._comm_server.boardcast_message("game-start")
+		self._comm_server.broadcast_message("game-start")
 		self._is_game_started = True
 
 	def game_stop(self):
@@ -240,5 +240,5 @@ class BasicGameCore:
 		if not self._is_game_started:
 			return
 
-		self._comm_server.boardcast_message("game-stop")
+		self._comm_server.broadcast_message("game-stop")
 		self._is_game_started = False

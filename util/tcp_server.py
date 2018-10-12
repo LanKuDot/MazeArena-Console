@@ -204,7 +204,7 @@ def send_msg(to_ip: str, msg: str):
 	to_socket = _clients[to_ip]
 	to_socket.send(msg.encode())
 
-def boardcast_msg(msg: str):
+def broadcast_msg(msg: str):
 	"""Boardcast message to all the clients
 
 	@param msg Specify the message
