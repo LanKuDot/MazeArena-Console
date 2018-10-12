@@ -142,19 +142,18 @@ class BasicGameCore:
 		@param args Specify a tuple (player ID, team name)
 		"""
 		try:
-			if len(args) != 2:
-				raise ValueError
-
-			team_type = self.team_get_type_by_name(args[1])
-		except ValueError:
+			player_ID = args[0]
+			team_name = args[1]
+			team_type = self.team_get_type_by_name(team_name)
+		except IndexError:	# Invaild arguments
 			self._comm_server.send_message(player_ip, "join fail")
-
-			if len(args) != 2:
-				print("[GameCore] The arguments for join the game is invaild.")
-			else:
-				print("[GameCore] Specified team name {0} is not found.".format(args[1]))
+			print("[GameCore] The arguments for join the game is invaild.")
+		except ValueError:	# Invaild team name
+			self._comm_server.send_message(player_ip, "join fail")
+			print("[GameCore] Specified team name {0} is not found.".format(team_name))
 		else:
-			player_info = self._teams[team_type].add_player_info(player_ip, *args)
+			player_info = self._teams[team_type] \
+				.add_player_info(player_ip, player_ID, team_name)
 
 			self._teammates[player_ip] = team_type
 			self._handlers["player-join"].invoke(player_info, team_type)

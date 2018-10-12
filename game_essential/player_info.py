@@ -54,21 +54,21 @@ class BasicTeamInfo:
 		self.maze_pos_finder = None
 		self._players = {}
 
-	def add_player_info(self, player_ip, *args) -> BasicPlayerInfo:
+	def add_player_info(self, player_ip, player_ID, team_name) -> BasicPlayerInfo:
 		"""Add the new player to this team
 
 		The method will create a new player information and store to
 		BasicTeamInfo._players.
 
-		@param player_ip Specify the IP of the player.
-		@param args Specify the extra information of the player.
-		       It is (player_ID, team_name).
+		@param player_ip Specify the IP of the player
+		@param player_ID Specify the ID of the player
+		@param team_name Specify the name of the team this player belongs to
 		@return The created player infomation object
 		"""
 		new_player_info = self._player_info_T()
 		new_player_info.IP = player_ip
-		new_player_info.ID = args[0]
-		new_player_info.team_name = args[1]
+		new_player_info.ID = player_ID
+		new_player_info.team_name = team_name
 		self._players[player_ip] = new_player_info
 		return new_player_info
 
