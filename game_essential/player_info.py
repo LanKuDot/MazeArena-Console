@@ -90,8 +90,21 @@ class BasicTeamInfo:
 
 		@param player_IP Specify the IP of the player
 		@return The specified player information
+		@retval None If it is not found
 		"""
 		return self._players.get(player_ip)
+
+	def get_player_info_by_ID(self, player_ID) -> BasicPlayerInfo:
+		"""Get the player information of the specified player ID
+
+		@param player_ID Specify the ID of the player
+		@return The specified player information
+		@retval None If it is not found
+		"""
+		for player_info in self._players.values():
+			if player_info.ID == player_ID:
+				return player_info
+		return None
 
 	def set_player_color(self, player_ip, color_bgr):
 		"""Set the LED color of the player

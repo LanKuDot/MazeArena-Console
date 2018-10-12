@@ -62,12 +62,14 @@ class BasicGameCore:
 
 		* Set player_quit() when a player disconnects from the server
 		* Set player_join() when the server receives the command "join" from player
-		* Set player_position() when the server received the command "position"
+		* Set player_position() when the server receives the command "position"
 		  from player
+		* Set player_send_msg() when the server received the command "send-to"
 		"""
 		self._comm_server.set_disconnection_handler(self.player_quit)
 		self._comm_server.add_command_handler("join", self.player_join)
 		self._comm_server.add_command_handler("position", self.player_position)
+		self._comm_server.add_command_handler("send-to", self.player_send_msg)
 
 	def _team_init(self):
 		"""Initialize the variables in the BasicTeamInfo
@@ -172,7 +174,7 @@ class BasicGameCore:
 		@param player_ip Specify the IP of the player
 		"""
 		try:
-			team_type = self._teammates.pop(team_type)
+			team_type = self._teammates.pop(player_ip)
 		except KeyError:
 			print("[GameCore] Specified player is not found.")
 			return
@@ -183,6 +185,30 @@ class BasicGameCore:
 
 			print("[GameCore] Player \"{0}\" from {1} quits the game." \
 				.format(player_info.ID, player_info.IP))
+
+	def player_send_msg(self, player_ip, *args):
+		"""Send the message to the other player
+
+		@param player_ip Specify the IP of the player who sends the message
+		@param args Specify a tuple (to_ID, message).
+		"""
+		try:
+			to_ID = args[0]
+			message = args[1]
+			team_type = self._teammates[player_ip]
+		except IndexError:	# Invalid arguments
+			self._comm_server.send_message(player_ip, "send-to fail")
+		except KeyError:	# Invalid player team
+			self._comm_server.send_message(player_ip, "send-to fail")
+		else:
+			from_ID = self._teams[team_type].get_player_info_by_IP(player_ip).ID
+			to_info = self._teams[team_type].get_player_info_by_ID(to_ID)
+			if to_info is not None:
+				self._comm_server.send_message(to_info.IP, "send-from {0} {1}" \
+					.format(from_ID, message))
+				self._comm_server.send_message(player_ip, "send-to ok")
+			else:
+				self._comm_server.send_message(player_ip, "send-to fail")
 
 	def player_set_color(self, player_ip, color_bgr):
 		"""Set the LED color of the player
