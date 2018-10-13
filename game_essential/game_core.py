@@ -147,11 +147,19 @@ class BasicGameCore:
 			team_type = self.team_get_type_by_name(team_name)
 		except IndexError:	# Invaild arguments
 			self._comm_server.send_message(player_ip, "join fail")
-			print("[GameCore] The arguments for join the game is invaild.")
+			print("[GameCore] The arguments for join the game are invaild.")
 		except ValueError:	# Invaild team name
 			self._comm_server.send_message(player_ip, "join fail")
 			print("[GameCore] Specified team name {0} is not found.".format(team_name))
 		else:
+			# Check if the player ID is used in the team
+			player_info = self._teams[team_type].get_player_info_by_ID(player_ID)
+			if player_info is not None:
+				self._comm_server.send_message(player_ip, "join fail")
+				print("[GameCore] Player \"{0}\" is already in the team." \
+					.format(player_ID))
+				return
+
 			player_info = self._teams[team_type] \
 				.add_player_info(player_ip, player_ID, team_name)
 
