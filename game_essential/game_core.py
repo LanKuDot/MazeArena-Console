@@ -197,11 +197,11 @@ class BasicGameCore:
 		"""Send the message to the other player
 
 		@param player_ip Specify the IP of the player who sends the message
-		@param args Specify a tuple (to_ID, message).
+		@param args Specify a tuple (to_ID, message_block_1, message_block_2, ...).
 		"""
 		try:
 			to_ID = args[0]
-			message = args[1]
+			message = args[1:len(args)]
 			team_type = self._teammates[player_ip]
 		except IndexError:	# Invalid arguments
 			self._comm_server.send_message(player_ip, "send-to fail")
@@ -211,8 +211,11 @@ class BasicGameCore:
 			from_ID = self._teams[team_type].get_player_info_by_IP(player_ip).ID
 			to_info = self._teams[team_type].get_player_info_by_ID(to_ID)
 			if to_info is not None:
-				self._comm_server.send_message(to_info.IP, "send-from {0} {1}" \
-					.format(from_ID, message))
+				msg_str = ""
+				for msg_block in message:
+					msg_str += " " + msg_block
+				self._comm_server.send_message(to_info.IP, "send-from {0}{1}" \
+					.format(from_ID, msg_str))
 				self._comm_server.send_message(player_ip, "send-to ok")
 			else:
 				self._comm_server.send_message(player_ip, "send-to fail")
