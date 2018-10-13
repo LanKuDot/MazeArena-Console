@@ -64,12 +64,14 @@ class BasicGameCore:
 		* Set player_join() when the server receives the command "join" from player
 		* Set player_position() when the server receives the command "position"
 		  from player
-		* Set player_send_msg() when the server received the command "send-to"
+		* Set player_send_msg() when the server receives the command "send-to"
+		* Set player_team_broadcast() when the server receives the command "send-team"
 		"""
 		self._comm_server.set_disconnection_handler(self.player_quit)
 		self._comm_server.add_command_handler("join", self.player_join)
 		self._comm_server.add_command_handler("position", self.player_position)
 		self._comm_server.add_command_handler("send-to", self.player_send_msg)
+		self._comm_server.add_command_handler("send-team", self.player_team_broadcast)
 
 	def _team_init(self):
 		"""Initialize the variables in the BasicTeamInfo
@@ -130,7 +132,8 @@ class BasicGameCore:
 		The response is: "server join ok" if it's success.
 		or "server join fail" if one of the situations is occured:
 		1. The argument is not matched;
-		2. The specified <team name> is not found.
+		2. The specified <team name> is not found;
+		3. The ID is already used by another player in the same team.
 
 		The method will try to find the player's team and create a new
 		player info for that player in his team.
@@ -214,11 +217,37 @@ class BasicGameCore:
 				msg_str = ""
 				for msg_block in message:
 					msg_str += " " + msg_block
+
 				self._comm_server.send_message(to_info.IP, "send-from {0}{1}" \
 					.format(from_ID, msg_str))
 				self._comm_server.send_message(player_ip, "send-to ok")
 			else:
 				self._comm_server.send_message(player_ip, "send-to fail")
+
+	def player_team_broadcast(self, player_ip, *args):
+		"""Broadcast message to other players in the same team
+
+		@param player_ip Specify the IP of the player
+		@param args Specify a tuple (message_block_1, message_block_2, ...)
+		"""
+		try:
+			message = args
+			team_type = self._teammates[player_ip]
+		except KeyError:	# Invaild player team
+			self._comm_server.send_message(player_ip, "send-team fail")
+		else:
+			from_ID = self._teams[team_type].get_player_info_by_IP(player_ip).ID
+
+			msg_str = ""
+			for msg_block in message:
+				msg_str += " " + msg_block
+
+			for to_ip, team in self._teammates.items():
+				if team is team_type and to_ip != player_ip:
+					self._comm_server.send_message(to_ip, "send-from {0}{1}" \
+						.format(from_ID, msg_str))
+
+			self._comm_server.send_message(player_ip, "send-team ok")
 
 	def player_set_color(self, player_ip, color_bgr):
 		"""Set the LED color of the player
