@@ -83,6 +83,19 @@ class JobThread():
 			print("[JobThread] {0} thread has not been started yet." \
 				.format(self._thread.name))
 
+	def stop_without_wait(self):
+		"""Stop the job thread without waiting it terminates
+
+		If the thread is not alive, the method does nothing.
+		"""
+		if self._thread is not None and self._thread.is_alive():
+			self._is_thread_started = False
+			print("[JobThread] {0} thread is stopped." \
+				.format(self._thread.name))
+		else:
+			print("[JobThread] {0} thread has not been started yet." \
+				.format(self._thread.name))
+
 	def _thread_loop(self):
 		"""A while loop for Thread to execute the target method
 		"""
