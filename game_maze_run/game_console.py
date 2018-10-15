@@ -6,7 +6,8 @@ in the maze if it requests.
 """
 
 from .game_core import GameCore, PlayerInfo, TeamType
-from game_essential import GameToggleButton, BasicPlayerInfoWidget, BasicTeamPanelWidget
+from .widget_timer import TimerWidget
+from game_essential import BasicPlayerInfoWidget, BasicTeamPanelWidget
 from maze_manager import MazeManager
 from tkinter import *
 
@@ -33,10 +34,13 @@ class GameConsoleWidget(LabelFrame):
 		self._setup_handler_to_gamecore()
 
 	def _setup_layout(self):
-		control_panel = Frame(self)
+		control_panel = Frame(self, name = "control_panel")
 		control_panel.pack(fill = X)
-		btn_game_toggle = GameToggleButton(control_panel, self._game_core)
+		btn_game_toggle = Button(control_panel, text = "遊戲開始", \
+			command = self._toggle_game, name = "btn_game_toggle")
 		btn_game_toggle.pack(side = LEFT)
+		timer = TimerWidget(control_panel, self._game_stop_from_timer, name = "timer")
+		timer.pack(side = LEFT, padx = 10)
 
 		self._team_A_panel = TeamPanelWidget(self, "team A", TeamType.A, \
 			self._game_core.team_set_name)
@@ -45,6 +49,7 @@ class GameConsoleWidget(LabelFrame):
 	def _setup_handler_to_gamecore(self):
 		self._game_core._handlers["player-join"] += self._add_player_widget
 		self._game_core._handlers["player-quit"] += self._delete_player_widget
+		self._game_core._handlers["game-stop"] += self._game_stop_from_gamecore
 
 	def _add_player_widget(self, new_player_info: PlayerInfo, team_type: TeamType):
 		if team_type is TeamType.A:
@@ -57,3 +62,28 @@ class GameConsoleWidget(LabelFrame):
 	def _delete_player_widget(self, player_info: PlayerInfo, team_type: TeamType):
 		if team_type is TeamType.A:
 			self._team_A_panel.delete_player(player_info)
+
+	def _toggle_game(self):
+		if not self._game_core.is_game_started:
+			self._game_start_from_gm()
+		else:
+			self._game_stop_from_gm()
+
+	def _game_start_from_gm(self):
+		self.children["control_panel"].children["timer"].timer_start()
+		self.children["control_panel"].children["btn_game_toggle"].config(text = "遊戲停止")
+		self._game_core.game_start()
+
+	# TODO Optimize these game-stop from different source
+	def _game_stop_from_gm(self):
+		self.children["control_panel"].children["timer"].timer_stop()
+		self.children["control_panel"].children["btn_game_toggle"].config(text = "遊戲開始")
+		self._game_core.game_stop()
+
+	def _game_stop_from_gamecore(self):
+		self.children["control_panel"].children["timer"].timer_stop()
+		self.children["control_panel"].children["btn_game_toggle"].config(text = "遊戲開始")
+
+	def _game_stop_from_timer(self):
+		self.children["control_panel"].children["btn_game_toggle"].config(text = "遊戲開始")
+		self._game_core.game_stop()

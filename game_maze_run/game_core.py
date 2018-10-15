@@ -16,3 +16,10 @@ class TeamInfo(BasicTeamInfo):
 class GameCore(BasicGameCore):
 	def __init__(self, maze_manager: MazeManager):
 		super().__init__(maze_manager, TeamInfo)
+
+	def _set_handler_to_server(self):
+		super()._set_handler_to_server()
+		self._comm_server.add_command_handler("game-touch", self.game_touch)
+
+	def game_touch(self, player_ip):
+		self.game_stop()
