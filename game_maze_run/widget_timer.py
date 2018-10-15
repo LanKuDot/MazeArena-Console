@@ -66,7 +66,7 @@ class TimerWidget(Frame):
 		self._label_ms = Label(self, text = ".0", font = font_L)
 		self._label_ms.pack(side = LEFT, fill = Y)
 
-		space_holder = Label(self, text = "", width = 3)
+		space_holder = Label(self, text = "", width = 1)
 		space_holder.pack(side = LEFT)
 
 		checkbox = Checkbutton(self, text = "倒數", variable = self._is_countdown)
@@ -82,9 +82,6 @@ class TimerWidget(Frame):
 		entry_second.pack(side = LEFT)
 		label_s = Label(self, text = "秒")
 		label_s.pack(side = LEFT)
-
-		button = Button(self, text = "開始", command = self.timer_start)
-		button.pack(side = LEFT)
 
 	def _toggle_entry(self, *args):
 		"""Toggle the entries of the timer value setting
