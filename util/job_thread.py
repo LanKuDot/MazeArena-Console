@@ -52,7 +52,7 @@ class JobThread():
 
 		If the thread has been already started, the method does nothing.
 		"""
-		if self._thread is not None and self._thread.is_alive():
+		if self._thread is not None and self._is_thread_started:
 			print("[JobThread] {0} thread has been already started." \
 				.format(self._thread.name))
 		else:
@@ -74,7 +74,7 @@ class JobThread():
 
 		If the thread is not alive, the method does nothing.
 		"""
-		if self._thread is not None and self._thread.is_alive():
+		if self._thread is not None and self._is_thread_started:
 			self._is_thread_started = False
 			self._thread.join()
 			print("[JobThread] {0} thread is stopped." \
@@ -88,7 +88,7 @@ class JobThread():
 
 		If the thread is not alive, the method does nothing.
 		"""
-		if self._thread is not None and self._thread.is_alive():
+		if self._thread is not None and self._is_thread_started:
 			self._is_thread_started = False
 			print("[JobThread] {0} thread is stopped." \
 				.format(self._thread.name))
