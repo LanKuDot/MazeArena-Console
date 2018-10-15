@@ -92,9 +92,13 @@ class BasicGameCore:
 		  `handler(player_info: BasicPlayerInfo, team_type, TeamType)`.
 		* "player-quit": Invoked in player_quit(). The handler should be
 		  `handler(player_info: BasicPlayerInfo, team_type, TeamType)`.
+		* "game-start": Invoked in game-start(). There is no argument.
+		* "game-stop": Invoked in game-stop(). There is no argument.
 		"""
 		self._handlers["player-join"] = FunctionDelegate()
 		self._handlers["player-quit"] = FunctionDelegate()
+		self._handlers["game-start"] = FunctionDelegate()
+		self._handlers["game-stop"] = FunctionDelegate()
 
 	def team_set_name(self, team_type: TeamType, team_name):
 		"""Set the name of the team
@@ -287,23 +291,25 @@ class BasicGameCore:
 	def game_start(self):
 		"""Start the game
 
-		It will do nothing if the game is already started.
 		The server will broadcast a "game-start" message.
+		It will do nothing if the game is already started.
 		"""
 		if self._is_game_started:
 			return
 
 		self._comm_server.broadcast_message("game-start")
 		self._is_game_started = True
+		self._handlers["game-start"].invoke()
 
 	def game_stop(self):
 		"""Stop the game
 
-		If will do nothing if the game is already stopped.
 		The server will broadcast a "game-stop" message.
+		If will do nothing if the game is already stopped.
 		"""
 		if not self._is_game_started:
 			return
 
 		self._comm_server.broadcast_message("game-stop")
 		self._is_game_started = False
+		self._handlers["game-stop"].invoke()
