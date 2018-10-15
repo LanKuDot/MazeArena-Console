@@ -3,61 +3,8 @@
 
 from tkinter import *
 import tkinter as tk
-from .game_core import BasicGameCore, TeamType
+from .game_core import TeamType
 from .player_info import BasicPlayerInfo
-
-class GameToggleButton(Button):
-	"""A button widget that makes game start or stop
-
-	The button will invoke BasicGameCore.game_start() or BasicGameCore.game_stop()
-	to toggle the game.
-
-	@var _game_core The object of BasicGameCore or its derived class to be toggled
-	"""
-
-	def __init__(self, master, game_core: BasicGameCore, **options):
-		"""Constructor
-
-		The command of the Button is GameToggleButton._toggle_game()
-
-		@param master Specify the parent widget
-		@param game_core Specify the object of BasicGameCore or its derived class
-		@param options Other options for Button widget
-		"""
-		super().__init__(master, text = "遊戲開始", \
-			command = self._toggle_game, **options)
-		self.pack()
-
-		self._game_core = game_core
-
-	def _toggle_game(self):
-		"""Toggle the game start or stop
-
-		The callback function of the GameToggleButton.
-		The method will check the flag BasicGameCore.is_game_started.
-		If it's set, GameToggleButton.game_start() is invoked, otherwise,
-		GameToggleButton.game_stop() is invoked.
-		"""
-		if not self._game_core.is_game_started:
-			self.game_start()
-		else:
-			self.game_stop()
-
-	def game_start(self):
-		"""Start the game
-
-		The method will invoke BasicGameCore.game_start().
-		"""
-		self._game_core.game_start()
-		self.config(text = "遊戲停止")
-
-	def game_stop(self):
-		"""Stop the game
-
-		The method will invoke BasicGameCore.game_stop().
-		"""
-		self._game_core.game_stop()
-		self.config(text = "遊戲開始")
 
 class BasicPlayerInfoWidget(Frame):
 	"""The widget for setting and displaying BasicPlayerInfo or its derived class
