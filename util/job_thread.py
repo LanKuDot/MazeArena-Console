@@ -54,7 +54,7 @@ class JobThread():
 		"""
 		if self._thread is not None and self._is_thread_started:
 			print("[JobThread] {0} thread has been already started." \
-				.format(self._thread.name))
+				.format(self._name))
 		else:
 			self._is_thread_started = True
 
@@ -67,7 +67,7 @@ class JobThread():
 
 			self._thread.start()
 			print("[JobThread] {0} thread is started." \
-				.format(self._thread.name))
+				.format(self._name))
 
 	def stop(self):
 		"""Stop the job thread
@@ -78,10 +78,10 @@ class JobThread():
 			self._is_thread_started = False
 			self._thread.join()
 			print("[JobThread] {0} thread is stopped." \
-				.format(self._thread.name))
+				.format(self._name))
 		else:
 			print("[JobThread] {0} thread has not been started yet." \
-				.format(self._thread.name))
+				.format(self._name))
 
 	def stop_without_wait(self):
 		"""Stop the job thread without waiting it terminates
@@ -91,10 +91,10 @@ class JobThread():
 		if self._thread is not None and self._is_thread_started:
 			self._is_thread_started = False
 			print("[JobThread] {0} thread is stopped." \
-				.format(self._thread.name))
+				.format(self._name))
 		else:
 			print("[JobThread] {0} thread has not been started yet." \
-				.format(self._thread.name))
+				.format(self._name))
 
 	def _thread_loop(self):
 		"""A while loop for Thread to execute the target method
