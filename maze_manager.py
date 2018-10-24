@@ -295,6 +295,10 @@ class MazePositionFinder:
 	def start_recognize_car_pos(self):
 		# Generate an array og the ratio of the LED height to the maze height
 		# of all colors
+		if self._upper_transform_mat is None or self._lower_transform_mat is None:
+			print("[MazePosFinder] The maze has not been recognized yet.")
+			return
+
 		self._generate_ratio_to_wall_height()
 		self._recognition_thread.start()
 
