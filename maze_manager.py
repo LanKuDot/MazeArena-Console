@@ -19,6 +19,8 @@ class CarPosition:
 	@var color_bgr The LED color of the maze car in BGR domain
 	@var LED_height The height of the LED on the maze car
 	@var position The position of the maze car in the maze
+	@var position_detail The detailed position of the maze car in the maze.
+	     Always in 512 x 512 scale.
 	"""
 
 	def __init__(self, color_bgr, LED_height: float):
@@ -30,6 +32,7 @@ class CarPosition:
 		self.color_bgr = color_bgr
 		self.LED_height = LED_height
 		self.position = Point2D(-1, -1)
+		self.position_detail = Point2D(-1, -1)	# Always in 512 x 512 scale
 
 	def __eq__(self, other):
 		"""Predefined equal comparsion method
@@ -52,6 +55,7 @@ class CarPosition:
 		new_item = CarPosition(self.color_bgr.copy(), self.LED_height)
 		# namedtuple cannot be modified
 		new_item.position = self.position
+		new_item.position_detail = self.position_detail
 		return new_item
 
 class MazePositionFinder:
@@ -92,6 +96,8 @@ class MazePositionFinder:
 		self._lower_plane_color = None
 		self._upper_transform_mat = None
 		self._lower_transform_mat = None
+		self._upper_transform_mat_detail = None
+		self._lower_transform_mat_detail = None
 		self._colors_to_find = []
 		self._colors_to_find_lock = Lock()
 		self._ratio_to_wall_height_array = []
@@ -224,13 +230,17 @@ class MazePositionFinder:
 
 		self._upper_transform_mat = None
 		self._lower_transform_mat = None
+		self._upper_transform_mat_detail = None
+		self._lower_transform_mat_detail = None
 
 		# Generate transform matrix of the upper plane
 		while self._upper_transform_mat is None:
 			corner_poses = self._maze_color_pos_finder \
 				.get_target_color(*self._upper_plane_color).pixel_position
 			self._upper_transform_mat = \
-				self._generate_transform_matrix(corner_poses)
+				self._generate_transform_matrix(corner_poses, self._maze_scale)
+			self._upper_transform_mat_detail = \
+				self._generate_transform_matrix(corner_poses, Point2D(512, 512))
 		print("[MazePositionFinder] Transform matrix of the upper plane is generated.")
 
 		# Generate transform matrix of the lower plane
@@ -238,10 +248,12 @@ class MazePositionFinder:
 			corner_poses = self._maze_color_pos_finder \
 				.get_target_color(*self._lower_plane_color).pixel_position
 			self._lower_transform_mat = \
-				self._generate_transform_matrix(corner_poses)
+				self._generate_transform_matrix(corner_poses, self._maze_scale)
+			self._lower_transform_mat_detail = \
+				self._generate_transform_matrix(corner_poses, Point2D(512, 512))
 		print("[MazePositionFinder] Transform matrix of the lower plane is generated.")
 
-	def _generate_transform_matrix(self, corner_pos_4: list):
+	def _generate_transform_matrix(self, corner_pos_4: list, maze_scale: Point2D):
 		"""Get a transform matrix which converts coordinates in the video stream
 		to coordinates in the maze
 
@@ -253,6 +265,7 @@ class MazePositionFinder:
 
 		@param corner_pos_4 The list of Point2D that stores
 		       the coordinates of 4 corners of the maze in the video stream
+		@param maze_scale The subdivision of the maze, like 8 x 8.
 		@return A matrix that could transform the points from the
 		        video stream coordinate to the maze coordinate
 		"""
@@ -276,9 +289,9 @@ class MazePositionFinder:
 			list(corner_pos_4[3]) ])
 		to_coordinate = np.float32([ \
 			[0, 0], \
-			[self._maze_scale.x, 0], \
-			[0, self._maze_scale.y], \
-			[self._maze_scale.x, self._maze_scale.y] ])
+			[maze_scale.x, 0], \
+			[0, maze_scale.y], \
+			[maze_scale.x, maze_scale.y] ])
 
 		return cv2.getPerspectiveTransform(from_coordinate, to_coordinate)
 
@@ -315,7 +328,8 @@ class MazePositionFinder:
 		by MazePositionFinder._recognize_position_in_maze._get_pos().
 		The result is stored in CarPosition.postion.
 		"""
-		def _get_pos(pos_in_frame, ratio_to_wall_height) -> Point2D:
+		def _get_pos(pos_in_frame, ratio_to_wall_height, \
+			upper_transform_mat, lower_transform_mat) -> Point2D:
 			""" Transform the pixel position to the maze coordinate
 
 			First, transfrom the pixel position by MazePositionFinder._upper_transform_mat
@@ -329,11 +343,13 @@ class MazePositionFinder:
 			@param pos_in_frame Specify the position found in the video stream
 			@param ratio_to_wall_height Specify the ratio of the LED height to the wall
 			       height
+			@param upper_transform_mat Specify the transform matrix of the upper plane
+			@param lower_transform_mat Specify the transform matrix of the lower plane
 			@return A Point2D object that stores the maze position in integer
 			"""
 			pos = np.array([[[pos_in_frame.x, pos_in_frame.y]]], dtype = np.float32)
-			pos_upper_plane = cv2.perspectiveTransform(pos, self._upper_transform_mat)
-			pos_lower_plane = cv2.perspectiveTransform(pos, self._lower_transform_mat)
+			pos_upper_plane = cv2.perspectiveTransform(pos, upper_transform_mat)
+			pos_lower_plane = cv2.perspectiveTransform(pos, lower_transform_mat)
 			pos_in_maze = pos_lower_plane + \
 				(pos_upper_plane - pos_lower_plane) * ratio_to_wall_height
 			return Point2D(int(round(pos_in_maze[0][0][0] - 0.5)), \
@@ -341,23 +357,35 @@ class MazePositionFinder:
 
 		# Calculate the maze position for each color
 		car_pos = []
+		car_pos_detail = []
 		for i in range(len(self._colors_to_find)):
 			target_color_pos = self._color_pos_finder \
 				.get_target_color(*(self._colors_to_find[i].color_bgr))
 
 			# Hope that there is only one position found in the video stream
 			if len(target_color_pos.pixel_position) > 0:
-				car_pos.append(_get_pos(target_color_pos.pixel_position[0], \
-					self._ratio_to_wall_height_array[i]))
+				pos = _get_pos(target_color_pos.pixel_position[0], \
+					self._ratio_to_wall_height_array[i], \
+					self._upper_transform_mat, \
+					self._lower_transform_mat)
+				car_pos.append(pos)
+
+				pos_detail = _get_pos(target_color_pos.pixel_position[0], \
+					self._ratio_to_wall_height_array[i], \
+					self._upper_transform_mat_detail, \
+					self._lower_transform_mat_detail)
+				car_pos_detail.append(pos_detail)
 			# If there is no position found in the video stream,
-			# remain the last result
+			# preserve the previous result
 			else:
 				car_pos.append(self._colors_to_find[i].position)
+				car_pos_detail.append(self._colors_to_find[i].position_detail)
 
 		# Update the result
 		self._colors_to_find_lock.acquire()
 		for i in range(len(car_pos)):
 			self._colors_to_find[i].position = car_pos[i]
+			self._colors_to_find[i].position_detail = car_pos_detail[i]
 		self._colors_to_find_lock.release()
 
 class MazeManager:
