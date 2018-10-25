@@ -1,4 +1,5 @@
 from collections import namedtuple
+import math
 
 class Point2D(namedtuple('Point2D', 'x y')):
 	"""A data structure of 2d point
@@ -13,3 +14,7 @@ class Point2D(namedtuple('Point2D', 'x y')):
 
 	def __repr__(self):
 		return "Point2D({0}, {1})".format(self.x, self.y)
+
+	@staticmethod
+	def distance(a, b):
+		return math.sqrt(math.pow(a.x - b.x, 2) + math.pow(a.y - b.y, 2))
