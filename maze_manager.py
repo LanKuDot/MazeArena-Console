@@ -20,7 +20,7 @@ class CarPosition:
 	@var LED_height The height of the LED on the maze car
 	@var position The position of the maze car in the maze
 	@var position_detail The detailed position of the maze car in the maze.
-	     Always in 512 x 512 scale.
+	     Always in 128 x 128 scale.
 	"""
 
 	def __init__(self, color_bgr, LED_height: float):
@@ -32,7 +32,7 @@ class CarPosition:
 		self.color_bgr = color_bgr
 		self.LED_height = LED_height
 		self.position = Point2D(-1, -1)
-		self.position_detail = Point2D(-1, -1)	# Always in 512 x 512 scale
+		self.position_detail = Point2D(-1, -1)	# Always in 128 x 128 scale
 
 	def __eq__(self, other):
 		"""Predefined equal comparsion method
@@ -91,6 +91,7 @@ class MazePositionFinder:
 		self._color_pos_finder = color_pos_finder
 
 		self._maze_scale = None
+		self._maze_scale_detail = Point2D(128, 128)
 		self._wall_height = None
 		self._upper_plane_color = None
 		self._lower_plane_color = None
@@ -240,7 +241,7 @@ class MazePositionFinder:
 			self._upper_transform_mat = \
 				self._generate_transform_matrix(corner_poses, self._maze_scale)
 			self._upper_transform_mat_detail = \
-				self._generate_transform_matrix(corner_poses, Point2D(512, 512))
+				self._generate_transform_matrix(corner_poses, self._maze_scale_detail)
 		print("[MazePositionFinder] Transform matrix of the upper plane is generated.")
 
 		# Generate transform matrix of the lower plane
@@ -250,7 +251,7 @@ class MazePositionFinder:
 			self._lower_transform_mat = \
 				self._generate_transform_matrix(corner_poses, self._maze_scale)
 			self._lower_transform_mat_detail = \
-				self._generate_transform_matrix(corner_poses, Point2D(512, 512))
+				self._generate_transform_matrix(corner_poses, self._maze_scale_detail)
 		print("[MazePositionFinder] Transform matrix of the lower plane is generated.")
 
 	def _generate_transform_matrix(self, corner_pos_4: list, maze_scale: Point2D):
