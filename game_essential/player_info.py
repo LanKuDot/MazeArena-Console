@@ -116,3 +116,6 @@ class BasicTeamInfo:
 
 		if target_info is not None:
 			target_info.color_bgr = color_bgr
+
+	def num_of_players(self) -> int:
+		return len(self._players)
