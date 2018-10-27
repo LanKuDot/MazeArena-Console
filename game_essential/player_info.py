@@ -117,5 +117,17 @@ class BasicTeamInfo:
 		if target_info is not None:
 			target_info.color_bgr = color_bgr
 
+	def get_player_info_by_color(self, color_bgr) -> BasicPlayerInfo:
+		"""Get the player information of the specified player color
+
+		@param color_bgr Specify the color in BGR domain
+		@return The specified color information
+		@retval None If it is not found
+		"""
+		for player_info in self._players.values():
+			if player_info.color_bgr == color_bgr:
+				return player_info
+		return None
+
 	def num_of_players(self) -> int:
 		return len(self._players)
