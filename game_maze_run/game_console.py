@@ -31,7 +31,7 @@ class GameConsoleWidget(LabelFrame):
 		self._team_A_panel = None
 
 		self._setup_layout()
-		self._setup_handler_to_gamecore()
+		self._setup_handler_from_gamecore()
 
 	def _setup_layout(self):
 		control_panel = Frame(self, name = "control_panel")
@@ -46,7 +46,7 @@ class GameConsoleWidget(LabelFrame):
 			self._game_core.team_set_name)
 		self._team_A_panel.pack(fill = X, anchor = W)
 
-	def _setup_handler_to_gamecore(self):
+	def _setup_handler_from_gamecore(self):
 		self._game_core._handlers["player-join"] += self._add_player_widget
 		self._game_core._handlers["player-quit"] += self._delete_player_widget
 		self._game_core._handlers["game-stop"] += self._game_stop_from_gamecore
