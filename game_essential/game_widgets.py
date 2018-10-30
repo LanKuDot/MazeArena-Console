@@ -151,7 +151,7 @@ class BasicTeamPanelWidget(LabelFrame):
 		"""
 		setting_panel = Frame(self)
 		setting_panel.pack(fill = X)
-		label_name = Label(setting_panel, text = "Name: ")
+		label_name = Label(setting_panel, text = "隊伍名稱: ")
 		label_name.pack(side = LEFT)
 		self._entry_team_name = Entry(setting_panel, width = 8)
 		self._entry_team_name.pack(side = LEFT)
