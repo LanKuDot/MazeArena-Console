@@ -40,12 +40,12 @@ def _setup_gui(main_window):
 	color_manager = ColorManagerWidget(main_window, \
 		_camera, _color_pos_manager, _maze_manager, \
 		name = "color_manager")
-	color_manager.pack(side = tk.LEFT)
+	color_manager.pack(side = tk.LEFT, anchor = tk.N)
 	right_frame = tk.Frame(main_window)
 	right_frame.pack(side = tk.RIGHT, fill = tk.Y)
 	server_manager = WidgetServerManager(right_frame, \
 		name = "server_manager")
-	server_manager.pack()
+	server_manager.pack(anchor = tk.W)
 	game_console = GameConsoleWidget(right_frame, \
 		_game_core, _maze_manager)
 	game_console.pack(fill = tk.BOTH, expand = tk.Y)
