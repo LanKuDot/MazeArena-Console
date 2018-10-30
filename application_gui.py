@@ -24,6 +24,7 @@ def start_gui():
 	"""Start the gui
 	"""
 	main_window = tk.Tk()
+	main_window.title("MazeArena console")
 	_setup_gui(main_window)
 
 	_camera.start_camera_thread()
