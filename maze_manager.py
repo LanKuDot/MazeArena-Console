@@ -86,7 +86,7 @@ class MazePositionFinder:
 	"""
 
 	def __init__(self, maze_color_pos_finder: ColorPositionFinder, \
-		color_pos_finder: ColorPositionFinder):
+		color_pos_finder: ColorPositionFinder, fps = 100):
 		self._maze_color_pos_finder = maze_color_pos_finder
 		self._color_pos_finder = color_pos_finder
 
@@ -104,7 +104,7 @@ class MazePositionFinder:
 		self._ratio_to_wall_height_array = []
 
 		self._recognition_thread = JobThread(self._recognize_pos_in_maze, \
-			"Car position recognition", 0.01)
+			"Car position recognition", 1.0 / fps)
 
 	def set_maze(self, scale_x, scale_y, wall_height):
 		"""Set the information of the maze
@@ -395,17 +395,18 @@ class MazeManager:
 	@var _maze_pos_finders The container for MazePositionFinders
 	"""
 
-	def __init__(self, color_pos_manager: ColorPosManager):
+	def __init__(self, color_pos_manager: ColorPosManager, fps = 100):
 		"""Constructor
 
 		@param color_pos_manager The instance of class ColorPosManager
+		@param fps Specify the updating rate of the car position in maze
 		"""
 		maze_color_finder = color_pos_manager.get_finder(PosFinderType.MAZE)
 		team_a_color_finder = color_pos_manager.get_finder(PosFinderType.CAR_TEAM_A)
 		team_b_color_finder = color_pos_manager.get_finder(PosFinderType.CAR_TEAM_B)
 		self._maze_pos_finders = {
-			PosFinderType.CAR_TEAM_A: MazePositionFinder(maze_color_finder, team_a_color_finder),
-			PosFinderType.CAR_TEAM_B: MazePositionFinder(maze_color_finder, team_b_color_finder)
+			PosFinderType.CAR_TEAM_A: MazePositionFinder(maze_color_finder, team_a_color_finder, fps),
+			PosFinderType.CAR_TEAM_B: MazePositionFinder(maze_color_finder, team_b_color_finder, fps)
 		}
 
 	def set_maze(self, scale_x, scale_y, wall_height):

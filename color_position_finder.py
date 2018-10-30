@@ -5,7 +5,8 @@ Find the position of the specified color in the image.
 import cv2
 import imutils
 import numpy as np
-from threading import Thread, Lock
+from threading import Lock
+from util.job_thread import JobThread
 
 from point import Point2D
 from color_type import *
@@ -60,20 +61,20 @@ class ColorPositionFinder:
 	@var _colors_to_find A list stores colors to be find in the frame
 	@var _camera The camera object for getting frames
 	@var _color_finding_thread The thread for finding colors in the frame
-	@var _is_thread_started Is the _color_finding_thread started?
 	@var _colors_to_find_lock The read lock of _colors_to_find
 	"""
 
-	def __init__(self, camera):
+	def __init__(self, camera, fps = 100):
 		"""Constructor
 
 		@param camera Spcify the camera object
+		@param fps Sepcify the updating rate of the car position
 		"""
 		self._colors_to_find = []
 		self._camera = camera
 
-		self._color_recognition_thread = None
-		self._is_thread_started = False
+		self._color_recognition_thread = JobThread(self._find_colors, \
+			"Color position recognition", 1.0 / fps)
 		self._colors_to_find_lock = Lock()
 
 	def add_target_color(self, color_b, color_g, color_r):
@@ -83,7 +84,7 @@ class ColorPositionFinder:
 		@param color_g The green channel of the target color
 		@param color_r The red channel of the target color
 		"""
-		if self._is_thread_started:
+		if self._color_recognition_thread.is_running:
 			print("[ColorPositionFinder] Stop the color recognition thread " \
 				"first before modify the target colors.")
 			return
@@ -102,7 +103,7 @@ class ColorPositionFinder:
 		@param color_g The green channel of the target color
 		@param color_r The red channel of the target color
 		"""
-		if self._is_thread_started:
+		if self._color_recognition_thread.is_running:
 			print("[ColorPositionFinder] Stop the color recognition thread " \
 				"first before modify the target colors.")
 			return
@@ -164,12 +165,10 @@ class ColorPositionFinder:
 		If the color recognition thread has been started,
 		the method will do nothing.
 		"""
-		if self._is_thread_started:
+		if self._color_recognition_thread.is_running:
 			print("[INFO] The color recognition thread has been already started.")
 			return
 
-		self._color_recognition_thread = Thread(target = self._find_colors)
-		self._is_thread_started = True
 		self._color_recognition_thread.start()
 
 	def stop_recognition_thread(self):
@@ -178,9 +177,7 @@ class ColorPositionFinder:
 		If the color recognition thread has been stopped,
 		the method will do nothing.
 		"""
-		if self._color_recognition_thread.isAlive():
-			self._is_thread_started = False
-			self._color_recognition_thread.join()
+		self._color_recognition_thread.stop()
 
 	def is_recognition_thread_started(self) -> bool:
 		"""Is the color recognition thread has been started?
@@ -188,7 +185,7 @@ class ColorPositionFinder:
 		@return True if the color recognition thread is started,
 		        otherwise, return False.
 		"""
-		return self._is_thread_started
+		return self._color_recognition_thread.is_running
 
 	def _find_colors(self):
 		def _get_detect_range(color_hsv):
@@ -238,25 +235,20 @@ class ColorPositionFinder:
 					int(moments['m01']/moments['m00'])))
 			return centres
 
-		print("[ColorPosFinder] The color recognition thread is started.")
+		frame = self._camera.get_frame()
+		frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+		# TODO Create multiple thread to find colors if there are
+		# too many colors to be found
+		posFound = []
+		for i in range(len(self._colors_to_find)):
+			posFound.append(_find_target_color(frame_hsv, \
+				self._colors_to_find[i].color_hsv))
 
-		while self._is_thread_started:
-			frame = self._camera.get_frame()
-			frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-			# TODO Create multiple thread to find colors if there are
-			# too many colors to be found
-			posFound = []
-			for i in range(len(self._colors_to_find)):
-				posFound.append(_find_target_color(frame_hsv, \
-					self._colors_to_find[i].color_hsv))
-
-			# Write local result back to the shared data
-			self._colors_to_find_lock.acquire()
-			for i in range(len(posFound)):
-				self._colors_to_find[i].pixel_position = posFound[i].copy()
-			self._colors_to_find_lock.release()
-
-		print("[ColorPosFinder] The color recognition thread is stopped.")
+		# Write local result back to the shared data
+		self._colors_to_find_lock.acquire()
+		for i in range(len(posFound)):
+			self._colors_to_find[i].pixel_position = posFound[i].copy()
+		self._colors_to_find_lock.release()
 
 class ColorPosManager:
 	"""Manage the ColorPositionFinders and provide accessing interface.
@@ -264,16 +256,17 @@ class ColorPosManager:
 	@var _color_pos_finders A dict contains name-ColorPositionFinder pairs
 	"""
 
-	def __init__(self, camera):
+	def __init__(self, camera, fps = 100):
 		"""Constructor
 
 		@param camera Specify the WebCam object
+		@param fps Specify the updating rate of the car position
 		"""
 		self._is_car_color_recognition_started = False
 		self._color_pos_finders = {
-			PosFinderType.MAZE: ColorPositionFinder(camera),
-			PosFinderType.CAR_TEAM_A: ColorPositionFinder(camera),
-			PosFinderType.CAR_TEAM_B: ColorPositionFinder(camera)
+			PosFinderType.MAZE: ColorPositionFinder(camera, fps),
+			PosFinderType.CAR_TEAM_A: ColorPositionFinder(camera, fps),
+			PosFinderType.CAR_TEAM_B: ColorPositionFinder(camera, fps)
 		}
 
 	@property
