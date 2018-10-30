@@ -189,3 +189,8 @@ class BasicTeamPanelWidget(LabelFrame):
 		player_widget = self._player_widgets[player_info.IP]
 		player_widget.pack_forget()
 		player_widget.destroy()
+
+	def num_of_player_widgets(self):
+		"""Get the number of player widgets it has
+		"""
+		return len(self._player_widgets)
