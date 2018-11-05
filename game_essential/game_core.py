@@ -212,7 +212,7 @@ class BasicGameCore:
 			team_type = self._teammates[player_ip]
 		except IndexError:	# Invalid arguments
 			self._comm_server.send_message(player_ip, "send-to fail")
-		except KeyError:	# Invalid player team
+		except KeyError:	# Invalid player
 			self._comm_server.send_message(player_ip, "send-to fail")
 		else:
 			from_ID = self._teams[team_type].get_player_info_by_IP(player_ip).ID
@@ -271,22 +271,27 @@ class BasicGameCore:
 		"""Response the request of the position from the player
 
 		The request is "position".
-		The response is "position <x> <y>"; or "position -1 -1", if the color
-		of the player in not registered in the MazeManager.
+		The response is "position <x> <y>"; or "position -1 -1", if the player
+		is not registered or its color is not assigned.
 
 		@param player_IP Specify the IP of the player
 		"""
-		team_type = self._teammates[player_ip]
-		maze_pos_finder = self._teams[team_type].maze_pos_finder
-		player_info = self._teams[team_type].get_player_info_by_IP(player_ip)
-
-		pos = maze_pos_finder.get_pos_in_maze(player_info.color_bgr)
-
-		if pos is not None:
-			self._comm_server.send_message(player_ip, "position {0} {1}" \
-				.format(*pos))
-		else:
+		try:
+			team_type = self._teammates[player_ip]
+		except KeyError:
 			self._comm_server.send_message(player_ip, "position -1 -1")
+			return
+		else:
+			maze_pos_finder = self._teams[team_type].maze_pos_finder
+			player_info = self._teams[team_type].get_player_info_by_IP(player_ip)
+
+			pos = maze_pos_finder.get_pos_in_maze(player_info.color_bgr)
+
+			if pos is not None:
+				self._comm_server.send_message(player_ip, "position {0} {1}" \
+					.format(*pos))
+			else:
+				self._comm_server.send_message(player_ip, "position -1 -1")
 
 	def game_start(self):
 		"""Start the game
