@@ -92,6 +92,9 @@ class BasicPlayerInfoWidget(Frame):
 			color_bgr.append(int(color))
 		self._player_info.color_bgr = color_bgr
 
+		print("[PlayerInfoWidget] Set the color of player \"{0}\" to \"{1}\"." \
+			.format(self._player_info.ID, self._player_info.color_bgr))
+
 	def refresh(self):
 		"""Make the widget reflect the changes of BasicPlayerInfo object
 		"""
