@@ -96,7 +96,7 @@ class GameCore(BasicGameCore):
 
 			pos = maze_pos_finder.get_pos_in_maze(player_info.color_bgr)
 			if pos is not None:
-				reply_msg += " {0} {1}".format(*pos)
+				reply_msg += " {0} {1}".format(*pos.position)
 			else:
 				reply_msg += " -1 -1"
 
@@ -129,7 +129,7 @@ class GameCore(BasicGameCore):
 		for player_info in self._teams[target_team_type]._players.values():
 			pos = maze_pos_finder.get_pos_in_maze(player_info.color_bgr)
 			if pos is not None:
-				reply_msg += " {0} {1}".format(*pos)
+				reply_msg += " {0} {1}".format(*pos.position)
 			else:
 				reply_msg += " -1 -1"
 

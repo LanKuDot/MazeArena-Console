@@ -289,7 +289,7 @@ class BasicGameCore:
 
 			if pos is not None:
 				self._comm_server.send_message(player_ip, "position {0} {1}" \
-					.format(*pos))
+					.format(*pos.position))
 			else:
 				self._comm_server.send_message(player_ip, "position -1 -1")
 

@@ -185,11 +185,12 @@ class MazePositionFinder:
 				print("[MazePosFinder] Color ({0}, {1}, {2}) is removed" \
 					.format(*color_bgr))
 
-	def get_pos_in_maze(self, color_bgr) -> Point2D:
+	def get_pos_in_maze(self, color_bgr) -> CarPosition:
 		"""Get the maze position of the specified color
 
 		@param color_bgr Specify the color in BGR domain
-		@return The maze position found in the maze
+		@return The copy CarPosition object of the specified color
+		@retval None if the specicifed color is not found
 		"""
 		try:
 			where = self._colors_to_find.index(CarPosition(color_bgr, 0))
@@ -197,7 +198,7 @@ class MazePositionFinder:
 			return None
 		else:
 			self._colors_to_find_lock.acquire()
-			car_pos = self._colors_to_find[where].position
+			car_pos = self._colors_to_find[where].copy()
 			self._colors_to_find_lock.release()
 			return car_pos
 
@@ -461,12 +462,13 @@ class MazeManager:
 			"B": self._maze_pos_finders[PosFinderType.CAR_TEAM_B]
 		}.get(team)
 
-	def get_car_pos_in_maze(self, color_bgr, team) -> Point2D:
+	def get_car_pos_in_maze(self, color_bgr, team) -> CarPosition:
 		"""Get the position in the maze of the spcified maze car
 
 		@param color_bgr Specify the LED color of the maze car in BGR domain
 		@param team Specify the team of the maze car. Should be "A" or "B"
-		@return The position found in the maze
+		@return The copy of CarPosition object of the specified color
+		@retval None If the specified color in not found
 		"""
 		finder = self._get_finder_by_team_name(team)
 		return finder.get_pos_in_maze(color_bgr)
