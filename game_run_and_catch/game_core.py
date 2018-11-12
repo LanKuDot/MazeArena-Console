@@ -3,7 +3,7 @@
 
 from game_essential import BasicGameCore
 from game_essential import BasicPlayerInfo, BasicTeamInfo, TeamType
-from maze_manager import MazeManager, CarPosition
+from maze_manager import MazeManager, MazePosition
 from point import Point2D
 from util.job_thread import JobThread
 from util.function_delegate import FunctionDelegate
@@ -187,7 +187,7 @@ class GameCore(BasicGameCore):
 		if self._num_of_survivor <= 0:
 			self.game_stop()
 
-	def is_catch(self, runner: CarPosition, catcher: CarPosition) -> bool:
+	def is_catch(self, runner: MazePosition, catcher: MazePosition) -> bool:
 		"""Check if the catcher catches the runner
 		"""
 		if Point2D.distance(runner.position_detail, catcher.position_detail) < 12.0:
