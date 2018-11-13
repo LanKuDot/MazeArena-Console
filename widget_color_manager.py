@@ -244,6 +244,19 @@ class ColorManagerWidget(LabelFrame):
 			'wall_height': None}
 		self._setup_layout()
 
+	def destroy(self):
+		"""Override function. Stop the existing thread.
+
+		This method will be called when the gui is closed.
+		"""
+		super().destroy()
+
+		if self._color_pos_manager.is_car_color_recognition_started:
+			self._color_pos_manager.stop_car_color_recognition()
+			self._maze_manager.stop_recognize_car_pos()
+		if self._is_show_result_thread_started:
+			self._is_show_result_thread_started = False
+
 	def _setup_layout(self):
 		"""Set up the layout of ColorManagerWidget
 

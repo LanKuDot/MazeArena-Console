@@ -23,6 +23,15 @@ class WidgetServerManager(LabelFrame):
 		comm_server.set_new_connection_handler(self._update_connection_num)
 		comm_server.set_disconnection_handler(self._update_connection_num)
 
+	def destroy(self):
+		"""Override function. Stop the server thread if it is running.
+
+		This method will be called when the GUI is closed.
+		"""
+		super().destroy()
+		if comm_server.is_running():
+			comm_server.stop_server()
+
 	def _setup_layout(self):
 		"""Set up the layout of WidgetServerManager
 
@@ -60,14 +69,15 @@ class WidgetServerManager(LabelFrame):
 		Start the communication server when the server is not started,
 		and vice versa.
 		"""
-		server_ip = self.children["entry_IP"].get()
-		server_port = int(self.children["entry_port"].get())
-		comm_server.toggle_server(server_ip, server_port)
+		if not comm_server.is_running():
+			server_ip = self.children["entry_IP"].get()
+			server_port = int(self.children["entry_port"].get())
+			comm_server.start_server(server_ip, server_port)
 
-		if comm_server.is_running():
 			self.children["btn_toggle_server"].config(text = "關閉伺服器")
 			self._update_connection_num("")
 		else:
+			comm_server.stop_server()
 			self.children["btn_toggle_server"].config(text = "啟動伺服器")
 			self.children["label_connections"].config(text = "連接數: -/-")
 

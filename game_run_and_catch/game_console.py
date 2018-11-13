@@ -46,6 +46,11 @@ class GameConsoleWidget(LabelFrame):
 		self._setup_layout()
 		self._setup_handler_from_gamecore()
 
+	def destroy(self):
+		super().destroy()
+		if self._game_core.is_game_started:
+			self._game_core.gamecore_thread.stop()
+
 	def _setup_layout(self):
 		control_panel = Frame(self, name = "control_panel")
 		control_panel.pack(fill = X)

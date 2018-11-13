@@ -70,18 +70,18 @@ def _parse_command(from_ip: str, cmd_string: str):
 
 TCPServer.on_recv_msg += _parse_command
 
-def toggle_server(server_ip: str, server_port: int):
-	"""Toggle the TCP server
+# TODO: Is class better than the module?
+def start_server(server_ip: str, server_port: int):
+	"""Start the TCP server
 
 	@param server_ip Specify the IP of the server
 	@param server_port Specify the port of the server
 	"""
-	if TCPServer.is_running():
-		TCPServer.stop_server()
-	else:
-		TCPServer.start_server(server_ip, server_port)
+	TCPServer.start_server(server_ip, server_port)
 
-# TODO: Is class better than the module?
+def stop_server():
+	TCPServer.stop_server()
+
 def is_running():
 	return TCPServer.is_running()
 
