@@ -32,6 +32,7 @@ def start_gui():
 	main_window.mainloop()
 
 	_camera.stop_camera_thread()
+	_camera.release_camera()
 
 def _setup_gui(main_window):
 	"""Set up the layout of the gui
