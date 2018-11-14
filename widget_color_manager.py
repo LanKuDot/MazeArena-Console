@@ -496,23 +496,37 @@ class ColorManagerWidget(LabelFrame):
 	def _mark_recognition_result(self):
 		"""Mark the recogntion result to the original frame
 
-		The method will get a target color list from ColorPositionFinder
-		by invoking ColorPositionFinder.get_all_target_colors().
-		Then, take recognition result stored in the
-		ColorPosition.pixel_position of each color in the target color list
-		and mark red dots at these positions.
+		The method will get a target color list from ColorPositionFinder.
+		Then, get the recognition results from both ColorPositionFinder
+		and MazePositionFinder to mark the maze position at where the color is found.
 		"""
-		def _mark_dots(color_pos_finder, marking_color):
+		def _mark_dots(color_pos_finder, maze_pos_finder = None, \
+			marking_color = (0, 0, 0)):
 			colors = color_pos_finder.get_all_target_colors()
+			maze_pos = None
+			if maze_pos_finder is not None:
+				maze_pos = maze_pos_finder.get_all_maze_pos()
+
 			for color_id in range(len(colors)):
-				posFound = colors[color_id].pixel_position
-				for i in range(len(posFound)):
-					cv2.circle(self._frame, (posFound[i].x, posFound[i].y), \
+				colorPosFound = colors[color_id].pixel_position
+
+				# Mark the colors found
+				for i in range(len(colorPosFound)):
+					cv2.circle(self._frame, colorPosFound[i], \
 						5, marking_color, -1)
 
+				# Only mark the position of the maze of the dot first found
+				if maze_pos is not None:
+					cv2.putText(self._frame, \
+						"({0}, {1})".format(*maze_pos[color_id].position), \
+						(colorPosFound[0].x + 10, colorPosFound[0].y - 10), \
+						cv2.FONT_HERSHEY_DUPLEX, 0.6, marking_color, 2)
+
 		_mark_dots(self._color_pos_manager.get_finder(PosFinderType.MAZE), \
-			(0, 0, 150))
+			marking_color = (0, 0, 150))
 		_mark_dots(self._color_pos_manager.get_finder(PosFinderType.CAR_TEAM_A), \
+			self._maze_manager.get_finder(PosFinderType.CAR_TEAM_A), \
 			(0, 150, 0))
 		_mark_dots(self._color_pos_manager.get_finder(PosFinderType.CAR_TEAM_B), \
+			self._maze_manager.get_finder(PosFinderType.CAR_TEAM_B), \
 			(150, 0, 0))
