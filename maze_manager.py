@@ -452,15 +452,20 @@ class MazeManager:
 			self._maze_pos_finders[old_finder] \
 				.delete_target_color(color_bgr, old_color_type)
 
-	def _get_finder_by_team_name(self, team: str) -> MazePositionFinder:
-		"""Get the MazePositionFinder by the name of the team
+	def get_finder(self, finder_type: PosFinderType) -> MazePositionFinder:
+		"""Get the MazePositionFinder by the type of the team
 
-		@param team Specify the name of the team. Should be "A" or "B".
+		@param finder_type Specify the type of the finder
+		"""
+		return self._maze_pos_finders[finder_type]
+
+	def get_finder_by_name(self, name: str) -> MazePositionFinder:
+		"""Get the MazePositionFinder by "A" or "B"
 		"""
 		return {
-			"A": self._maze_pos_finders[PosFinderType.CAR_TEAM_A],
-			"B": self._maze_pos_finders[PosFinderType.CAR_TEAM_B]
-		}.get(team)
+			"A": self.get_finder(PosFinderType.CAR_TEAM_A),
+			"B": self.get_finder(PosFinderType.CAR_TEAM_B)
+		}.get(name)
 
 	def get_maze_pos(self, color_bgr, team: str) -> MazePosition:
 		"""Get the position in the maze of the spcified maze car
@@ -470,7 +475,7 @@ class MazeManager:
 		@return The copy of MazePosition object of the specified color
 		@retval None If the specified color in not found
 		"""
-		finder = self._get_finder_by_team_name(team)
+		finder = self.get_finder_by_name(team)
 		return finder.get_maze_pos(color_bgr)
 
 	def get_team_maze_pos(self, team: str):
@@ -479,7 +484,7 @@ class MazeManager:
 		@param team Specify the team of the maze cars. Should be "A" or "B"
 		@return A list of MazePosition objects of the specfied team
 		"""
-		finder = self._get_finder_by_team_name(team)
+		finder = self.get_finder_by_name(team)
 		return finder.get_all_maze_pos()
 
 	def recognize_maze(self):

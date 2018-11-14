@@ -81,7 +81,7 @@ class BasicGameCore:
 		for team_type, team_info in self._teams.items():
 			team_info.team_type = team_type
 			team_info.maze_pos_finder = \
-				self._maze_manager._get_finder_by_team_name(team_type.__str__())
+				self._maze_manager.get_finder_by_name(team_type.__str__())
 
 	def _handler_init(self):
 		"""Create the event handlers
