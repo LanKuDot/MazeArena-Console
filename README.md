@@ -7,6 +7,8 @@ MazeArena 是由一個迷宮場地與數台迷宮車組成的場景。
 迷宮車具有通訊能力，用來與伺服器溝通或是透過伺服器與其他迷宮車溝通，
 同時帶有一個 RGB LED 燈，用來讓車輛辨識程式辨別車輛在迷宮中的位置。
 
+詳細的資訊可以參考專案的 [wiki 頁面](https://github.com/LanKuDot/MazeArena-Console/wiki)
+
 ## 需求 ##
 
 **額外設備**
@@ -36,28 +38,6 @@ MazeArena 是由一個迷宮場地與數台迷宮車組成的場景。
 * [**Run and Catch**](game_run_and_catch/README.md)：
   由兩隊組成，一方扮演逃亡者 (Runner)，一方則扮演追逐者 (Catcher)。
   逃亡方在全員被抓起來前完成指定的目標。
-
-## 基本伺服器指令 ##
-
-在遊戲中，迷宮車必須透過指令與伺服器溝通
-
-* `join <ID> <team>`：加入遊戲
-  - `ID`：迷宮車的識別名稱
-  - `team`：要加入隊伍的名稱
-  - 伺服器回應：`join ok` 或 `join fail`
-* `send-to <ID> <message>`：傳訊息給指定 ID 的迷宮車，只有同隊才有效
-  - `ID`：同隊的迷宮車 ID
-  - `message`：要傳遞的訊息
-  - 伺服器回應：`send-to ok`
-  - 隊友收到的訊息格式：`send-from <ID> <message>`
-    - `ID`：訊息來源 ID
-    - `message`：收到的訊息
-* `send-team <message>`：傳訊息給所有隊友
-  - `message`：要傳遞的訊息
-  - 伺服器回應：`send-team ok`
-  - 隊友收到的訊息同 `send-to` 指令
-
-若要離開遊戲，直接離開 TCP server 即可。
 
 ## 設定額外參數 ##
 
