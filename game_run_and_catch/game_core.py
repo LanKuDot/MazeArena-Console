@@ -94,7 +94,7 @@ class GameCore(BasicGameCore):
 		for player_info in self._teams[team_type]._players.values():
 			reply_msg += " " + player_info.ID
 
-			pos = maze_pos_finder.get_pos_in_maze(player_info.color_bgr)
+			pos = maze_pos_finder.get_maze_pos(player_info.color_bgr)
 			if pos is not None:
 				reply_msg += " {0} {1}".format(*pos.position)
 			else:
@@ -127,7 +127,7 @@ class GameCore(BasicGameCore):
 		maze_pos_finder = self._teams[target_team_type].maze_pos_finder
 
 		for player_info in self._teams[target_team_type]._players.values():
-			pos = maze_pos_finder.get_pos_in_maze(player_info.color_bgr)
+			pos = maze_pos_finder.get_maze_pos(player_info.color_bgr)
 			if pos is not None:
 				reply_msg += " {0} {1}".format(*pos.position)
 			else:
@@ -165,8 +165,8 @@ class GameCore(BasicGameCore):
 
 		If there is no runner who is still alive, then the game will be stopped.
 		"""
-		runners = self._teams[GameCore.TEAM_RUNNER].maze_pos_finder.get_all_target_colors()
-		catchers = self._teams[GameCore.TEAM_CATCHER].maze_pos_finder.get_all_target_colors()
+		runners = self._teams[GameCore.TEAM_RUNNER].maze_pos_finder.get_all_maze_pos()
+		catchers = self._teams[GameCore.TEAM_CATCHER].maze_pos_finder.get_all_maze_pos()
 
 		for runner in runners:
 			for catcher in catchers:

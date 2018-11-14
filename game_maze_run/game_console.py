@@ -53,7 +53,7 @@ class GameConsoleWidget(LabelFrame):
 
 	def _add_player_widget(self, new_player_info: PlayerInfo, team_type: TeamType):
 		if team_type is TeamType.A:
-			team_car_pos = self._maze_manager.get_team_car_pos(team_type.__str__())
+			team_car_pos = self._maze_manager.get_team_maze_pos(team_type.__str__())
 			team_color = []
 			for car_pos in team_car_pos:
 				team_color.append(car_pos.color_bgr.__str__())

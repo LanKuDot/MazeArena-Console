@@ -185,7 +185,7 @@ class MazePositionFinder:
 				print("[MazePosFinder] Color ({0}, {1}, {2}) is removed" \
 					.format(*color_bgr))
 
-	def get_pos_in_maze(self, color_bgr) -> MazePosition:
+	def get_maze_pos(self, color_bgr) -> MazePosition:
 		"""Get the maze position of the specified color
 
 		@param color_bgr Specify the color in BGR domain
@@ -202,7 +202,7 @@ class MazePositionFinder:
 			self._colors_to_find_lock.release()
 			return car_pos
 
-	def get_all_target_colors(self) -> list:
+	def get_all_maze_pos(self) -> list:
 		"""Get a copy of all the target colors and their maze positions
 
 		@return A copy of MazePositionFinder._colors_to_find
@@ -307,7 +307,7 @@ class MazePositionFinder:
 			self._ratio_to_wall_height_array \
 				.append(self._colors_to_find[i].LED_height / self._wall_height)
 
-	def start_recognize_car_pos(self):
+	def start_recognize_maze_pos(self):
 		# Generate an array og the ratio of the LED height to the maze height
 		# of all colors
 		if self._upper_transform_mat is None or self._lower_transform_mat is None:
@@ -317,7 +317,7 @@ class MazePositionFinder:
 		self._generate_ratio_to_wall_height()
 		self._recognition_thread.start()
 
-	def stop_recognize_car_pos(self):
+	def stop_recognize_maze_pos(self):
 		self._recognition_thread.stop()
 
 	def _recognize_pos_in_maze(self):
@@ -452,7 +452,7 @@ class MazeManager:
 			self._maze_pos_finders[old_finder] \
 				.delete_target_color(color_bgr, old_color_type)
 
-	def _get_finder_by_team_name(self, team) -> MazePositionFinder:
+	def _get_finder_by_team_name(self, team: str) -> MazePositionFinder:
 		"""Get the MazePositionFinder by the name of the team
 
 		@param team Specify the name of the team. Should be "A" or "B".
@@ -462,7 +462,7 @@ class MazeManager:
 			"B": self._maze_pos_finders[PosFinderType.CAR_TEAM_B]
 		}.get(team)
 
-	def get_car_pos_in_maze(self, color_bgr, team) -> MazePosition:
+	def get_maze_pos(self, color_bgr, team: str) -> MazePosition:
 		"""Get the position in the maze of the spcified maze car
 
 		@param color_bgr Specify the LED color of the maze car in BGR domain
@@ -471,16 +471,16 @@ class MazeManager:
 		@retval None If the specified color in not found
 		"""
 		finder = self._get_finder_by_team_name(team)
-		return finder.get_pos_in_maze(color_bgr)
+		return finder.get_maze_pos(color_bgr)
 
-	def get_team_car_pos(self, team):
+	def get_team_maze_pos(self, team: str):
 		"""Get the position of all the maze cars in a team
 
 		@param team Specify the team of the maze cars. Should be "A" or "B"
 		@return A list of MazePosition objects of the specfied team
 		"""
 		finder = self._get_finder_by_team_name(team)
-		return finder.get_all_target_colors()
+		return finder.get_all_maze_pos()
 
 	def recognize_maze(self):
 		"""Make every MazePositionFinder to recognize the maze
@@ -488,10 +488,10 @@ class MazeManager:
 		for maze_pos_finder in self._maze_pos_finders.values():
 			maze_pos_finder.recognize_maze()
 
-	def start_recognize_car_pos(self):
+	def start_recognize_maze_pos(self):
 		for maze_pos_finder in self._maze_pos_finders.values():
-			maze_pos_finder.start_recognize_car_pos()
+			maze_pos_finder.start_recognize_maze_pos()
 
-	def stop_recognize_car_pos(self):
+	def stop_recognize_maze_pos(self):
 		for maze_pos_finder in self._maze_pos_finders.values():
-			maze_pos_finder.stop_recognize_car_pos()
+			maze_pos_finder.stop_recognize_maze_pos()

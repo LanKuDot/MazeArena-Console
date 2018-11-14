@@ -285,7 +285,7 @@ class BasicGameCore:
 			maze_pos_finder = self._teams[team_type].maze_pos_finder
 			player_info = self._teams[team_type].get_player_info_by_IP(player_ip)
 
-			pos = maze_pos_finder.get_pos_in_maze(player_info.color_bgr)
+			pos = maze_pos_finder.get_maze_pos(player_info.color_bgr)
 
 			if pos is not None:
 				self._comm_server.send_message(player_ip, "position {0} {1}" \
