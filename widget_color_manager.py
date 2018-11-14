@@ -287,7 +287,7 @@ class ColorManagerWidget(LabelFrame):
 		button_recognize_maze.pack(fill = X)
 		#-----
 		maze_scale_frame = Frame(self._option_panel)
-		label_ms_1 = Label(maze_scale_frame, text = "迷宮座標：X ")
+		label_ms_1 = Label(maze_scale_frame, text = "迷宮規模：X ")
 		label_ms_1.pack(side = LEFT)
 		entry_maze_scale_x = PositiveIntEntry(maze_scale_frame, width = 3)
 		entry_maze_scale_x.pack(side = LEFT)
