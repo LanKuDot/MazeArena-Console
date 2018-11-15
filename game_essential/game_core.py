@@ -253,20 +253,6 @@ class BasicGameCore:
 
 			self._comm_server.send_message(player_ip, "send-team ok")
 
-	def player_set_color(self, player_ip, color_bgr):
-		"""Set the LED color of the player
-
-		The callback function for the widget that can specify the LED color of
-		the player's maze car.
-
-		@param player_ip Specify the IP of the player
-		@param color_bgr Specify the LED color in BGR domain
-		"""
-		for team_info in self._teams.values():
-			# If the player_ip is not in that table,
-			# it will do nothing.
-			team_info.set_player_color(player_ip, color_bgr)
-
 	def player_position(self, player_ip, *args):
 		"""Response the request of the position from the player
 
