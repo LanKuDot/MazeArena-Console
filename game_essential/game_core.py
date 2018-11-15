@@ -149,9 +149,9 @@ class BasicGameCore:
 		@param args Specify a tuple (player ID, team name)
 		"""
 		try:
-			player_ID = args[0]
-			team_name = args[1]
-			team_type = self.team_get_type_by_name(team_name)
+			player_ID = args[0] # IndexError
+			team_name = args[1] # IndexError
+			team_type = self.team_get_type_by_name(team_name) # ValueError
 		except IndexError:	# Invaild arguments
 			self._comm_server.send_message(player_ip, "join fail")
 			print("[GameCore] The arguments for join the game are invaild.")
@@ -207,9 +207,9 @@ class BasicGameCore:
 		@param args Specify a tuple (to_ID, message_block_1, message_block_2, ...).
 		"""
 		try:
-			to_ID = args[0]
-			message = args[1:len(args)]
-			team_type = self._teammates[player_ip]
+			to_ID = args[0] # IndexError
+			message = args[1:len(args)] # IndexError
+			team_type = self._teammates[player_ip] # KeyError
 		except IndexError:	# Invalid arguments
 			self._comm_server.send_message(player_ip, "send-to fail")
 		except KeyError:	# Invalid player
@@ -236,7 +236,7 @@ class BasicGameCore:
 		"""
 		try:
 			message = args
-			team_type = self._teammates[player_ip]
+			team_type = self._teammates[player_ip] # KeyError
 		except KeyError:	# Invaild player team
 			self._comm_server.send_message(player_ip, "send-team fail")
 		else:
@@ -267,7 +267,7 @@ class BasicGameCore:
 			# it will do nothing.
 			team_info.set_player_color(player_ip, color_bgr)
 
-	def player_position(self, player_ip):
+	def player_position(self, player_ip, *args):
 		"""Response the request of the position from the player
 
 		The request is "position".
