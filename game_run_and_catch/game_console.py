@@ -20,8 +20,8 @@ class TeamPanelWidget(BasicTeamPanelWidget):
 		super().__init__(master, team_title, team_type, fn_update_team_name, \
 			PlayerInfoWidget, **options)
 
-	def add_player(self, player_info, color_list, label_color_name):
-		super().add_player(player_info, color_list)
+	def add_player(self, player_info, color_list, fn_kick, label_color_name):
+		super().add_player(player_info, color_list, fn_kick)
 		self.set_player_color_label(player_info.IP, label_color_name)
 
 	def set_player_color_label(self, player_ip, label_color_name):
@@ -91,9 +91,11 @@ class GameConsoleWidget(LabelFrame):
 			team_color.append(car_pos.color_bgr.__str__())
 
 		if team_type is GameCore.TEAM_CATCHER:
-			self._team_catcher_panel.add_player(new_player_info, team_color, "blue")
+			self._team_catcher_panel.add_player(new_player_info, team_color, \
+				self._game_core.player_kick, "blue")
 		else:
-			self._team_runner_panel.add_player(new_player_info, team_color, "red")
+			self._team_runner_panel.add_player(new_player_info, team_color, \
+				self._game_core.player_kick, "red")
 
 	def _delete_player_widget(self, player_info: PlayerInfo, team_type: TeamType):
 		if team_type is GameCore.TEAM_CATCHER:

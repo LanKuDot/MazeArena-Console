@@ -34,6 +34,13 @@ _sockets = []
 # A dictionary(IP, socket) which mapping IP to the socket.
 _clients = {}
 
+### Data structure ###
+
+class ClientSock:
+	def __init__(self, sock):
+		self.sock = sock
+		self.to_be_closed = False
+
 def start_server(server_ip: str, server_port: int):
 	"""Start the TCP server on server_ip: server_port.
 
@@ -113,6 +120,9 @@ def _listen_to_client(server_ip: str, server_port: int):
 			else:
 				_recv_msg(sock)
 
+		# Check if the socket needs to be closed
+		_check_disconnection()
+
 	_server_socket.close()
 
 def _new_connection(new_sock, addr_info):
@@ -142,11 +152,11 @@ def _new_connection(new_sock, addr_info):
 		pass
 	else:
 		# If it's in the list, disconnection the old connection
-		_disconnection(client_sock)
+		_disconnection(client_sock.sock)
 	finally:
 		# Accept new connection
 		_sockets.append(new_sock)
-		_clients[sock_ip] = new_sock
+		_clients[sock_ip] = ClientSock(new_sock)
 
 	on_new_connect.invoke(sock_ip)
 
@@ -168,6 +178,32 @@ def _disconnection(sock):
 
 	sock.close()
 	on_disconnect.invoke(sock_ip)
+
+def force_disconnection(sock_ip):
+	"""Forcely close the connection from the client asychronizedly
+
+	The method will only raise the close flag of the client socket.
+	The server thread will not close the client until it checks the flag.
+	"""
+	try:
+		client_sock = _clients[sock_ip]
+	except KeyError:
+		print("[TCP server] {0} is not connecting to server" \
+			.format(sock_ip))
+		return
+	else:
+		client_sock.to_be_closed = True
+
+def _check_disconnection():
+	sock_to_be_closed = []
+
+	# Stack sockets that need to be closed
+	for client_sock in _clients.values():
+		if client_sock.to_be_closed:
+			sock_to_be_closed.append(client_sock)
+
+	for client_sock in sock_to_be_closed:
+		_disconnection(client_sock.sock)
 
 def _recv_msg(sock):
 	"""Receving message from the client
@@ -201,7 +237,7 @@ def send_msg(to_ip: str, msg: str):
 	@param to_ip Specify the IP of the client
 	@param msg Specify the message
 	"""
-	to_socket = _clients[to_ip]
+	to_socket = _clients[to_ip].sock
 	to_socket.send(msg.encode())
 
 def broadcast_msg(msg: str):

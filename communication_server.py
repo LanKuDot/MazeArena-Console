@@ -82,6 +82,13 @@ def start_server(server_ip: str, server_port: int):
 def stop_server():
 	TCPServer.stop_server()
 
+def force_disconnection(client_ip):
+	"""Forcely disconnect the client from the server
+
+	@param client_ip Specify the client IP
+	"""
+	TCPServer.force_disconnection(client_ip)
+
 def is_running():
 	return TCPServer.is_running()
 

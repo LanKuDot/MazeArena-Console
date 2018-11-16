@@ -57,7 +57,8 @@ class GameConsoleWidget(LabelFrame):
 			team_color = []
 			for car_pos in team_car_pos:
 				team_color.append(car_pos.color_bgr.__str__())
-			self._team_A_panel.add_player(new_player_info, team_color)
+			self._team_A_panel.add_player(new_player_info, team_color, \
+				self._game_core.player_kick)
 
 	def _delete_player_widget(self, player_info: PlayerInfo, team_type: TeamType):
 		if team_type is TeamType.A:

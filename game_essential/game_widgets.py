@@ -53,9 +53,9 @@ class BasicPlayerInfoWidget(Frame):
 		"""Set up the layout of the widget
 
 		It will be like:
-		+-------------------------+
-		| [] IP ID [Color +] |
-		+-------------------------+
+		+---------------------------+
+		| [] [Kick] IP ID [Color +] |
+		+---------------------------+
 
 		@param color_list Specify the selectable color list in string
 		"""
@@ -64,6 +64,12 @@ class BasicPlayerInfoWidget(Frame):
 		color_label.pack(side = LEFT)
 		spacer = Label(self, width = 1)
 		spacer.pack(side = LEFT)
+		btn_kick = Button(self, text = "剔除", \
+			command = lambda: print("[PlayerInfoWidget] Kick handler is not assigned."), \
+			name = "btn_kick")
+		btn_kick.pack(side = LEFT)
+		spacer_mary = color_label(self, width = 1)
+		spacer_mary.pack(side = LEFT)
 		ip = Label(self, text = self._player_info.IP, \
 			width = 14, anchor = W, name = "ip")
 		ip.pack(side = LEFT)
@@ -94,6 +100,14 @@ class BasicPlayerInfoWidget(Frame):
 
 		print("[PlayerInfoWidget] Set the color of player \"{0}\" to \"{1}\"." \
 			.format(self._player_info.ID, self._player_info.color_bgr))
+
+	def set_kick_handler(self, fn_kick):
+		"""Set the handler for the button "kick"
+
+		@param fn_kick The function for kicking the player from server.
+		       Should be fn_kick(player_ip).
+		"""
+		self.children["btn_kick"].config(command = lambda: fn_kick(self._player_info.IP))
 
 	def refresh(self):
 		"""Make the widget reflect the changes of BasicPlayerInfo object
@@ -171,16 +185,19 @@ class BasicTeamPanelWidget(LabelFrame):
 		if new_team_name:
 			self._fn_update_team_name(self._team_type, new_team_name)
 
-	def add_player(self, player_info, color_list):
+	def add_player(self, player_info, color_list, fn_kick):
 		"""Add a player widget to the panel
 
 		@param player_info Specify the info that will be bind to new player widget.
 		       It is the object of BasicPlayerInfo or its derived class
 		@param color_list Specify a list of string representation of the
 		       selectable color. See BasicPlayerWidget.__init__().
+		@param fn_kick Specify the handler for kicking the player from the server.
+		       Should be fn_kick(player_ip).
 		"""
 		player_widget = self._player_info_widget_T(self, player_info, color_list)
 		player_widget.pack()
+		player_widget.set_kick_handler(fn_kick)
 		player_widget.refresh()
 		self._player_widgets[player_info.IP] = player_widget
 

@@ -200,6 +200,15 @@ class BasicGameCore:
 			print("[GameCore] Player \"{0}\" from {1} quits the game." \
 				.format(player_info.ID, player_info.IP))
 
+	def player_kick(self, player_ip):
+		"""Kick the player from the server
+
+		The callback function for the kicking request from the PlayerInfoWidget.
+
+		@param player_ip Specify the IP of the player
+		"""
+		self._comm_server.force_disconnection(player_ip)
+
 	def player_send_msg(self, player_ip, *args):
 		"""Send the message to the other player
 
