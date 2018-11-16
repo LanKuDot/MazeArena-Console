@@ -68,7 +68,7 @@ class BasicPlayerInfoWidget(Frame):
 			command = lambda: print("[PlayerInfoWidget] Kick handler is not assigned."), \
 			name = "btn_kick")
 		btn_kick.pack(side = LEFT)
-		spacer_mary = color_label(self, width = 1)
+		spacer_mary = Label(self, width = 1)
 		spacer_mary.pack(side = LEFT)
 		ip = Label(self, text = self._player_info.IP, \
 			width = 14, anchor = W, name = "ip")
