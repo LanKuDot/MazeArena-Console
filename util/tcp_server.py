@@ -80,6 +80,11 @@ def stop_server():
 	_server_running = False
 	_server_thread.join()
 
+	# Close all the client sockets
+	for target_client in _clients.values():
+		target_client.to_be_closed = True
+	_check_disconnection()
+
 	print("[TCP server] Stop server")
 
 def is_running() -> bool:
