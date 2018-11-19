@@ -5,7 +5,7 @@ IP and port by a new thread. It provides callback functions
 for new connection, disconnection, or receving message from
 the client.
 """
-import socket, select
+import socket, select, time
 from threading import Thread
 from util.function_delegate import FunctionDelegate
 
@@ -33,13 +33,15 @@ RECV_BUFF_SIZE = 512
 _sockets = []
 # A dictionary(IP, socket) which mapping IP to the socket.
 _clients = {}
+# The time interval of the request from the client.
+request_interval = 0.1 # seconds
 
 ### Data structure ###
-
 class ClientSock:
 	def __init__(self, sock):
 		self.sock = sock
 		self.to_be_closed = False
+		self.timestamp = time.time()
 
 def start_server(server_ip: str, server_port: int):
 	"""Start the TCP server on server_ip: server_port.
@@ -225,9 +227,14 @@ def _recv_msg(sock):
 		_disconnection(sock)
 	else:
 		if len(recv_data) > 0:
-			print("[TCP server] Receive data from {0}: {1}" \
-				.format(sock_ip, recv_data))
-			on_recv_msg.invoke(sock_ip, recv_data)
+			# Check timestamp to see whether handle the message or not.
+			target_client = _clients[sock_ip]
+
+			if time.time() - target_client.timestamp > request_interval:
+				print("[TCP server] Receive data from {0}: {1}" \
+					.format(sock_ip, recv_data))
+				target_client.timestamp = time.time()
+				on_recv_msg.invoke(sock_ip, recv_data)
 		else:
 			_disconnection(sock)
 
