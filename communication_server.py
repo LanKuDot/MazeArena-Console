@@ -4,9 +4,15 @@ The wrapper module of tcp_module. Mainly handling the command
 send from the client.
 """
 import util.tcp_server as TCPServer
+from threading import Thread
+from queue import Queue
 
 # A dictionary for mapping command to the handler
 _command_handlers = {}	# (command, handler)
+# The thread for handling the pending command
+_command_thread = None
+# A queue to store the pending command
+_pending_queue = Queue()
 
 def set_new_connection_handler(handler):
 	"""Set the callback function(client_ip) of new connection from client
@@ -39,6 +45,22 @@ def add_command_handler(cmd_keyword: str, handler):
 		raise ValueError("Command '{0}' is already registered." \
 			.format(cmd_keyword))
 
+def _comsume_command():
+	"""Comsume the pending commands in the _pending_queue
+
+	This method is the target method of the thread _command_thread.
+	The thread will stop when get the None object from the _pending_queue.
+	"""
+	while True:
+		command_item = _pending_queue.get()
+
+		if command_item is None:
+			_pending_queue.task_done()
+			break
+
+		_parse_command(*command_item)
+		_pending_queue.task_done()
+
 def _parse_command(from_ip: str, cmd_string: str):
 	"""Parse the command sent from the client
 
@@ -68,18 +90,37 @@ def _parse_command(from_ip: str, cmd_string: str):
 	else:
 		target_handler(from_ip, *parameters)
 
-TCPServer.on_recv_msg += _parse_command
+def _queue_command(from_ip: str, cmd_string: str):
+	"""Queue the pending command to the _pending_queue
+
+	The command in the _pending_queue will be comsumed in _dequeue_command.
+
+	@param from_ip The IP of the client
+	@param cmd_string The command recevied from the client
+	"""
+	_pending_queue.put((from_ip, cmd_string))
+
+TCPServer.on_recv_msg += _queue_command
 
 # TODO: Is class better than the module?
 def start_server(server_ip: str, server_port: int):
-	"""Start the TCP server
+	"""Start the TCP server and the command thread
 
 	@param server_ip Specify the IP of the server
 	@param server_port Specify the port of the server
 	"""
+	global _command_thread
+
 	TCPServer.start_server(server_ip, server_port)
+	_command_thread = Thread(target = _comsume_command)
+	_command_thread.start()
 
 def stop_server():
+	"""Stop the TCP server and the command thread
+	"""
+	_pending_queue.put(None)
+	_pending_queue.join()
+	_command_thread.join()
 	TCPServer.stop_server()
 
 def force_disconnection(client_ip):
