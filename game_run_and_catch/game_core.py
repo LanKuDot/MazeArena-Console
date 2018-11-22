@@ -72,6 +72,7 @@ class GameCore(BasicGameCore):
 		super()._handler_init()
 		self._handlers["game-catched"] = FunctionDelegate()
 
+	# @BasicGameCore.game_started
 	def player_position_team(self, player_ip):
 		"""Request the position of maze cars in the player's team (including itself)
 
@@ -102,6 +103,7 @@ class GameCore(BasicGameCore):
 
 		self._comm_server.send_message(player_ip, reply_msg)
 
+	# @BasicGameCore.game_started
 	def player_position_enemy(self, player_ip):
 		"""Request the position of enemies
 
@@ -135,6 +137,7 @@ class GameCore(BasicGameCore):
 
 		self._comm_server.send_message(player_ip, reply_msg)
 
+	@BasicGameCore.game_started
 	def game_touch(self, player_ip):
 		"""Touch the goal.
 
@@ -144,6 +147,7 @@ class GameCore(BasicGameCore):
 		if player_info is not None:
 			self.game_stop()
 
+	@BasicGameCore.game_stopped
 	def game_start(self):
 		self._num_of_survivor = self._teams[GameCore.TEAM_RUNNER].num_of_players()
 		for player_info in self._teams[GameCore.TEAM_RUNNER]._players.values():
@@ -151,6 +155,7 @@ class GameCore(BasicGameCore):
 		self.gamecore_thread.start()
 		super().game_start()
 
+	@BasicGameCore.game_started
 	def game_stop(self):
 		self.gamecore_thread.stop_without_wait()
 		super().game_stop()
