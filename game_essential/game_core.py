@@ -49,6 +49,26 @@ class BasicGameCore:
 		self._team_init()
 		self._handler_init()
 
+	def game_started(func):
+		"""Function decorator. Run the method "func" when the game is started.
+		"""
+		def wrapper(self, *args, **kargs):
+			if self._is_game_started:
+				return func(self, *args, **kargs)
+			else:
+				pass
+		return wrapper
+
+	def game_stopped(func):
+		"""Function decorator. Run the method "func" when the game is stopped.
+		"""
+		def wrapper(self, *args, **kargs):
+			if not self._is_game_started:
+				return func(self, *args, **kargs)
+			else:
+				pass
+		return wrapper
+
 	@property
 	def is_game_started(self):
 		"""Is the game started?
@@ -100,6 +120,7 @@ class BasicGameCore:
 		self._handlers["game-start"] = FunctionDelegate()
 		self._handlers["game-stop"] = FunctionDelegate()
 
+	@game_stopped
 	def team_set_name(self, team_type: TeamType, team_name):
 		"""Set the name of the team
 
@@ -129,6 +150,7 @@ class BasicGameCore:
 			err.extra_info = "\"{0}\" is not a team name.".format(team_name)
 			raise
 
+	@game_stopped
 	def player_join(self, player_ip, *args):
 		"""The callback function when a player sends join command
 
@@ -209,6 +231,7 @@ class BasicGameCore:
 		"""
 		self._comm_server.force_disconnection(player_ip)
 
+	# @game_started # TODO: On testing mode, no need to block the function
 	def player_send_msg(self, player_ip, *args):
 		"""Send the message to the other player
 
@@ -237,6 +260,7 @@ class BasicGameCore:
 			else:
 				self._comm_server.send_message(player_ip, "send-to fail")
 
+	# @game_started
 	def player_team_broadcast(self, player_ip, *args):
 		"""Broadcast message to other players in the same team
 
@@ -262,6 +286,7 @@ class BasicGameCore:
 
 			self._comm_server.send_message(player_ip, "send-team ok")
 
+	# @game_started
 	def player_position(self, player_ip, *args):
 		"""Response the request of the position from the player
 
@@ -288,28 +313,24 @@ class BasicGameCore:
 			else:
 				self._comm_server.send_message(player_ip, "position -1 -1")
 
+	@game_stopped
 	def game_start(self):
 		"""Start the game
 
 		The server will broadcast a "game-start" message.
 		It will do nothing if the game is already started.
 		"""
-		if self._is_game_started:
-			return
-
 		self._comm_server.broadcast_message("game-start")
 		self._is_game_started = True
 		self._handlers["game-start"].invoke()
 
+	@game_started
 	def game_stop(self):
 		"""Stop the game
 
 		The server will broadcast a "game-stop" message.
 		If will do nothing if the game is already stopped.
 		"""
-		if not self._is_game_started:
-			return
-
 		self._comm_server.broadcast_message("game-stop")
 		self._is_game_started = False
 		self._handlers["game-stop"].invoke()
