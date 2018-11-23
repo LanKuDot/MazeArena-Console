@@ -503,9 +503,10 @@ class ColorManagerWidget(LabelFrame):
 		def _mark_dots(color_pos_finder, maze_pos_finder = None, \
 			marking_color = (0, 0, 0)):
 			colors = color_pos_finder.get_all_target_colors()
-			maze_pos = None
 			if maze_pos_finder is not None:
 				maze_pos = maze_pos_finder.get_all_maze_pos()
+			else:
+				maze_pos = []
 
 			for color_id in range(len(colors)):
 				colorPosFound = colors[color_id].pixel_position
@@ -516,7 +517,7 @@ class ColorManagerWidget(LabelFrame):
 						5, marking_color, -1)
 
 				# Only mark the position of the maze of the dot first found
-				if maze_pos is not None:
+				if len(colorPosFound) > 0 and len(maze_pos) > 0:
 					cv2.putText(self._frame, \
 						"({0}, {1})".format(*maze_pos[color_id].position), \
 						(colorPosFound[0].x + 10, colorPosFound[0].y - 10), \
