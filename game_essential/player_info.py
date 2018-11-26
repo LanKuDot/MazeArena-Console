@@ -1,6 +1,7 @@
 """The essential player information table
 """
 from enum import Enum, auto
+from threading import Lock
 
 class BasicPlayerInfo:
 	"""A data struture for the player information
@@ -40,6 +41,7 @@ class BasicTeamInfo:
 	@var _player_info_T The BasicPlayerInfo or its derived class
 	@var team_type The TeamType of the team
 	@var maze_pos_finder The MazePositionFinder belongs to this team
+	@var _players_read_lock A lock to avoid that _players is changed while reading it
 	@var _players The dictionary stores the player IP-BasicPlayerInfo pair
 	"""
 
@@ -52,6 +54,7 @@ class BasicTeamInfo:
 		self.team_type = None
 		self.team_name = ""
 		self.maze_pos_finder = None
+		self._players_read_lock = Lock()
 		self._players = {}
 
 	def add_player_info(self, player_ip, player_ID, team_name) -> BasicPlayerInfo:
@@ -69,7 +72,8 @@ class BasicTeamInfo:
 		new_player_info.IP = player_ip
 		new_player_info.ID = player_ID
 		new_player_info.team_name = team_name
-		self._players[player_ip] = new_player_info
+		with self._players_read_lock:
+			self._players[player_ip] = new_player_info
 		return new_player_info
 
 	def delete_player_info(self, player_ip) -> BasicPlayerInfo:
@@ -83,7 +87,8 @@ class BasicTeamInfo:
 		target_player_info = self.get_player_info_by_IP(player_ip)
 
 		if target_player_info is not None:
-			return self._players.pop(player_ip, None)
+			with self._players_read_lock:
+				return self._players.pop(player_ip, None)
 
 	def get_player_info_by_IP(self, player_ip) -> BasicPlayerInfo:
 		"""Get the player infromation of the specified IP
@@ -92,7 +97,8 @@ class BasicTeamInfo:
 		@return The specified player information
 		@retval None If it is not found
 		"""
-		return self._players.get(player_ip)
+		with self._players_read_lock:
+			return self._players.get(player_ip)
 
 	def get_player_info_by_ID(self, player_ID) -> BasicPlayerInfo:
 		"""Get the player information of the specified player ID
@@ -101,9 +107,10 @@ class BasicTeamInfo:
 		@return The specified player information
 		@retval None If it is not found
 		"""
-		for player_info in self._players.values():
-			if player_info.ID == player_ID:
-				return player_info
+		with self._players_read_lock:
+			for player_info in self._players.values():
+				if player_info.ID == player_ID:
+					return player_info
 		return None
 
 	def set_player_color(self, player_ip, color_bgr):
@@ -124,10 +131,20 @@ class BasicTeamInfo:
 		@return The specified color information
 		@retval None If it is not found
 		"""
-		for player_info in self._players.values():
-			if player_info.color_bgr == color_bgr:
-				return player_info
+		with self._players_read_lock:
+			for player_info in self._players.values():
+				if player_info.color_bgr == color_bgr:
+					return player_info
 		return None
+
+	def get_all_players(self) -> list:
+		"""Get the copy of the _players
+		"""
+		copy = {}
+		with self._players_read_lock:
+			for player_ip, player_info in self._players.items():
+				copy[player_ip] = player_info
+		return copy
 
 	def num_of_players(self) -> int:
 		return len(self._players)
