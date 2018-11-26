@@ -15,14 +15,24 @@ _command_thread = None
 _pending_queue = Queue()
 
 def set_new_connection_handler(handler):
-	"""Set the callback function(client_ip) of new connection from client
+	"""Set the callback function(client_ip) when a client connects to the server
 	"""
 	TCPServer.on_new_connect += handler
 
+def remove_new_connection_handler(handler):
+	"""Remove the callback function when a client connects to the server
+	"""
+	TCPServer.on_new_connect -= handler
+
 def set_disconnection_handler(handler):
-	"""Set the callback function(client_ip) of disconnection of client
+	"""Set the callback function(client_ip) when a client disconnects from the server
 	"""
 	TCPServer.on_disconnect += handler
+
+def remove_disconnection_handler(handler):
+	"""Remove the callback function when a client disconnects from the server
+	"""
+	TCPServer.on_disconnect -= handler
 
 def add_command_handler(cmd_keyword: str, handler):
 	"""Set the callback fucntion(from_ip, *args) of receving commands from client

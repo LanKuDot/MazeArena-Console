@@ -30,6 +30,7 @@ class WidgetServerManager(LabelFrame):
 		"""
 		super().destroy()
 		if comm_server.is_running():
+			comm_server.remove_disconnection_handler(self._update_connection_num)
 			comm_server.stop_server()
 
 	def _setup_layout(self):
