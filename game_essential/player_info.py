@@ -14,7 +14,7 @@ class BasicPlayerInfo:
 		self.ID = None
 		self.IP = None
 		self.team_name = ""
-		self.color_bgr = None
+		self.color_bgr = [0, 0, 0]
 
 class TeamType(Enum):
 	"""A enum for the type of the team used to distinguish the different team
