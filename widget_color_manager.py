@@ -319,7 +319,7 @@ class ColorManagerWidget(LabelFrame):
 			state = DISABLED, \
 			name = "btn_show_result_img")
 		button_show_result_img.pack(fill = X)
-
+		#-----
 		self._color_label_panel = Frame(self)
 		self._color_label_panel.pack(side = RIGHT, fill = Y)
 		label_color = Label(self._color_label_panel, \
@@ -442,14 +442,22 @@ class ColorManagerWidget(LabelFrame):
 		if not self._color_pos_manager.is_car_color_recognition_started:
 			self._color_pos_manager.start_car_color_recognition()
 			self._maze_manager.start_recognize_maze_pos()
+			self._option_panel.children["btn_select_color"].config(state = DISABLED)
+			self._option_panel.children["btn_recognize_maze"].config(state = DISABLED)
 			self._option_panel.children["btn_recognize_maze_cars"].config(text = "停止辨識位置")
 			self._option_panel.children["btn_show_result_img"].config(state = NORMAL)
+			for color_label in self._color_label_panel.children.values():
+				color_label.config(state = DISABLED)
 		# Stop color recognition
 		else:
 			self._color_pos_manager.stop_car_color_recognition()
 			self._maze_manager.stop_recognize_maze_pos()
+			self._option_panel.children["btn_select_color"].config(state = NORMAL)
+			self._option_panel.children["btn_recognize_maze"].config(state = NORMAL)
 			self._option_panel.children["btn_recognize_maze_cars"].config(text = "辨識車輛位置")
 			self._option_panel.children["btn_show_result_img"].config(state = DISABLED)
+			for color_label in self._color_label_panel.children.values():
+				color_label.config(state = NORMAL)
 
 	def _toggle_show_result_image(self):
 		"""Toggle the thread of showing recognition result image
