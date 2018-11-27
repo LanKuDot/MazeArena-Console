@@ -21,6 +21,11 @@ class MazePosition:
 	@var position The position of the maze car in the maze
 	@var position_detail The detailed position of the maze car in the maze.
 	     Always in 128 x 128 scale.
+	@var _missing_counter The counter the counts the number of continous calls
+	     that cannot find the maze position. This counter will be reset
+		 if the maze position if found at a call. If the counter is more than
+		 a certain value, than position and position_detail will be set to
+		 (-1, -1) to mark that the maze car is not in the maze.
 	"""
 
 	def __init__(self, color_bgr, LED_height: float):
@@ -33,6 +38,7 @@ class MazePosition:
 		self.LED_height = LED_height
 		self.position = Point2D(-1, -1)
 		self.position_detail = Point2D(-1, -1)	# Always in 128 x 128 scale
+		self._missing_counter = 0 # It will not be copied.
 
 	def __eq__(self, other):
 		"""Predefined equal comparsion method
@@ -82,6 +88,8 @@ class MazePositionFinder:
 	@var _colors_to_find_lock A lock for accessing _colors_to_find
 	@var _ratio_to_wall_height_array An array of the ratio of LED height to the
 	     maze wall height of each color in _colors_to_find
+	@var _max_missing_counter The maximum number of missing counter that will
+	     treat this color as missing
 	@var _recognition_thread A JobThread for recognizing the car position
 	"""
 
@@ -102,6 +110,7 @@ class MazePositionFinder:
 		self._colors_to_find = []
 		self._colors_to_find_lock = Lock()
 		self._ratio_to_wall_height_array = []
+		self._max_missing_counter = fps * 5	# 5 seconds
 
 		self._recognition_thread = JobThread(self._recognize_pos_in_maze, \
 			"Car position recognition", 1.0 / fps)
@@ -337,10 +346,11 @@ class MazePositionFinder:
 			First, transfrom the pixel position by MazePositionFinder._upper_transform_mat
 			for upper plane (wall level), and MazePositionFinder._lower_transform_mat
 			for lower plane (groud level). It will generate two coordinates,
-			pos_upper_plane and pos_lower_plane.
+			pos_at_upper_plane and pos_at_lower_plane.
 			Then, get the maze coordinate by interploting these two coordinates.
 			The formula is:
-			pos_lower_plane + (pos_upper_plane - pos_lower_plane) * ratio_to_wall_height.
+			pos_at_lower_plane + (pos_at_upper_plane - pos_at_lower_plane)
+			* ratio_to_wall_height.
 
 			@param pos_in_frame Specify the position found in the video stream
 			@param ratio_to_wall_height Specify the ratio of the LED height to the wall
@@ -350,10 +360,10 @@ class MazePositionFinder:
 			@return A Point2D object that stores the maze position in integer
 			"""
 			pos = np.array([[[pos_in_frame.x, pos_in_frame.y]]], dtype = np.float32)
-			pos_upper_plane = cv2.perspectiveTransform(pos, upper_transform_mat)
-			pos_lower_plane = cv2.perspectiveTransform(pos, lower_transform_mat)
-			pos_in_maze = pos_lower_plane + \
-				(pos_upper_plane - pos_lower_plane) * ratio_to_wall_height
+			pos_at_upper_plane = cv2.perspectiveTransform(pos, upper_transform_mat)
+			pos_at_lower_plane = cv2.perspectiveTransform(pos, lower_transform_mat)
+			pos_in_maze = pos_at_lower_plane + \
+				(pos_at_upper_plane - pos_at_lower_plane) * ratio_to_wall_height
 			return Point2D(int(round(pos_in_maze[0][0][0] - 0.5)), \
 				int(round(pos_in_maze[0][0][1] - 0.5)))
 
@@ -378,17 +388,27 @@ class MazePositionFinder:
 					self._lower_transform_mat_detail)
 				car_pos_detail.append(pos_detail)
 			# If there is no position found in the video stream,
-			# preserve the previous result
+			# return (-1, -1)
 			else:
-				car_pos.append(self._colors_to_find[i].position)
-				car_pos_detail.append(self._colors_to_find[i].position_detail)
+				car_pos.append(Point2D(-1, -1))
+				car_pos_detail.append(Point2D(-1, -1))
 
 		# Update the result
-		self._colors_to_find_lock.acquire()
-		for i in range(len(car_pos)):
-			self._colors_to_find[i].position = car_pos[i]
-			self._colors_to_find[i].position_detail = car_pos_detail[i]
-		self._colors_to_find_lock.release()
+		with self._colors_to_find_lock:
+			for i in range(len(car_pos)):
+				if car_pos[i].x >= 0:
+					# Position is found. Reset the counter
+					self._colors_to_find[i].position = car_pos[i]
+					self._colors_to_find[i].position_detail = car_pos_detail[i]
+					self._colors_to_find[i]._missing_counter = 0
+				elif self._colors_to_find[i]._missing_counter > self._max_missing_counter:
+					# Position is missing for a while. Set to (-1, -1)
+					self._colors_to_find[i].position = car_pos[i]
+					self._colors_to_find[i].position_detail = car_pos_detail[i]
+				else:
+					# Position is missing. Increase the missing counter
+					# and remain the lastest vaild position.
+					self._colors_to_find[i]._missing_counter += 1
 
 class MazeManager:
 	"""Manage the maze information and MazePositionFinders of team A and B
