@@ -21,5 +21,6 @@ class GameCore(BasicGameCore):
 		super()._set_handler_to_server()
 		self._comm_server.add_command_handler("game-touch", self.game_touch)
 
+	@BasicGameCore.game_started
 	def game_touch(self, player_ip):
 		self.game_stop()
