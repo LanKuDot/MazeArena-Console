@@ -178,13 +178,17 @@ class GameCore(BasicGameCore):
 				if self.is_catch(runner, catcher):
 					runner_info = self._teams[GameCore.TEAM_RUNNER] \
 						.get_player_info_by_color(runner.color_bgr)
+					catcher_info = self._teams[GameCore.TEAM_CATCHER] \
+						.get_player_info_by_color(catcher.color_bgr)
+					if runner_info is None or catcher_info is None or \
+						runner_info.is_catched:
+						continue
+
 					runner_info.is_catched = True
 					self._comm_server.send_message(runner_info.IP, "game-catched")
 					self._handlers["game-catched"].invoke(runner_info.IP)
 					self._num_of_survivor -= 1
 
-					catcher_info = self._teams[GameCore.TEAM_CATCHER] \
-						.get_player_info_by_color(catcher.color_bgr)
 					print("[GameCore] Runner \"{0}\" is catched by \"{1}\"." \
 						.format(runner_info.ID, catcher_info.ID))
 					break
@@ -195,6 +199,10 @@ class GameCore(BasicGameCore):
 	def is_catch(self, runner: MazePosition, catcher: MazePosition) -> bool:
 		"""Check if the catcher catches the runner
 		"""
+		# Neither runner nor catcher is in the maze, return False.
+		if runner.position_detail.x < 0 or catcher.position_detail.x < 0:
+			return False
+
 		if Point2D.distance(runner.position_detail, catcher.position_detail) < 12.0:
 			if catcher.position == runner.position:
 				return True
