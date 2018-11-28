@@ -75,8 +75,6 @@ class MazePositionFinder:
 	     of the maze
 	@var _color_pos_finder The ColorPosFinder that contains the colors to be found
 	     in the MazePositionFinder
-	@var _maze_scale A Point2D(x, y) which represents the coordinate scale of
-	     the maze (0 ~ x, 0 ~ y)
 	@var _wall_height The height of the maze wall
 	@var _upper_plane_color The color that locates the upper plane of the maze
 	@var _lower_plane_color Simliar to _upper_plane_color but for the lower plane
@@ -98,8 +96,6 @@ class MazePositionFinder:
 		self._maze_color_pos_finder = maze_color_pos_finder
 		self._color_pos_finder = color_pos_finder
 
-		self._maze_scale = None
-		self._maze_scale_detail = Point2D(128, 128)
 		self._wall_height = None
 		self._upper_plane_color = None
 		self._lower_plane_color = None
@@ -115,15 +111,24 @@ class MazePositionFinder:
 		self._recognition_thread = JobThread(self._recognize_pos_in_maze, \
 			"Car position recognition", 1.0 / fps)
 
-	def set_maze(self, scale_x, scale_y, wall_height):
+	def set_wall_height(self, wall_height):
+		self._wall_height = wall_height
+
+	def set_transform_matrix(self, upper_plane, lower_plane, \
+		upper_plane_detail, lower_plane_detail):
 		"""Set the information of the maze
 
-		@param scale_x The x scale of the maze
-		@param scale_y The y scale of the maze
-		@param wall_height The height of the maze wall
+		@param upper_plane Specify the transform matrix of the upper plane
+		@param lower_plane Specify the transform matrix of the lower plane
+		@param upper_plane_detail Specify the transform matrix of the upper plane
+		       in the detailed scale
+		@param lower_plane_detail Specify the transform matrix of the lower plane
+		       in the detailed scale
 		"""
-		self._maze_scale = Point2D(scale_x, scale_y)
-		self._wall_height = wall_height
+		self._upper_transform_mat = upper_plane
+		self._lower_transform_mat = lower_plane
+		self._upper_transform_mat_detail = upper_plane_detail
+		self._lower_transform_mat_detail = lower_plane_detail
 
 	def add_target_color(self, color_bgr, color_type: ColorType, LED_height = 0.0):
 		"""Add a target color to the position finding list
@@ -222,89 +227,6 @@ class MazePositionFinder:
 			target_colors.append(self._colors_to_find[i].copy())
 		self._colors_to_find_lock.release()
 		return target_colors
-
-	def recognize_maze(self):
-		"""Recognize the position of the maze and generate the transform matrix
-
-		The method uses MazePositionFinder._upper_plane_color and
-		MazePositionFinder._lower_plane_color to get the position from the
-		corresponding ColrPositionFinder. Then, invoke
-		MazeManager._generate_transform_matrix() to generate the transform matrix
-		of upper plane and lower plane. The result will be stored in both
-		MazePositionFinder._upper_transform_mat and MazePositionFinder._lower_transform_mat.
-		This method will wait until both transform matrixes are generated.
-		"""
-		if self._upper_plane_color is None or self._lower_plane_color is None:
-			print("[MazePositionFinder] The color of the upper plane or the lower plane " \
-				"has not been specified yet.")
-			return
-
-		self._upper_transform_mat = None
-		self._lower_transform_mat = None
-		self._upper_transform_mat_detail = None
-		self._lower_transform_mat_detail = None
-
-		# Generate transform matrix of the upper plane
-		while self._upper_transform_mat is None:
-			corner_poses = self._maze_color_pos_finder \
-				.get_target_color(*self._upper_plane_color).pixel_position
-			self._upper_transform_mat = \
-				self._generate_transform_matrix(corner_poses, self._maze_scale)
-			self._upper_transform_mat_detail = \
-				self._generate_transform_matrix(corner_poses, self._maze_scale_detail)
-		print("[MazePositionFinder] Transform matrix of the upper plane is generated.")
-
-		# Generate transform matrix of the lower plane
-		while self._lower_transform_mat is None:
-			corner_poses = self._maze_color_pos_finder \
-				.get_target_color(*self._lower_plane_color).pixel_position
-			self._lower_transform_mat = \
-				self._generate_transform_matrix(corner_poses, self._maze_scale)
-			self._lower_transform_mat_detail = \
-				self._generate_transform_matrix(corner_poses, self._maze_scale_detail)
-		print("[MazePositionFinder] Transform matrix of the lower plane is generated.")
-
-	def _generate_transform_matrix(self, corner_pos_4: list, maze_scale: Point2D):
-		"""Get a transform matrix which converts coordinates in the video stream
-		to coordinates in the maze
-
-		In the method, corner_pos_4 is sorted into the order of:
-		left-bottom, right-bottom, left-top, and right-top.
-		Then, map the sorted corner_pos_4 to (0, 0), (x of maze scale, 0),
-		(0, y of maze scale), and (x of maze scale, y of maze scale) to
-		generate the transform matrix. The maze scale is MazeManager._maze_scale.
-
-		@param corner_pos_4 The list of Point2D that stores
-		       the coordinates of 4 corners of the maze in the video stream
-		@param maze_scale The subdivision of the maze, like 8 x 8.
-		@return A matrix that could transform the points from the
-		        video stream coordinate to the maze coordinate
-		"""
-		if len(corner_pos_4) != 4:
-			return None
-
-		# Sort the input coordinate to the order of
-		# (0, 0), (x, 0), (0, y), (x, y), The origin is set to left-bottom corner.
-		corner_pos_4.sort(key = attrgetter('y'), reverse = True)
-		if corner_pos_4[0].x > corner_pos_4[1].x:
-			corner_pos_4[0], corner_pos_4[1] = \
-				corner_pos_4[1], corner_pos_4[0]
-		if corner_pos_4[2].x > corner_pos_4[3].x:
-			corner_pos_4[2], corner_pos_4[3] = \
-				corner_pos_4[3], corner_pos_4[2]
-
-		from_coordinate = np.float32([ \
-			list(corner_pos_4[0]), \
-			list(corner_pos_4[1]), \
-			list(corner_pos_4[2]), \
-			list(corner_pos_4[3]) ])
-		to_coordinate = np.float32([ \
-			[0, 0], \
-			[maze_scale.x, 0], \
-			[0, maze_scale.y], \
-			[maze_scale.x, maze_scale.y] ])
-
-		return cv2.getPerspectiveTransform(from_coordinate, to_coordinate)
 
 	def _generate_ratio_to_wall_height(self):
 		"""Generate ratio to of the LED height to the maze wall height for all colors
@@ -430,15 +352,71 @@ class MazeManager:
 			PosFinderType.CAR_TEAM_B: MazePositionFinder(maze_color_finder, team_b_color_finder, fps)
 		}
 
-	def set_maze(self, scale_x, scale_y, wall_height):
-		"""Set the information of the maze to each MazePositionFinder
+	def recognize_maze(self, scale_x: int, scale_y: int, wall_height: float, \
+		upper_corner: list, lower_corner: list):
+		"""Generate the transform matries and set them to all MazePositionFinder
 
 		@param scale_x The x scale of the maze
 		@param scale_y The y scale of the maze
 		@param wall_height The height of the maze wall
+		@param upper_corner A list storing point2D of 4 corners on the upper plane
+		@param lower_corner A list storing point2D of 4 corners on the lower plane
 		"""
+		maze_scale = Point2D(scale_x, scale_y)
+		maze_scale_detail = Point2D(128, 128)
+		upper_transform_mat = self._generate_transform_matrix(upper_corner, maze_scale)
+		lower_transform_mat = self._generate_transform_matrix(lower_corner, maze_scale)
+		upper_transform_mat_detail = \
+			self._generate_transform_matrix(upper_corner, maze_scale_detail)
+		lower_transform_mat_detail = \
+			self._generate_transform_matrix(lower_corner, maze_scale_detail)
+
 		for maze_pos_finder in self._maze_pos_finders.values():
-			maze_pos_finder.set_maze(scale_x, scale_y, wall_height)
+			maze_pos_finder.set_transform_matrix(upper_transform_mat, lower_transform_mat, \
+				upper_transform_mat_detail, lower_transform_mat_detail)
+			maze_pos_finder.set_wall_height(wall_height)
+
+	def _generate_transform_matrix(self, corner_pos_4: list, maze_scale: Point2D):
+		"""Get a transform matrix which converts coordinates in the video stream
+		to coordinates in the maze
+
+		In the method, corner_pos_4 is sorted into the order of:
+		left-bottom, right-bottom, left-top, and right-top.
+		Then, map the sorted corner_pos_4 to (0, 0), (x of maze scale, 0),
+		(0, y of maze scale), and (x of maze scale, y of maze scale) to
+		generate the transform matrix. The maze scale is MazeManager._maze_scale.
+
+		@param corner_pos_4 The list of Point2D that stores
+		       the coordinates of 4 corners of the maze in the video stream
+		@param maze_scale The subdivision of the maze, like 8 x 8.
+		@return A matrix that could transform the points from the
+		        video stream coordinate to the maze coordinate
+		"""
+		if len(corner_pos_4) != 4:
+			return None
+
+		# Sort the input coordinate to the order of
+		# (0, 0), (x, 0), (0, y), (x, y), The origin is set to left-bottom corner.
+		corner_pos_4.sort(key = attrgetter('y'), reverse = True)
+		if corner_pos_4[0].x > corner_pos_4[1].x:
+			corner_pos_4[0], corner_pos_4[1] = \
+				corner_pos_4[1], corner_pos_4[0]
+		if corner_pos_4[2].x > corner_pos_4[3].x:
+			corner_pos_4[2], corner_pos_4[3] = \
+				corner_pos_4[3], corner_pos_4[2]
+
+		from_coordinate = np.float32([ \
+			list(corner_pos_4[0]), \
+			list(corner_pos_4[1]), \
+			list(corner_pos_4[2]), \
+			list(corner_pos_4[3]) ])
+		to_coordinate = np.float32([ \
+			[0, 0], \
+			[maze_scale.x, 0], \
+			[0, maze_scale.y], \
+			[maze_scale.x, maze_scale.y] ])
+
+		return cv2.getPerspectiveTransform(from_coordinate, to_coordinate)
 
 	def set_color(self, color_bgr, \
 		old_color_type: ColorType, new_color_type: ColorType, LED_height = 0.0):
@@ -506,12 +484,6 @@ class MazeManager:
 		"""
 		finder = self.get_finder_by_name(team)
 		return finder.get_all_maze_pos()
-
-	def recognize_maze(self):
-		"""Make every MazePositionFinder to recognize the maze
-		"""
-		for maze_pos_finder in self._maze_pos_finders.values():
-			maze_pos_finder.recognize_maze()
 
 	def start_recognize_maze_pos(self):
 		for maze_pos_finder in self._maze_pos_finders.values():

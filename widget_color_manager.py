@@ -507,28 +507,31 @@ class ColorManagerWidget(LabelFrame):
 			self._maze_corner_points["lower"].pop()
 
 	def _maze_recognition(self):
-		"""Recognize the maze
+		"""Make MazeManager to recognize the maze
 
-		The recognition will be automatically stopped when the maze manger
-		finished generating maze position transform matrix.
+		If the scale or the corners of the maze are not specified,
+		it will output the error message.
 		"""
-		# Check if the input value is vaild
+		# Check if the maze scale is vaild
 		x_scale = self._maze_info_entries['x_scale'].get()
 		y_scale = self._maze_info_entries['y_scale'].get()
 		wall_height = self._maze_info_entries['wall_height'].get()
 		if not x_scale or not y_scale or not wall_height:
-			print('[Widget ColorManager] There are some invalid input value. ' \
-				'x: %s, y: %s, wall_height: %s' % (x_scale, y_scale, wall_height,))
+			print("[Widget ColorManager][Error] There are some invalid input value. " \
+				"x: %s, y: %s, wall_height: %s" % (x_scale, y_scale, wall_height,))
 			return
 
-		self._color_pos_manager.start_maze_color_recognition()
-		self._option_panel.children["btn_recognize_maze"].config(text = "辨識中...")
+		# Check if the corners of the maze are all specified
+		if len(self._maze_corner_points["upper"]) != 4 or \
+			len(self._maze_corner_points["lower"]) != 4:
+			print("[Widget ColorManager][Error] There are\'t enough points to locate" \
+				" the maze.")
+			return
 
-		self._maze_manager.set_maze(int(x_scale), int(y_scale), float(wall_height))
-		self._maze_manager.recognize_maze()
-
-		self._color_pos_manager.stop_maze_color_recognition()
-		self._option_panel.children["btn_recognize_maze"].config(text = "辨識迷宮")
+		self._maze_manager.recognize_maze(int(x_scale), int(y_scale), \
+			float(wall_height), self._maze_corner_points["upper"], \
+			self._maze_corner_points["lower"])
+		print("[Widget ColorManager] The maze is recognized.")
 
 	def _toggle_car_recognition(self):
 		"""Toggle the color recognition of maze cars
