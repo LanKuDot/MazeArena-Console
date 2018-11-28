@@ -463,9 +463,9 @@ class ColorManagerWidget(LabelFrame):
 			self._frame = self._camera.get_frame()
 			# Mark the selected point
 			for point in self._maze_corner_points["upper"]:
-				cv2.circle(self._frame, point, 5, (0, 0, 150), -1)
+				cv2.circle(self._frame, point, 5, (60, 240, 240), -1) # Yellow
 			for point in self._maze_corner_points["lower"]:
-				cv2.circle(self._frame, point, 5, (0, 150, 0), -1)
+				cv2.circle(self._frame, point, 5, (240, 60, 240), -1) # Purple
 			cv2.imshow(window_name, self._frame)
 
 		print("[Widget ColorManager] Maze selection thread is stopped.")
@@ -631,5 +631,5 @@ class ColorManagerWidget(LabelFrame):
 						(colorPosFound[0].x + 10, colorPosFound[0].y - 10), \
 						cv2.FONT_HERSHEY_DUPLEX, 0.6, marking_color, 2)
 
-		_mark_dots(PosFinderType.CAR_TEAM_A, (0, 0, 150))
-		_mark_dots(PosFinderType.CAR_TEAM_B, (0, 150, 0))
+		_mark_dots(PosFinderType.CAR_TEAM_A, (0, 0, 250))
+		_mark_dots(PosFinderType.CAR_TEAM_B, (0, 250, 0))
