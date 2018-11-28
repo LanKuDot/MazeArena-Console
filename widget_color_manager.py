@@ -259,9 +259,9 @@ class ColorManagerWidget(LabelFrame):
 		"""
 		super().destroy()
 
-		if self._color_pos_manager.is_car_color_recognition_started:
-			self._color_pos_manager.stop_car_color_recognition()
-			self._maze_manager.stop_recognize_maze_pos()
+		if self._color_pos_manager.is_recognition_started:
+			self._color_pos_manager.stop_recognition()
+			self._maze_manager.stop_recognition()
 		if self._is_show_result_thread_started:
 			self._is_show_result_thread_started = False
 
@@ -539,9 +539,9 @@ class ColorManagerWidget(LabelFrame):
 		ColorPositionFinders of car_team_a and car_team_b will be toggled.
 		"""
 		# Start color recognition
-		if not self._color_pos_manager.is_car_color_recognition_started:
-			self._color_pos_manager.start_car_color_recognition()
-			self._maze_manager.start_recognize_maze_pos()
+		if not self._color_pos_manager.is_recognition_started:
+			self._color_pos_manager.start_recognition()
+			self._maze_manager.start_recognition()
 			self._option_panel.children["btn_select_color"].config(state = DISABLED)
 			self._option_panel.children["btn_select_maze"].config(state = DISABLED)
 			self._option_panel.children["btn_recognize_maze"].config(state = DISABLED)
@@ -551,8 +551,8 @@ class ColorManagerWidget(LabelFrame):
 				color_label.config(state = DISABLED)
 		# Stop color recognition
 		else:
-			self._color_pos_manager.stop_car_color_recognition()
-			self._maze_manager.stop_recognize_maze_pos()
+			self._color_pos_manager.stop_recognition()
+			self._maze_manager.stop_recognition()
 			self._option_panel.children["btn_select_color"].config(state = NORMAL)
 			self._option_panel.children["btn_select_maze"].config(state = NORMAL)
 			self._option_panel.children["btn_recognize_maze"].config(state = NORMAL)

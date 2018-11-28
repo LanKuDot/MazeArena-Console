@@ -262,15 +262,15 @@ class ColorPosManager:
 		@param camera Specify the WebCam object
 		@param fps Specify the updating rate of the car position
 		"""
-		self._is_car_color_recognition_started = False
+		self._is_recognition_started = False
 		self._color_pos_finders = {
 			PosFinderType.CAR_TEAM_A: ColorPositionFinder(camera, fps),
 			PosFinderType.CAR_TEAM_B: ColorPositionFinder(camera, fps)
 		}
 
 	@property
-	def is_car_color_recognition_started(self):
-		return self._is_car_color_recognition_started
+	def is_recognition_started(self):
+		return self._is_recognition_started
 
 	def get_finder(self, finder_type: PosFinderType) -> ColorPositionFinder:
 		"""Get the ColorPositionFinder by the PosFinderType
@@ -297,16 +297,16 @@ class ColorPosManager:
 		if new_finder is not None:
 			self._color_pos_finders[new_finder].add_target_color(*color_bgr)
 
-	def start_car_color_recognition(self):
+	def start_recognition(self):
 		"""Start the recognition thread of the ColorPositionFinders of car colors
 		"""
 		for finder_type in self._color_pos_finders.keys():
 			self._color_pos_finders[finder_type].start_recognition()
-		self._is_car_color_recognition_started = True
+		self._is_recognition_started = True
 
-	def stop_car_color_recognition(self):
+	def stop_recognition(self):
 		"""Stop the recognition thread of the ColorPositionFinders of car colors
 		"""
 		for finder_type in self._color_pos_finders.keys():
 			self._color_pos_finders[finder_type].stop_recognition()
-		self._is_car_color_recognition_started = False
+		self._is_recognition_started = False

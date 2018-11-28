@@ -198,7 +198,7 @@ class MazePositionFinder:
 			self._ratio_to_wall_height_array \
 				.append(self._colors_to_find[i].LED_height / self._wall_height)
 
-	def start_recognize_maze_pos(self):
+	def start_recognition(self):
 		# Generate an array og the ratio of the LED height to the maze height
 		# of all colors
 		if self._upper_transform_mat is None or self._lower_transform_mat is None:
@@ -208,7 +208,7 @@ class MazePositionFinder:
 		self._generate_ratio_to_wall_height()
 		self._recognition_thread.start()
 
-	def stop_recognize_maze_pos(self):
+	def stop_recognition(self):
 		self._recognition_thread.stop()
 
 	def _recognize_pos_in_maze(self):
@@ -436,10 +436,10 @@ class MazeManager:
 		finder = self.get_finder_by_name(team)
 		return finder.get_all_maze_pos()
 
-	def start_recognize_maze_pos(self):
+	def start_recognition(self):
 		for maze_pos_finder in self._maze_pos_finders.values():
-			maze_pos_finder.start_recognize_maze_pos()
+			maze_pos_finder.start_recognition()
 
-	def stop_recognize_maze_pos(self):
+	def stop_recognition(self):
 		for maze_pos_finder in self._maze_pos_finders.values():
-			maze_pos_finder.stop_recognize_maze_pos()
+			maze_pos_finder.stop_recognition()
