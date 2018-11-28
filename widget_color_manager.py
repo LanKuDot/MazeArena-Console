@@ -610,13 +610,9 @@ class ColorManagerWidget(LabelFrame):
 		Then, get the recognition results from both ColorPositionFinder
 		and MazePositionFinder to mark the maze position at where the color is found.
 		"""
-		def _mark_dots(color_pos_finder, maze_pos_finder = None, \
-			marking_color = (0, 0, 0)):
+		def _mark_dots(color_pos_finder, maze_pos_finder, marking_color):
 			colors = color_pos_finder.get_all_target_colors()
-			if maze_pos_finder is not None:
-				maze_pos = maze_pos_finder.get_all_maze_pos()
-			else:
-				maze_pos = []
+			maze_pos = maze_pos_finder.get_all_maze_pos()
 
 			for color_id in range(len(colors)):
 				colorPosFound = colors[color_id].pixel_position
@@ -627,17 +623,15 @@ class ColorManagerWidget(LabelFrame):
 						5, marking_color, -1)
 
 				# Only mark the position of the maze of the dot first found
-				if len(colorPosFound) > 0 and len(maze_pos) > 0:
+				if len(colorPosFound) > 0:
 					cv2.putText(self._frame, \
 						"({0}, {1})".format(*maze_pos[color_id].position), \
 						(colorPosFound[0].x + 10, colorPosFound[0].y - 10), \
 						cv2.FONT_HERSHEY_DUPLEX, 0.6, marking_color, 2)
 
-		_mark_dots(self._color_pos_manager.get_finder(PosFinderType.MAZE), \
-			marking_color = (0, 0, 150))
 		_mark_dots(self._color_pos_manager.get_finder(PosFinderType.CAR_TEAM_A), \
 			self._maze_manager.get_finder(PosFinderType.CAR_TEAM_A), \
-			(0, 150, 0))
+			(0, 0, 150))
 		_mark_dots(self._color_pos_manager.get_finder(PosFinderType.CAR_TEAM_B), \
 			self._maze_manager.get_finder(PosFinderType.CAR_TEAM_B), \
-			(150, 0, 0))
+			(0, 150, 0))

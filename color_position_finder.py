@@ -159,7 +159,7 @@ class ColorPositionFinder:
 		self._colors_to_find_lock.release()
 		return copied
 
-	def start_recognition_thread(self):
+	def start_recognition(self):
 		"""Start a new thread to do color recognition
 
 		If the color recognition thread has been started,
@@ -171,7 +171,7 @@ class ColorPositionFinder:
 
 		self._color_recognition_thread.start()
 
-	def stop_recognition_thread(self):
+	def stop_recognition(self):
 		"""Stop the color recognition thread
 
 		If the color recognition thread has been stopped,
@@ -264,7 +264,6 @@ class ColorPosManager:
 		"""
 		self._is_car_color_recognition_started = False
 		self._color_pos_finders = {
-			PosFinderType.MAZE: ColorPositionFinder(camera, fps),
 			PosFinderType.CAR_TEAM_A: ColorPositionFinder(camera, fps),
 			PosFinderType.CAR_TEAM_B: ColorPositionFinder(camera, fps)
 		}
@@ -298,28 +297,16 @@ class ColorPosManager:
 		if new_finder is not None:
 			self._color_pos_finders[new_finder].add_target_color(*color_bgr)
 
-	def start_maze_color_recognition(self):
-		"""Start the recognition thread of the ColorPositionFinder of type MAZE
-		"""
-		self._color_pos_finders[PosFinderType.MAZE].start_recognition_thread()
-
-	def stop_maze_color_recognition(self):
-		"""Stop the recognition thread of the ColorPositionFinder of type MAZE
-		"""
-		self._color_pos_finders[PosFinderType.MAZE].stop_recognition_thread()
-
 	def start_car_color_recognition(self):
 		"""Start the recognition thread of the ColorPositionFinders of car colors
 		"""
 		for finder_type in self._color_pos_finders.keys():
-			if finder_type is not PosFinderType.MAZE:
-				self._color_pos_finders[finder_type].start_recognition_thread()
+			self._color_pos_finders[finder_type].start_recognition()
 		self._is_car_color_recognition_started = True
 
 	def stop_car_color_recognition(self):
 		"""Stop the recognition thread of the ColorPositionFinders of car colors
 		"""
 		for finder_type in self._color_pos_finders.keys():
-			if finder_type is not PosFinderType.MAZE:
-				self._color_pos_finders[finder_type].stop_recognition_thread()
+			self._color_pos_finders[finder_type].stop_recognition()
 		self._is_car_color_recognition_started = False
