@@ -174,10 +174,8 @@ class MazePositionFinder:
 		except ValueError:
 			return None
 		else:
-			self._colors_to_find_lock.acquire()
-			car_pos = self._colors_to_find[where].copy()
-			self._colors_to_find_lock.release()
-			return car_pos
+			with self._colors_to_find_lock:
+				return self._colors_to_find[where].copy()
 
 	def get_all_maze_pos(self) -> list:
 		"""Get a copy of all the target colors and their maze positions
@@ -185,10 +183,9 @@ class MazePositionFinder:
 		@return A copy of MazePositionFinder._colors_to_find
 		"""
 		target_colors = []
-		self._colors_to_find_lock.acquire()
-		for i in range(len(self._colors_to_find)):
-			target_colors.append(self._colors_to_find[i].copy())
-		self._colors_to_find_lock.release()
+		with self._colors_to_find_lock:
+			for i in range(len(self._colors_to_find)):
+				target_colors.append(self._colors_to_find[i].copy())
 		return target_colors
 
 	def _generate_ratio_to_wall_height(self):
