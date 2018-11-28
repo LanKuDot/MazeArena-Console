@@ -610,7 +610,9 @@ class ColorManagerWidget(LabelFrame):
 		Then, get the recognition results from both ColorPositionFinder
 		and MazePositionFinder to mark the maze position at where the color is found.
 		"""
-		def _mark_dots(color_pos_finder, maze_pos_finder, marking_color):
+		def _mark_dots(finder_type, marking_color):
+			color_pos_finder = self._color_pos_manager.get_finder(finder_type)
+			maze_pos_finder = self._maze_manager.get_finder(finder_type)
 			colors = color_pos_finder.get_all_target_colors()
 			maze_pos = maze_pos_finder.get_all_maze_pos()
 
@@ -629,9 +631,5 @@ class ColorManagerWidget(LabelFrame):
 						(colorPosFound[0].x + 10, colorPosFound[0].y - 10), \
 						cv2.FONT_HERSHEY_DUPLEX, 0.6, marking_color, 2)
 
-		_mark_dots(self._color_pos_manager.get_finder(PosFinderType.CAR_TEAM_A), \
-			self._maze_manager.get_finder(PosFinderType.CAR_TEAM_A), \
-			(0, 0, 150))
-		_mark_dots(self._color_pos_manager.get_finder(PosFinderType.CAR_TEAM_B), \
-			self._maze_manager.get_finder(PosFinderType.CAR_TEAM_B), \
-			(0, 150, 0))
+		_mark_dots(PosFinderType.CAR_TEAM_A, (0, 0, 150))
+		_mark_dots(PosFinderType.CAR_TEAM_B, (0, 150, 0))
