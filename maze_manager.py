@@ -71,13 +71,9 @@ class MazePositionFinder:
 	(which is from ColorPositionFinder) to find the position of the colors in
 	the maze.
 
-	@var _maze_color_pos_finder The ColorPosFinder that contains the reference color
-	     of the maze
 	@var _color_pos_finder The ColorPosFinder that contains the colors to be found
 	     in the MazePositionFinder
 	@var _wall_height The height of the maze wall
-	@var _upper_plane_color The color that locates the upper plane of the maze
-	@var _lower_plane_color Simliar to _upper_plane_color but for the lower plane
 	@var _upper_transform_mat A matrix that transform from the frame
 	     coordinate to the coordinate of the upper plane of the maze
 	@var _lower_transform_mat Similar to _upper_transform_mat, but for
@@ -91,14 +87,10 @@ class MazePositionFinder:
 	@var _recognition_thread A JobThread for recognizing the car position
 	"""
 
-	def __init__(self, maze_color_pos_finder: ColorPositionFinder, \
-		color_pos_finder: ColorPositionFinder, fps = 100):
-		self._maze_color_pos_finder = maze_color_pos_finder
+	def __init__(self, color_pos_finder: ColorPositionFinder, fps = 100):
 		self._color_pos_finder = color_pos_finder
 
 		self._wall_height = None
-		self._upper_plane_color = None
-		self._lower_plane_color = None
 		self._upper_transform_mat = None
 		self._lower_transform_mat = None
 		self._upper_transform_mat_detail = None
@@ -130,74 +122,45 @@ class MazePositionFinder:
 		self._upper_transform_mat_detail = upper_plane_detail
 		self._lower_transform_mat_detail = lower_plane_detail
 
-	def add_target_color(self, color_bgr, color_type: ColorType, LED_height = 0.0):
+	def add_target_color(self, color_bgr, LED_height = 0.0):
 		"""Add a target color to the position finding list
 
-		Accroding the color_type:
-		- MAZE_UPPER_PLANE: The color is assigned to the
-		  MazePositionFinder._upper_plane_color
-		- MAZE_LOWER_PLANE: The color is assigned to the
-		  MazePositionFinder._lower_plane_color
-		- Others: The color is added to the MazePositionFinder._colors_to_find
-		  if it is not in there. Otherwise, update the MazePosition.LED_height
-		  value.
-
 		@param color_bgr The target color in BGR domain
-		@param color_type The ColorType of the target color
 		@param LED_height The height of the LED on the maze car
 		"""
 		if self._recognition_thread.is_running:
 			print("[MazePosFinder] Cannot update colors while recognizing.")
 			return
 
-		if color_type == ColorType.MAZE_UPPER_PLANE:
-			self._upper_plane_color = color_bgr
-			print("[MazePosFinder] Set the color of upper plane to ({0}, {1}, {2})" \
+		try:
+			where = self._colors_to_find.index(MazePosition(color_bgr, 0))
+		except ValueError:
+			self._colors_to_find.append(MazePosition(color_bgr, LED_height))
+			print("[MazePosFinder] New color added: ({0}, {1}, {2})" \
 				.format(*color_bgr))
-		elif color_type == ColorType.MAZE_LOWER_PLANE:
-			self._lower_plane_color = color_bgr
-			print("[MazePosFinder] Set the color of lower plane to ({0}, {1}, {2})" \
+		else:
+			self._colors_to_find[where].LED_height = LED_height
+			print("[MazePosFinder] LED height of color ({0}, {1}, {2}) is updated" \
 				.format(*color_bgr))
-		else:	# Team_X
-			where = -1
-			try:
-				where = self._colors_to_find.index(MazePosition(color_bgr, 0))
-			except ValueError:
-				self._colors_to_find.append(MazePosition(color_bgr, LED_height))
-				print("[MazePosFinder] New color added: ({0}, {1}, {2})" \
-					.format(*color_bgr))
-			else:
-				self._colors_to_find[where].LED_height = LED_height
-				print("[MazePosFinder] LED height of color ({0}, {1}, {2}) is updated" \
-					.format(*color_bgr))
 
-	def delete_target_color(self, color_bgr, color_type: ColorType):
+	def delete_target_color(self, color_bgr):
 		"""Delete the target color from the MazePositionFinder._colors_to_find
 
 		@param color_bgr Specify the color to be removed in BGR domain
-		@param color_type Specify the type of the color
 		"""
 		if self._recognition_thread.is_running:
 			print("[MazePosFinder] Cannot update colors while recognizing.")
 			return
 
-		if color_type == ColorType.MAZE_UPPER_PLANE:
-			self._upper_plane_color = None
-			print("[MazePosFinder] Delete the color of upper plane")
-		elif color_type == ColorType.MAZE_LOWER_PLANE:
-			self._lower_plane_color = None
-			print("[MazePosFinder] Delete the color of lower plane")
+		try:
+			where = self._colors_to_find.index(MazePosition(color_bgr, 0))
+		except ValueError:
+			print("[MazePosFinder] Color ({0}, {1}, {2}) is not existing" \
+				.format(*color_bgr))
 		else:
-			where = -1
-			try:
-				where = self._colors_to_find.index(MazePosition(color_bgr, 0))
-			except ValueError:
-				print("[MazePosFinder] Color ({0}, {1}, {2}) is not existing" \
-					.format(*color_bgr))
-			else:
-				self._colors_to_find.remove(self._colors_to_find[where])
-				print("[MazePosFinder] Color ({0}, {1}, {2}) is removed" \
-					.format(*color_bgr))
+			self._colors_to_find.remove(self._colors_to_find[where])
+			print("[MazePosFinder] Color ({0}, {1}, {2}) is removed" \
+				.format(*color_bgr))
 
 	def get_maze_pos(self, color_bgr) -> MazePosition:
 		"""Get the maze position of the specified color
@@ -344,12 +307,11 @@ class MazeManager:
 		@param color_pos_manager The instance of class ColorPosManager
 		@param fps Specify the updating rate of the car position in maze
 		"""
-		maze_color_finder = color_pos_manager.get_finder(PosFinderType.MAZE)
 		team_a_color_finder = color_pos_manager.get_finder(PosFinderType.CAR_TEAM_A)
 		team_b_color_finder = color_pos_manager.get_finder(PosFinderType.CAR_TEAM_B)
 		self._maze_pos_finders = {
-			PosFinderType.CAR_TEAM_A: MazePositionFinder(maze_color_finder, team_a_color_finder, fps),
-			PosFinderType.CAR_TEAM_B: MazePositionFinder(maze_color_finder, team_b_color_finder, fps)
+			PosFinderType.CAR_TEAM_A: MazePositionFinder(team_a_color_finder, fps),
+			PosFinderType.CAR_TEAM_B: MazePositionFinder(team_b_color_finder, fps)
 		}
 
 	def recognize_maze(self, scale_x: int, scale_y: int, wall_height: float, \
@@ -429,26 +391,18 @@ class MazeManager:
 		@param new_color_type The new color type of the target color
 		@param LED_height The height of the LED on the maze car
 		"""
-		old_finder = PosFinderType.get_finder_type(old_color_type)
-		new_finder = PosFinderType.get_finder_type(new_color_type)
+		old_finder_type = PosFinderType.get_finder_type(old_color_type)
+		new_finder_type = PosFinderType.get_finder_type(new_color_type)
 
-		if new_finder == PosFinderType.MAZE:
-			for maze_pos_finder in self._maze_pos_finders.values():
-				maze_pos_finder.add_target_color(color_bgr, new_color_type)
-		elif new_finder is not None:
-			self._maze_pos_finders[new_finder] \
-				.add_target_color(color_bgr, new_color_type, LED_height)
+		if new_finder_type is not None:
+			self._maze_pos_finders[new_finder_type] \
+				.add_target_color(color_bgr, LED_height)
 
-		# Avoid deleting the color from the same finder
 		if new_color_type == old_color_type:
 			return
 
-		if old_finder == PosFinderType.MAZE:
-			for maze_pos_finder in self._maze_pos_finders.values():
-				maze_pos_finder.delete_target_color(color_bgr, old_color_type)
-		elif old_finder is not None:
-			self._maze_pos_finders[old_finder] \
-				.delete_target_color(color_bgr, old_color_type)
+		if old_finder_type is not None:
+			self._maze_pos_finders[old_finder_type].delete_target_color(color_bgr)
 
 	def get_finder(self, finder_type: PosFinderType) -> MazePositionFinder:
 		"""Get the MazePositionFinder by the type of the team
