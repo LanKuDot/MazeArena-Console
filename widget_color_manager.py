@@ -363,20 +363,20 @@ class ColorManagerWidget(LabelFrame):
 		The method will pop up a window showing the stream from the camera
 		for the user to select colors.
 
-		Use left mouse click to specify the color and press 'q' to confirm
+		Use left mouse click to specify the color and press 'Esc' to finish
 		the selection, close the window, and automatically stop the thread
 		create by self._start_select_color_thread().
 		And then the color selection option and recognition toggling options
 		will be enabled again.
 		"""
-		windowName = "Select target color (q to quit)"
+		windowName = "Select target color (Esc to quit)"
 		cv2.namedWindow(windowName)
 		cv2.setMouseCallback(windowName, self._click_new_color)
 
 		print("[Widget ColorManager] Color selection thread is started.")
 
 		while True:
-			if cv2.waitKey(1) & 0xFF == ord('q'):
+			if cv2.waitKey(1) == 27:	# Esc
 				break
 
 			self._frame = self._camera.get_frame()
@@ -440,7 +440,7 @@ class ColorManagerWidget(LabelFrame):
 	def _select_maze(self):
 		"""Display the marked image and select the corners of the maze
 		"""
-		window_name = "Select maze (q to quit)"
+		window_name = "Select maze (Esc to quit)"
 		cv2.namedWindow(window_name)
 		cv2.setMouseCallback(window_name, self._click_maze_corner)
 		instruction_string = \
@@ -448,14 +448,14 @@ class ColorManagerWidget(LabelFrame):
 			"  Right mouse - Select 4 corners of lower plane\n" \
 			"  U/u - Delete a point from upper plane\n" \
 			"  L/l - Delete a point from lower plane\n" \
-			"  Q/q - Confirm and quit"
+			"  Esc - Confirm and quit"
 
 		print("[Widget ColorManager] Maze selection thread is started.")
 		print(instruction_string)
 
 		while True:
 			key_pressed = cv2.waitKey(1)
-			if key_pressed == ord('q') or key_pressed == ord('Q'):
+			if key_pressed == 27:	# Esc
 				break
 			elif key_pressed > 0:
 				self._keyboard_event_select_maze(key_pressed)
@@ -583,13 +583,13 @@ class ColorManagerWidget(LabelFrame):
 		The method will invoke ColorManagerWidget._mark_recognition_result()
 		to mark the colors found and then show the marked frame to the user.
 		"""
-		window_name = "Recognition result (q to quit)"
+		window_name = "Recognition result (Esc to quit)"
 		cv2.namedWindow(window_name)
 
 		print("[Widget ColorManager] Show result image thread is started.")
 
 		while self._is_show_result_thread_started:
-			if cv2.waitKey(1) & 0xFF == ord('q'):
+			if cv2.waitKey(1) == 27:	# Esc
 				self._option_panel.children["btn_show_result_img"]. \
 					config(text = "顯示標記影像")
 				self._is_show_result_thread_started = False
