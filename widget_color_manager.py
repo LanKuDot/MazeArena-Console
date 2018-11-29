@@ -147,6 +147,7 @@ class ColorLabel(Button):
 		"""
 		try:
 			self._entry_LED_height.focus()
+			self._entry_LED_height.select_range(0, END)
 		except Exception:
 			return
 

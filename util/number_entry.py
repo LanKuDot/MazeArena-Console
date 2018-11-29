@@ -18,6 +18,8 @@ class NonNegativeFloatEntry(Entry):
 		"""
 		# For entry.insert(0, 'blabla')
 		if len(text_edited) > 1:
+			if len(text_if_allowed) == 0:
+				return True
 			try:
 				if float(text_if_allowed) >= 0:
 					return True
@@ -46,6 +48,8 @@ class PositiveIntEntry(Entry):
 
 	def _validate_positive_int(self, action, text_if_allowed, text_edited):
 		if len(text_edited) > 1:
+			if len(text_if_allowed) == 0:
+					return True
 			try:
 				if int(text_if_allowed) > 0:
 					return True
