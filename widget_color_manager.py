@@ -7,6 +7,7 @@ from color_type import *
 from color_position_finder import *
 from util.number_entry import *
 from maze_manager import MazeManager
+from config_manager import ConfigManager
 from webcam import WebCamera
 
 from threading import Thread
@@ -202,7 +203,8 @@ class ColorManagerWidget(LabelFrame):
 
 	@var _camera The camera object for getting frames
 	@var _frame The frame got from _camera
-	@var _color_pos_managder The instance of class ColorPosManager
+	@var _config_manager The instance of class ConfigManager
+	@var _color_pos_manager The instance of class ColorPosManager
 	@var _maze_manager The instance of class MazeManager
 	@var _maze_corner_points A dictionary stores the corner points of the maze.
 	     ["upper"] stores a list of points of the upper plane of the maze,
@@ -219,12 +221,14 @@ class ColorManagerWidget(LabelFrame):
 	"""
 
 	def __init__(self, master, camera: WebCamera, \
+		config_manager: ConfigManager, \
 		color_pos_manager: ColorPosManager, \
 		maze_manager: MazeManager, **options):
 		"""Constructor
 
 		@param master The parent widget of the ColorManagerWidget
 		@param camera The WebCamera object
+		@param config_manager The instance of class ConfigManager
 		@param color_pos_manager The instance of class ColorPosManager
 		@param maze_manager The instance of class MazeManager
 		@param options Additional options for the LabelFrame
@@ -234,6 +238,7 @@ class ColorManagerWidget(LabelFrame):
 
 		self._camera = camera
 		self._frame = None
+		self._config_manager = config_manager
 		self._color_pos_manager = color_pos_manager
 		self._maze_manager = maze_manager
 
@@ -252,6 +257,7 @@ class ColorManagerWidget(LabelFrame):
 			'y_scale': None, \
 			'wall_height': None}
 		self._setup_layout()
+		self._load_maze_config()
 
 	def destroy(self):
 		"""Override function. Stop the existing thread.
@@ -339,6 +345,48 @@ class ColorManagerWidget(LabelFrame):
 		label_color = Label(self._color_label_panel, \
 			text = "目標辨識顏色", width = 24, anchor = W)
 		label_color.pack(fill = X)
+
+	def _load_maze_config(self):
+		"""Load the maze config from ConfigManager and update to the GUI
+
+		Load the config from ConfigManager.maze_config. The "corner_plane_upper" and
+		"corner_plane_lower" are loaded to ColorManagerWidget._maze_corner_points.
+		The "scale" and "wall_height" are loaded to CoolorManagerWidget._maze_info_entries.
+
+		If the config is not initialized (with negative value), it won't be loaded.
+		"""
+		if self._config_manager.maze_config["corner_plane_upper"][0].x >= 0:
+			for point2d in self._config_manager.maze_config["corner_plane_upper"]:
+				self._maze_corner_points["upper"].append(point2d)
+			for point2d in self._config_manager.maze_config["corner_plane_lower"]:
+				self._maze_corner_points["lower"].append(point2d)
+
+		x_scale = self._config_manager.maze_config["scale"].x
+		y_scale = self._config_manager.maze_config["scale"].y
+		if x_scale > 0 and y_scale > 0:
+			self._maze_info_entries['x_scale'].insert(END, str(x_scale))
+			self._maze_info_entries['y_scale'].insert(END, str(y_scale))
+
+		wall_height = self._config_manager.maze_config["wall_height"]
+		if wall_height > 0:
+			self._maze_info_entries["wall_height"].insert(END, str(wall_height))
+
+	def _save_maze_config(self, x_scale: int, y_scale: int, wall_height: float):
+		"""Save the maze config to the ConfigManager
+
+		The method will assume that configurations are valid.
+		"""
+		self._config_manager.maze_config["corner_plane_upper"].clear()
+		self._config_manager.maze_config["corner_plane_lower"].clear()
+		for point2d in self._maze_corner_points["upper"]:
+			self._config_manager.maze_config["corner_plane_upper"].append(point2d)
+		for point2d in self._maze_corner_points["lower"]:
+			self._config_manager.maze_config["corner_plane_lower"].append(point2d)
+
+		self._config_manager.maze_config["scale"] = Point2D(x_scale, y_scale)
+		self._config_manager.maze_config["wall_height"] = wall_height
+
+		self._config_manager.save_config()
 
 	def _start_select_color_thread(self):
 		"""Start a new thread to select the color to be found
@@ -533,6 +581,8 @@ class ColorManagerWidget(LabelFrame):
 			float(wall_height), self._maze_corner_points["upper"], \
 			self._maze_corner_points["lower"])
 		print("[Widget ColorManager] The maze is recognized.")
+
+		self._save_maze_config(x_scale, y_scale, wall_height)
 
 	def _toggle_car_recognition(self):
 		"""Toggle the color recognition of maze cars

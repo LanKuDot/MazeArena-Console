@@ -11,10 +11,12 @@ from color_position_finder import *
 from maze_manager import MazeManager
 from widget_color_manager import ColorManagerWidget
 from widget_server_manager import WidgetServerManager
+from config_manager import ConfigManager
 
 from game_maze_run import GameCore, GameConsoleWidget
 
 ### Workers ###
+_config_manager = ConfigManager("config.xml")
 _camera = WebCamera(src = 0, width = 1080, height = 720)
 _color_pos_manager = ColorPosManager(_camera, fps = 50)
 _maze_manager = MazeManager(_color_pos_manager, fps = 50)
@@ -40,12 +42,12 @@ def _setup_gui(main_window):
 	@param main_window The main window of the application
 	"""
 	color_manager = ColorManagerWidget(main_window, \
-		_camera, _color_pos_manager, _maze_manager, \
+		_camera, _config_manager, _color_pos_manager, _maze_manager, \
 		name = "color_manager")
 	color_manager.pack(side = tk.LEFT, anchor = tk.N)
 	right_frame = tk.Frame(main_window)
 	right_frame.pack(side = tk.RIGHT, fill = tk.Y)
-	server_manager = WidgetServerManager(right_frame, \
+	server_manager = WidgetServerManager(right_frame, _config_manager, \
 		name = "server_manager")
 	server_manager.pack(anchor = tk.W)
 	game_console = GameConsoleWidget(right_frame, \

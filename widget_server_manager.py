@@ -1,11 +1,14 @@
 from tkinter import *
+from config_manager import ConfigManager
 import communication_server as comm_server
 
 class WidgetServerManager(LabelFrame):
 	"""The widget for controling the communication_server
+
+	@var _config_manager The instance of ConfigManager
 	"""
 
-	def __init__(self, master, **options):
+	def __init__(self, master, config_manager: ConfigManager, **options):
 		"""Constructor
 
 		Set up the layout and register WidgetServerManager._update_connection_num
@@ -13,12 +16,16 @@ class WidgetServerManager(LabelFrame):
 		widget.
 
 		@param master Specify the parent widget
+		@param config_manager Specify the instance of ConfigManager
 		@param options Specify addtional options to be passed to LableFrame
 		"""
 		super().__init__(master, text = "伺服器", **options)
 		self.pack()
 
+		self._config_manager = config_manager
+
 		self._setup_layout()
+		self._load_server_config()
 
 		comm_server.set_new_connection_handler(self._update_connection_num)
 		comm_server.set_disconnection_handler(self._update_connection_num)
@@ -62,6 +69,24 @@ class WidgetServerManager(LabelFrame):
 			name = "label_connections")
 		label_connections.pack(side = LEFT)
 
+	def _load_server_config(self):
+		"""Load the server config from the ConfigManager.server_config
+
+		The "ip" is loaded to the entry of the server IP, and
+		the "port" is loaded to the entry of the server port.
+		"""
+		server_ip = self._config_manager.server_config["ip"]
+		server_port = self._config_manager.server_config["port"]
+		self.children["entry_IP"].insert(END, server_ip)
+		self.children["entry_port"].insert(END, server_port)
+
+	def _save_server_config(self, server_ip: str, server_port: int):
+		"""Save the server config to the ConfigManager
+		"""
+		self._config_manager.server_config["ip"] = server_ip
+		self._config_manager.server_config["port"] = server_port
+		self._config_manager.save_config()
+
 	def _toggle_server(self):
 		"""Toggle the communication server
 
@@ -74,6 +99,7 @@ class WidgetServerManager(LabelFrame):
 			server_ip = self.children["entry_IP"].get()
 			server_port = int(self.children["entry_port"].get())
 			comm_server.start_server(server_ip, server_port)
+			self._save_server_config(server_ip, server_port)
 
 			self.children["btn_toggle_server"].config(text = "關閉伺服器")
 			self._update_connection_num("")
