@@ -88,6 +88,8 @@ class ColorLabel(Button):
 		self._setting_panel.geometry("%dx%d%+d%+d" % (250, 120, 100, 50))
 		# Run _close_setting_panel when the user click X on the window
 		self._setting_panel.protocol("WM_DELETE_WINDOW", self._close_setting_panel)
+		self._setting_panel.bind("<Return>", lambda e: self._setup_confirm())
+		self._setting_panel.bind("<Escape>", lambda e: self._close_setting_panel())
 
 		# Display color information
 		label_bgr = Label(self._setting_panel, \
