@@ -3,13 +3,13 @@ from enum import Enum, auto
 class ColorType(Enum):
 	"""The representation of colors in the maze arena
 
-	@var NOT_DEFINED enum = 0 The color that haven't be defined yet
-	@var MAZEC_CAR_TEAM_A enum = 1 The color that marks the maze cars of one team
-	@var MAZEC_CAR_TEAM_B enum = 2 The color that marks the maze cars of another team
+	@var NOT_DEFINED The color that haven't be defined yet
+	@var MAZEC_CAR_TEAM_A The color that marks the maze cars of one team
+	@var MAZEC_CAR_TEAM_B The color that marks the maze cars of another team
 	"""
-	NOT_DEFINED = 0
-	MAZE_CAR_TEAM_A = 1
-	MAZE_CAR_TEAM_B = 2
+	NOT_DEFINED = auto()
+	MAZE_CAR_TEAM_A = auto()
+	MAZE_CAR_TEAM_B = auto()
 
 	def __str__(self):
 		"""The string represenation of each value
