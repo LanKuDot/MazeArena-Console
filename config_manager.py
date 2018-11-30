@@ -96,8 +96,8 @@ class ConfigManager:
 		corner_lower = ET.SubElement(maze, "corner", {"plane": "lower"})
 		for i in range(4):
 			ET.SubElement(corner_lower, "Point2D", \
-				{"x": str(self.maze_config["corner_plane_upper"][i].x), \
-				 "y": str(self.maze_config["corner_plane_upper"][i].y)})
+				{"x": str(self.maze_config["corner_plane_lower"][i].x), \
+				 "y": str(self.maze_config["corner_plane_lower"][i].y)})
 		maze_scale = ET.SubElement(maze, "scale")
 		ET.SubElement(maze_scale, "Point2D", \
 			{"x": str(self.maze_config["scale"].x), \
