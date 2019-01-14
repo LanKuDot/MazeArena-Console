@@ -147,7 +147,7 @@ def get_current_connection_num():
 	return TCPServer.get_current_connection_num()
 
 def send_message(to_ip: str, msg: str):
-	TCPServer.send_msg(to_ip, msg)
+	TCPServer.send_message(to_ip, msg)
 
 def broadcast_message(msg: str):
-	TCPServer.broadcast_msg(msg)
+	TCPServer.broadcast_message(msg)

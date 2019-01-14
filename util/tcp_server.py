@@ -7,6 +7,7 @@ the client.
 """
 import socket, select, time
 from threading import Thread
+from queue import Queue
 from util.function_delegate import FunctionDelegate
 
 ### Callback functions ###
@@ -35,6 +36,8 @@ _sockets = []
 _clients = {}
 # The time interval of the request from the client.
 request_interval = 0.1 # seconds
+# The queue for the sending message
+_sending_queue = Queue()
 
 ### Data structure ###
 class ClientSock:
@@ -127,6 +130,7 @@ def _listen_to_client(server_ip: str, server_port: int):
 			else:
 				_recv_msg(sock)
 
+		_consume_sending_queue()
 		# Check if the socket needs to be closed
 		_check_disconnection()
 
@@ -227,7 +231,7 @@ def _recv_msg(sock):
 	try:
 		recv_data = sock.recv(RECV_BUFF_SIZE).decode('utf-8')
 	except Exception as e:
-		print("[TCP sevrer] Expection occured when receving data: {0}" \
+		print("[TCP sevrer] Exception occured while receving data: {0}" \
 			.format(e))
 		_disconnection(sock)
 	else:
@@ -236,26 +240,52 @@ def _recv_msg(sock):
 			target_client = _clients[sock_ip]
 
 			if time.time() - target_client.timestamp > request_interval:
-				print("[TCP server] Receive data from {0}: {1}" \
-					.format(sock_ip, recv_data))
+				#print("[TCP server] Receive data from {0}: {1}" \
+				#	.format(sock_ip, recv_data))
 				target_client.timestamp = time.time()
 				on_recv_msg.invoke(sock_ip, recv_data)
 		else:
 			_disconnection(sock)
 
-def send_msg(to_ip: str, msg: str):
+def _consume_sending_queue():
+	while not _sending_queue.empty():
+		message_item = _sending_queue.get()
+
+		try:
+			to_ip = message_item[0]
+			message = message_item[1] + "\n"
+			client = _clients[to_ip]
+
+			total_msg_sent = 0
+			while total_msg_sent < len(message):
+				msg_sent = client.sock.send(message[total_msg_sent:].encode())
+				if msg_sent == 0:
+					raise RuntimeError("Socket connetion broken")
+				total_msg_sent = total_msg_sent + msg_sent
+			#print("[TCP server] Send data to {0}: {1}".format(to_ip, message))
+		except KeyError:
+			print("[TCP server] Exception occured while sending data to {0}: "\
+				"Client not found".format(to_ip))
+		except Exception as e:
+			print("[TCP server] Exception occured while sending data to {0}: {1}"\
+				.format(to_ip, e))
+			client.to_be_closed = True
+
+def send_message(to_ip: str, msg: str):
 	"""Send message to a cllient.
+
+	The message item (to_ip, msg) will be pushed to the queue, and
+	then consumed in _consume_sending_queue().
 
 	@param to_ip Specify the IP of the client
 	@param msg Specify the message
 	"""
-	to_socket = _clients[to_ip].sock
-	to_socket.send(msg.encode())
+	_sending_queue.put((to_ip, msg))
 
-def broadcast_msg(msg: str):
+def broadcast_message(msg: str):
 	"""Boardcast message to all the clients
 
 	@param msg Specify the message
 	"""
 	for ip in _clients.keys():
-		send_msg(ip, msg)
+		send_message(ip, msg)
