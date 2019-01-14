@@ -27,9 +27,13 @@ MazeArena 是由一個迷宮場地與數台迷宮車組成的場景。
 
 套件使用版本可參考 [`requirements.txt`](requirements.txt)
 
-## 操作流程 (v1.1) ##
+## 問題回報 ##
 
-[Youtube 影片](https://youtu.be/mDIv9mxErNQ)，記得開 CC 字幕
+可以使用 github issue 或是編輯 [hackMD](https://hackmd.io/SiMts1xHSkaRAGwaKRBylg?both)
+
+## 操作流程 ##
+
+[Youtube 影片](https://youtu.be/A2j2MTcqj-k)，記得開 CC 字幕
 
 ## 遊戲 ##
 
