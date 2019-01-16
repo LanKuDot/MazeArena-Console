@@ -181,6 +181,13 @@ class BasicGameCore:
 			self._comm_server.send_message(player_ip, "join fail")
 			print("[GameCore] Specified team name {0} is not found.".format(team_name))
 		else:
+			# If the player has already joined
+			if self._teammates.get(player_ip) is not None:
+				self._comm_server.send_message(player_ip, "join fail")
+				print("[GameCore] IP {0} has already joined the game." \
+					.format(player_ip))
+				return
+
 			# Check if the player ID is used in the team
 			player_info = self._teams[team_type].get_player_info_by_ID(player_ID)
 			if player_info is not None:
