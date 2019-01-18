@@ -5,6 +5,7 @@ import communication_server as comm_server
 from .player_info import BasicTeamInfo, TeamType
 from maze_manager import MazeManager, MazePositionFinder
 from util.function_delegate import FunctionDelegate
+from functools import wraps
 		
 class BasicGameCore:
 	"""The basic functions in the game
@@ -49,6 +50,7 @@ class BasicGameCore:
 		self._team_init()
 		self._handler_init()
 
+	@wraps
 	def game_started(func):
 		"""Function decorator. Run the method "func" when the game is started.
 		"""
@@ -59,6 +61,7 @@ class BasicGameCore:
 				pass
 		return wrapper
 
+	@wraps
 	def game_stopped(func):
 		"""Function decorator. Run the method "func" when the game is stopped.
 		"""
