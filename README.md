@@ -29,7 +29,7 @@ MazeArena 是由一個迷宮場地與數台迷宮車組成的場景。
 
 ## 問題回報 ##
 
-可以使用 github issue 或是編輯 [hackMD](https://hackmd.io/SiMts1xHSkaRAGwaKRBylg?both)
+參考 wiki 上的[問題回報建議](https://github.com/LanKuDot/MazeArena-Console/wiki/%E5%95%8F%E9%A1%8C%E5%9B%9E%E5%A0%B1)，可以使用 github issue 或是編輯 [hackMD](https://hackmd.io/SiMts1xHSkaRAGwaKRBylg?both)
 
 ## 操作流程 ##
 
