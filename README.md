@@ -60,12 +60,12 @@ _camera = WebCamera(src = 0, width = 1080, height = 720)
 **設定位置更新頻率**
 
 程式的 CPU 使用率大部分來自計算位置的更新頻率，
-考量到迷宮車的移動速度與請求位置的速率，設定為合適的值，以降低程式的 CPU 使用率。
+考量到網路攝影機的更新頻率，設定為合適的值，以降低程式的 CPU 使用率。
 頻率過高可讓程式的 CPU 使用率達 100%。
 
 ```python
-_color_pos_manager = ColorPosManager(_camera, fps = 50)
-_maze_manager = MazeManager(_color_pos_manager, fps = 50)
+_color_pos_manager = ColorPosManager(_camera, fps = 30)
+_maze_manager = MazeManager(_color_pos_manager, fps = 30)
 ```
 
 * `fps`：位置的更新頻率
