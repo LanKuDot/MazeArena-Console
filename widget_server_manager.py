@@ -104,7 +104,8 @@ class WidgetServerManager(LabelFrame):
 		if not comm_server.is_running():
 			server_ip = self.children["entry_IP"].get()
 			server_port = int(self.children["entry_port"].get())
-			comm_server.start_server(server_ip, server_port)
+			if not comm_server.start_server(server_ip, server_port):
+				return
 			self._save_server_config(server_ip, server_port)
 
 			self.children["btn_toggle_server"].config(text = "關閉伺服器")

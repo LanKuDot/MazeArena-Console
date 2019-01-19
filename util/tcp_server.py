@@ -48,7 +48,7 @@ class ClientSock:
 		self.to_be_closed = False
 		self.timestamp = time.time()
 
-def start_server(server_ip: str, server_port: int):
+def start_server(server_ip: str, server_port: int) -> bool:
 	"""Start the TCP server on server_ip: server_port.
 
 	If the server is running, it will do nothing. Otherwise,
@@ -56,6 +56,7 @@ def start_server(server_ip: str, server_port: int):
 
 	@param server_ip Specify the IPv4 of the TCP server
 	@param server_port Specify the port of the TCP server
+	@return True if the server successfully started
 	"""
 	global _server_thread, _server_running
 
@@ -66,14 +67,21 @@ def start_server(server_ip: str, server_port: int):
 
 	_sockets.clear()
 	_clients.clear()
+	
+	_server_socket = _create_server_socket(server_ip, server_port)
+	if _server_socket is None:
+		return False
+
 	_server_thread = Thread( \
-		target = lambda: _listen_to_client(server_ip, server_port), \
+		target = lambda: _listen_to_client(_server_socket), \
 		name = "tcp_server")
 	_server_running = True
 	_server_thread.start()
 
 	_logger.info("Server is started on {0}:{1}" \
 		.format(server_ip, server_port))
+
+	return True
 
 def stop_server():
 	"""Stop the TCP server
@@ -109,22 +117,34 @@ def get_current_connection_num():
 	"""
 	return (len(_clients), MAX_CONNECTION)
 
-def _listen_to_client(server_ip: str, server_port: int):
+def _create_server_socket(server_ip: str, server_port: int) -> socket.socket:
+	"""Create a server socket from giving imformation
+
+	@param server_ip Specify the IP of the server
+	@param server_port Specify the port of the server
+	@return A created server socket
+	@retval None If an exception occurs while creating the server socket.
+	"""
+	try:
+		server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+		server_socket.bind((server_ip, server_port))
+		server_socket.listen(MAX_CONNECTION)
+	except Exception as e:
+		_logger.error("Exception occured while creating server socket: " \
+			+ str(e))
+		return None
+	else:
+		return server_socket
+
+def _listen_to_client(server_socket):
 	"""Waiting for new connection from clients
 
 	The mainloop of the TCP server. If there has new pending,
 	it will accept new connection, receive message, or close connection.
-
-	@param server_ip Specify the IP of the server
-	@param server_port Specify the port of the server
 	"""
-	_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	_server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-	_server_socket.bind((server_ip, server_port))
-	_server_socket.listen(MAX_CONNECTION)
-
 	# Add server socket to the checking list
-	_sockets.append(_server_socket)
+	_sockets.append(server_socket)
 
 	_logger.debug("TCP server thread is started.")
 
@@ -134,8 +154,8 @@ def _listen_to_client(server_ip: str, server_port: int):
 		read_sockets, _, _ = select.select(checking_sockets, [], [], 0.1)
 
 		for sock in read_sockets:
-			if sock == _server_socket:
-				_new_connection(*(_server_socket.accept()))	
+			if sock == server_socket:
+				_new_connection(*(server_socket.accept()))	
 			else:
 				_recv_msg(sock)
 
@@ -143,7 +163,7 @@ def _listen_to_client(server_ip: str, server_port: int):
 		# Check if the socket needs to be closed
 		_check_disconnection()
 
-	_server_socket.close()
+	server_socket.close()
 
 	_logger.debug("TCP server thread is stopped.")
 

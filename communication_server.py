@@ -120,18 +120,23 @@ def _queue_command(from_ip: str, cmd_string: str):
 TCPServer.on_recv_msg += _queue_command
 
 # TODO: Is class better than the module?
-def start_server(server_ip: str, server_port: int):
+def start_server(server_ip: str, server_port: int) -> bool:
 	"""Start the TCP server and the command thread
 
 	@param server_ip Specify the IP of the server
 	@param server_port Specify the port of the server
+	@return True If the server successfully started.
 	"""
 	global _command_thread
 
-	TCPServer.start_server(server_ip, server_port)
+	if not TCPServer.start_server(server_ip, server_port):
+		return False
+
 	_logger.debug("Consuming command thread is starting.")
 	_command_thread = Thread(target = _comsume_command, name = "consume_cmd")
 	_command_thread.start()
+
+	return True
 
 def stop_server():
 	"""Stop the TCP server and the command thread
