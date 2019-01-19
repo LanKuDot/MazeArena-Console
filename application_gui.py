@@ -19,8 +19,8 @@ from game_maze_run import GameCore, GameConsoleWidget
 ### Workers ###
 _config_manager = ConfigManager("config.xml")
 _camera = WebCamera(src = 0, width = 1080, height = 720)
-_color_pos_manager = ColorPosManager(_camera, fps = 50)
-_maze_manager = MazeManager(_color_pos_manager, fps = 50)
+_color_pos_manager = ColorPosManager(_camera, fps = 30)
+_maze_manager = MazeManager(_color_pos_manager, fps = 30)
 _game_core = GameCore(_maze_manager)
 
 def start_gui():

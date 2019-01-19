@@ -89,7 +89,7 @@ class MazePositionFinder:
 	@var _recognition_thread A JobThread for recognizing the car position
 	"""
 
-	def __init__(self, finder_name, color_pos_finder: ColorPositionFinder, fps = 100):
+	def __init__(self, finder_name, color_pos_finder: ColorPositionFinder, fps = 30):
 		self._logger = logging.getLogger(self.__class__.__name__)
 		self._finder_name = finder_name
 		self._color_pos_finder = color_pos_finder
@@ -309,7 +309,7 @@ class MazeManager:
 	@var _maze_pos_finders The container for MazePositionFinders
 	"""
 
-	def __init__(self, color_pos_manager: ColorPosManager, fps = 100):
+	def __init__(self, color_pos_manager: ColorPosManager, fps = 30):
 		"""Constructor
 
 		@param color_pos_manager The instance of class ColorPosManager

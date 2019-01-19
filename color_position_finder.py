@@ -66,7 +66,7 @@ class ColorPositionFinder:
 	@var _colors_to_find_lock The read lock of _colors_to_find
 	"""
 
-	def __init__(self, finder_name, camera, fps = 100):
+	def __init__(self, finder_name, camera, fps = 30):
 		"""Constructor
 
 		@param finder_name The name of the finder
@@ -263,7 +263,7 @@ class ColorPosManager:
 	@var _color_pos_finders A dict contains name-ColorPositionFinder pairs
 	"""
 
-	def __init__(self, camera, fps = 100):
+	def __init__(self, camera, fps = 30):
 		"""Constructor
 
 		@param camera Specify the WebCam object
