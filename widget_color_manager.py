@@ -296,7 +296,6 @@ class ColorManagerWidget(LabelFrame):
 		| select maze         | be found     |
 		| scale: x [ ] y [ ]  |              |
 		| height: [  ] cm     |              |
-		| recognize maze      |              |
 		| recognize maze cars |              |
 		| show result         |              |
 		+---------------------+--------------+
@@ -339,10 +338,6 @@ class ColorManagerWidget(LabelFrame):
 		self._maze_info_entries['y_scale'] = entry_maze_scale_y
 		self._maze_info_entries['wall_height'] = entry_maze_height
 		#-----
-		button_recognize_maze = Button(self._option_panel, \
-			text = "辨識迷宮", command = self._maze_recognition, \
-			name = "btn_recognize_maze")
-		button_recognize_maze.pack(fill = X)
 		button_recognize_maze_car = Button(self._option_panel, \
 			text = "辨識車輛位置", command = self._toggle_car_recognition, \
 			name = "btn_recognize_maze_cars")
@@ -418,7 +413,6 @@ class ColorManagerWidget(LabelFrame):
 
 		self._option_panel.children["btn_select_color"].config(state = DISABLED)
 		self._option_panel.children["btn_select_maze"].config(state = DISABLED)
-		self._option_panel.children["btn_recognize_maze"].config(state = DISABLED)
 		self._option_panel.children["btn_recognize_maze_cars"].config(state = DISABLED)
 		select_color_thread = Thread(target = self._select_color, name = "Color_sel")
 		select_color_thread.start()
@@ -453,7 +447,6 @@ class ColorManagerWidget(LabelFrame):
 		cv2.destroyWindow(windowName)
 		self._option_panel.children["btn_select_color"].config(state = NORMAL)
 		self._option_panel.children["btn_select_maze"].config(state = NORMAL)
-		self._option_panel.children["btn_recognize_maze"].config(state = NORMAL)
 		self._option_panel.children["btn_recognize_maze_cars"].config(state = NORMAL)
 
 	def _click_new_color(self, event, x, y, flags, param):
@@ -501,7 +494,6 @@ class ColorManagerWidget(LabelFrame):
 
 		self._option_panel.children["btn_select_color"].config(state = DISABLED)
 		self._option_panel.children["btn_select_maze"].config(state = DISABLED)
-		self._option_panel.children["btn_recognize_maze"].config(state = DISABLED)
 		self._option_panel.children["btn_recognize_maze_cars"].config(state = DISABLED)
 		select_maze_thread = Thread(target = self._select_maze, name = "Maze_sel")
 		select_maze_thread.start()
@@ -543,7 +535,6 @@ class ColorManagerWidget(LabelFrame):
 		cv2.destroyWindow(window_name)
 		self._option_panel.children["btn_select_color"].config(state = NORMAL)
 		self._option_panel.children["btn_select_maze"].config(state = NORMAL)
-		self._option_panel.children["btn_recognize_maze"].config(state = NORMAL)
 		self._option_panel.children["btn_recognize_maze_cars"].config(state = NORMAL)
 
 	def _click_maze_corner(self, event, x, y, flags, param):
@@ -580,11 +571,12 @@ class ColorManagerWidget(LabelFrame):
 			self._maze_corner_points["lower"].pop()
 			_logger.debug("Deleted a new corner of the lower plane.")
 
-	def _maze_recognition(self):
+	def _maze_recognition(self) -> bool:
 		"""Make MazeManager to recognize the maze
 
 		If the scale or the corners of the maze are not specified,
-		it will output the error message.
+		it will output the error message and return False.
+		@return Is the maze successfully recognized?
 		"""
 		_logger.debug("Maze recognition (not thread) is starting.")
 
@@ -597,23 +589,25 @@ class ColorManagerWidget(LabelFrame):
 			if not x_scale: invaild_parameters += " x"
 			if not y_scale: invaild_parameters += " y"
 			if not wall_height: invalid_parameters += " wall_height"
-			_logger.error("Cannot start maze recognition. " \
+			_logger.error("Cannot recognize the maze. " \
 				"There are invalid parameters:{0}".format(invaild_parameters))
-			return
+			return False
 
 		# Check if the corners of the maze are all specified
 		if len(self._maze_corner_points["upper"]) != 4 or \
 			len(self._maze_corner_points["lower"]) != 4:
-			_logger.error("Cannot start maze recognition. "\
+			_logger.error("Cannot recognize the maze. "\
 				"There are\'t enough points to locate the maze.")
-			return
+			return False
 
 		self._maze_manager.recognize_maze(int(x_scale), int(y_scale), \
 			float(wall_height), self._maze_corner_points["upper"], \
 			self._maze_corner_points["lower"])
-		_logger.info("The maze is recognized.")
+
+		_logger.debug("The maze is recognized.")
 
 		self._save_maze_config(x_scale, y_scale, wall_height)
+		return True
 
 	def _toggle_car_recognition(self):
 		"""Toggle the color recognition of maze cars
@@ -624,11 +618,12 @@ class ColorManagerWidget(LabelFrame):
 
 		# Start color recognition
 		if not self._color_pos_manager.is_recognition_started:
+			if not self._maze_recognition():
+				return
 			self._color_pos_manager.start_recognition()
 			self._maze_manager.start_recognition()
 			self._option_panel.children["btn_select_color"].config(state = DISABLED)
 			self._option_panel.children["btn_select_maze"].config(state = DISABLED)
-			self._option_panel.children["btn_recognize_maze"].config(state = DISABLED)
 			self._option_panel.children["btn_recognize_maze_cars"].config(text = "停止辨識位置")
 			self._option_panel.children["btn_show_result_img"].config(state = NORMAL)
 			for color_label in self._color_label_panel.children.values():
@@ -639,7 +634,6 @@ class ColorManagerWidget(LabelFrame):
 			self._maze_manager.stop_recognition()
 			self._option_panel.children["btn_select_color"].config(state = NORMAL)
 			self._option_panel.children["btn_select_maze"].config(state = NORMAL)
-			self._option_panel.children["btn_recognize_maze"].config(state = NORMAL)
 			self._option_panel.children["btn_recognize_maze_cars"].config(text = "辨識車輛位置")
 			self._option_panel.children["btn_show_result_img"].config(state = DISABLED)
 			for color_label in self._color_label_panel.children.values():
