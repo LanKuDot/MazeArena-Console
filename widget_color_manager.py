@@ -14,6 +14,9 @@ from threading import Thread
 from tkinter import *
 import cv2
 import numpy as np
+import logging
+
+_logger = logging.getLogger(__name__)
 
 class ColorLabel(Button):
 	"""A button widget that manage a color
@@ -79,6 +82,9 @@ class ColorLabel(Button):
 		|  [Delete][Confirm][Cancel]  |
 		+-----------------------------+
 		"""
+		_logger.debug("ColorLabel: Showing setting panel " \
+			"for color ({0}, {1}, {2}).".format(*self._color))
+
 		if not self._setting_panel == None:
 			self._setting_panel.focus()
 			return
@@ -185,6 +191,9 @@ class ColorLabel(Button):
 		self._fn_update_color(self._color, _old_color_type, self._color_type, self._LED_height)
 		self._close_setting_panel()
 
+		_logger.debug("ColorLabel: Confirm setup. " \
+			"Arguments: color {0}, height = {1}.".format(button_text, self._LED_height))
+
 	def _delete_color(self):
 		"""Delete the color and reflect the modification to the color manager
 
@@ -197,6 +206,8 @@ class ColorLabel(Button):
 		self._close_setting_panel()
 		self.pack_forget()
 		self.destroy()
+
+		_logger.debug("ColorLabel: Delete color.")
 
 class ColorManagerWidget(LabelFrame):
 	"""A widget that manage the colors to be found in the video stream
@@ -373,6 +384,8 @@ class ColorManagerWidget(LabelFrame):
 		if wall_height > 0:
 			self._maze_info_entries["wall_height"].insert(END, str(wall_height))
 
+		_logger.debug("Maze config is loaded to the widget.")
+
 	def _save_maze_config(self, x_scale: int, y_scale: int, wall_height: float):
 		"""Save the maze config to the ConfigManager
 
@@ -401,11 +414,13 @@ class ColorManagerWidget(LabelFrame):
 		The new thread will run ColorManagerWidget._select_color(), and
 		the thread will be automatically stopped after finishing color selection.
 		"""
+		_logger.debug("Color selection thread is starting.")
+
 		self._option_panel.children["btn_select_color"].config(state = DISABLED)
 		self._option_panel.children["btn_select_maze"].config(state = DISABLED)
 		self._option_panel.children["btn_recognize_maze"].config(state = DISABLED)
 		self._option_panel.children["btn_recognize_maze_cars"].config(state = DISABLED)
-		select_color_thread = Thread(target = self._select_color)
+		select_color_thread = Thread(target = self._select_color, name = "Color_sel")
 		select_color_thread.start()
 
 	def _select_color(self):
@@ -424,7 +439,7 @@ class ColorManagerWidget(LabelFrame):
 		cv2.namedWindow(windowName)
 		cv2.setMouseCallback(windowName, self._click_new_color)
 
-		print("[Widget ColorManager] Color selection thread is started.")
+		_logger.debug("Color selection thread is started.")
 
 		while True:
 			if cv2.waitKey(1) == 27:	# Esc
@@ -433,7 +448,7 @@ class ColorManagerWidget(LabelFrame):
 			self._frame = self._camera.get_frame()
 			cv2.imshow(windowName, self._frame)
 
-		print("[Widget ColorManager] Color selection thread is stopped.")
+		_logger.debug("Color selection thread is stopped.")
 
 		cv2.destroyWindow(windowName)
 		self._option_panel.children["btn_select_color"].config(state = NORMAL)
@@ -452,6 +467,7 @@ class ColorManagerWidget(LabelFrame):
 			target_color = [self._frame[y, x][0], self._frame[y, x][1], self._frame[y, x][2]]
 			new_color_label = ColorLabel(self._color_label_panel, target_color, self._update_color)
 			new_color_label.pack(fill = X)
+			_logger.debug("Selected a color ({0}, {1}, {2}).".format(*target_color))
 
 	def _update_color(self, color_bgr, \
 		old_type: ColorType, new_type: ColorType, LED_height = 0.0):
@@ -481,11 +497,13 @@ class ColorManagerWidget(LabelFrame):
 		The target function of the thread is _select_maze(). When selecting maze,
 		the option buttons are disabled.
 		"""
+		_logger.debug("Maze selction thread is starting.")
+
 		self._option_panel.children["btn_select_color"].config(state = DISABLED)
 		self._option_panel.children["btn_select_maze"].config(state = DISABLED)
 		self._option_panel.children["btn_recognize_maze"].config(state = DISABLED)
 		self._option_panel.children["btn_recognize_maze_cars"].config(state = DISABLED)
-		select_maze_thread = Thread(target = self._select_maze)
+		select_maze_thread = Thread(target = self._select_maze, name = "Maze_sel")
 		select_maze_thread.start()
 
 	def _select_maze(self):
@@ -495,14 +513,15 @@ class ColorManagerWidget(LabelFrame):
 		cv2.namedWindow(window_name)
 		cv2.setMouseCallback(window_name, self._click_maze_corner)
 		instruction_string = \
+			"How to select the corners of the maze:\n" \
 			"  Left mouse - Select 4 corners of upper plane\n" \
 			"  Right mouse - Select 4 corners of lower plane\n" \
 			"  U/u - Delete a point from upper plane\n" \
 			"  L/l - Delete a point from lower plane\n" \
 			"  Esc - Confirm and quit"
 
-		print("[Widget ColorManager] Maze selection thread is started.")
-		print(instruction_string)
+		_logger.debug("Maze selection thread is started.")
+		_logger.info(instruction_string)
 
 		while True:
 			key_pressed = cv2.waitKey(1)
@@ -519,7 +538,7 @@ class ColorManagerWidget(LabelFrame):
 				cv2.circle(self._frame, point, 5, (240, 60, 240), -1) # Purple
 			cv2.imshow(window_name, self._frame)
 
-		print("[Widget ColorManager] Maze selection thread is stopped.")
+		_logger.debug("Maze selection thread is stopped.")
 
 		cv2.destroyWindow(window_name)
 		self._option_panel.children["btn_select_color"].config(state = NORMAL)
@@ -539,9 +558,11 @@ class ColorManagerWidget(LabelFrame):
 		if event == cv2.EVENT_LBUTTONUP and \
 			len(self._maze_corner_points["upper"]) < 4:
 			self._maze_corner_points["upper"].append(Point2D(x, y))
+			_logger.debug("Selected a new corner of the upper plane.")
 		elif event == cv2.EVENT_RBUTTONUP and \
 			len(self._maze_corner_points["lower"]) < 4:
 			self._maze_corner_points["lower"].append(Point2D(x, y))
+			_logger.debug("Selected a new corner of the lower plane.")
 
 	def _keyboard_event_select_maze(self, key_pressed):
 		"""The keyboard event when selecting the maze
@@ -553,9 +574,11 @@ class ColorManagerWidget(LabelFrame):
 		if (key_pressed == ord('u') or key_pressed == ord('U')) and \
 			len(self._maze_corner_points["upper"]) > 0:
 			self._maze_corner_points["upper"].pop()
+			_logger.debug("Deleted a new corner of the upper plane.")
 		elif (key_pressed == ord('l') or key_pressed == ord('L')) and \
 			len(self._maze_corner_points["lower"]) > 0:
 			self._maze_corner_points["lower"].pop()
+			_logger.debug("Deleted a new corner of the lower plane.")
 
 	def _maze_recognition(self):
 		"""Make MazeManager to recognize the maze
@@ -563,26 +586,32 @@ class ColorManagerWidget(LabelFrame):
 		If the scale or the corners of the maze are not specified,
 		it will output the error message.
 		"""
+		_logger.debug("Maze recognition (not thread) is starting.")
+
 		# Check if the maze scale is vaild
 		x_scale = self._maze_info_entries['x_scale'].get()
 		y_scale = self._maze_info_entries['y_scale'].get()
 		wall_height = self._maze_info_entries['wall_height'].get()
 		if not x_scale or not y_scale or not wall_height:
-			print("[Widget ColorManager][Error] There are some invalid input value. " \
-				"x: %s, y: %s, wall_height: %s" % (x_scale, y_scale, wall_height,))
+			invaild_parameters = ""
+			if not x_scale: invaild_parameters += " x"
+			if not y_scale: invaild_parameters += " y"
+			if not wall_height: invalid_parameters += " wall_height"
+			_logger.error("Cannot start maze recognition. " \
+				"There are invalid parameters:{0}".format(invaild_parameters))
 			return
 
 		# Check if the corners of the maze are all specified
 		if len(self._maze_corner_points["upper"]) != 4 or \
 			len(self._maze_corner_points["lower"]) != 4:
-			print("[Widget ColorManager][Error] There are\'t enough points to locate" \
-				" the maze.")
+			_logger.error("Cannot start maze recognition. "\
+				"There are\'t enough points to locate the maze.")
 			return
 
 		self._maze_manager.recognize_maze(int(x_scale), int(y_scale), \
 			float(wall_height), self._maze_corner_points["upper"], \
 			self._maze_corner_points["lower"])
-		print("[Widget ColorManager] The maze is recognized.")
+		_logger.info("The maze is recognized.")
 
 		self._save_maze_config(x_scale, y_scale, wall_height)
 
@@ -591,6 +620,8 @@ class ColorManagerWidget(LabelFrame):
 
 		ColorPositionFinders of car_team_a and car_team_b will be toggled.
 		"""
+		_logger.debug("Color and car recongnition is starting.")
+
 		# Start color recognition
 		if not self._color_pos_manager.is_recognition_started:
 			self._color_pos_manager.start_recognition()
@@ -619,13 +650,15 @@ class ColorManagerWidget(LabelFrame):
 		"""
 		# Start showing recognition result
 		if not self._is_show_result_thread_started:
+			_logger.debug("Showing recognized image thread is starting.")
 			self._option_panel.children["btn_show_result_img"].config(text = "關閉標記影像")
 			self._show_result_image_thread = \
-				Thread(target = self._show_result_image)
+				Thread(target = self._show_result_image, name = "Show_result")
 			self._show_result_image_thread.start()
 			self._is_show_result_thread_started = True
 		# Stop showing recognition result
 		else:
+			_logger.debug("Showing recognized image thread is stopping.")
 			self._option_panel.children["btn_show_result_img"].config(text = "顯示標記影像")
 			self._is_show_result_thread_started = False
 			self._show_result_image_thread.join()
@@ -639,7 +672,7 @@ class ColorManagerWidget(LabelFrame):
 		window_name = "Recognition result (Esc to quit)"
 		cv2.namedWindow(window_name)
 
-		print("[Widget ColorManager] Show result image thread is started.")
+		_logger.debug("Showing recognized image thread is started.")
 
 		while self._is_show_result_thread_started:
 			if cv2.waitKey(1) == 27:	# Esc
@@ -652,7 +685,7 @@ class ColorManagerWidget(LabelFrame):
 			self._mark_recognition_result()
 			cv2.imshow(window_name, self._frame)
 
-		print("[Widget ColorManager] Show result image thread is stopped.")
+		_logger.debug("Showing recognized image thread is stopped.")
 
 		cv2.destroyWindow(window_name)
 

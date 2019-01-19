@@ -4,6 +4,7 @@ The wrapper module of tcp_module. Mainly handling the command
 send from the client.
 """
 import util.tcp_server as TCPServer
+import logging
 from threading import Thread
 from queue import Queue
 
@@ -13,6 +14,8 @@ _command_handlers = {}	# (command, handler)
 _command_thread = None
 # A queue to store the pending command
 _pending_queue = Queue()
+# Logger
+_logger = logging.getLogger(__name__)
 
 def set_new_connection_handler(handler):
 	"""Set the callback function(client_ip) when a client connects to the server
@@ -61,6 +64,8 @@ def _comsume_command():
 	This method is the target method of the thread _command_thread.
 	The thread will stop when get the None object from the _pending_queue.
 	"""
+	_logger.debug("Consuming command thread is started.")
+
 	while True:
 		command_item = _pending_queue.get()
 
@@ -70,6 +75,8 @@ def _comsume_command():
 
 		_parse_command(*command_item)
 		_pending_queue.task_done()
+
+	_logger.debug("Consuming command thread is stopped.")
 
 def _parse_command(from_ip: str, cmd_string: str):
 	"""Parse the command sent from the client
@@ -95,8 +102,8 @@ def _parse_command(from_ip: str, cmd_string: str):
 	try:
 		target_handler = _command_handlers[command]
 	except KeyError:
-		print("[Communication server] Unknown command {0}. Discard." \
-			.format(command))
+		_logger.error("Unknown command {0} from {1}. Discard." \
+			.format(command, from_ip))
 	else:
 		target_handler(from_ip, *parameters)
 
@@ -122,12 +129,14 @@ def start_server(server_ip: str, server_port: int):
 	global _command_thread
 
 	TCPServer.start_server(server_ip, server_port)
-	_command_thread = Thread(target = _comsume_command)
+	_logger.debug("Consuming command thread is starting.")
+	_command_thread = Thread(target = _comsume_command, name = "consume_cmd")
 	_command_thread.start()
 
 def stop_server():
 	"""Stop the TCP server and the command thread
 	"""
+	_logger.debug("Consuming command thread is stopping.")
 	_pending_queue.put(None)
 	_pending_queue.join()
 	_command_thread.join()

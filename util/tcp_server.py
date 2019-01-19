@@ -5,7 +5,7 @@ IP and port by a new thread. It provides callback functions
 for new connection, disconnection, or receving message from
 the client.
 """
-import socket, select, time
+import socket, select, time, logging
 from threading import Thread
 from queue import Queue
 from util.function_delegate import FunctionDelegate
@@ -38,6 +38,8 @@ _clients = {}
 request_interval = 0.1 # seconds
 # The queue for the sending message
 _sending_queue = Queue()
+# Logger
+_logger = logging.getLogger(__name__)
 
 ### Data structure ###
 class ClientSock:
@@ -60,14 +62,17 @@ def start_server(server_ip: str, server_port: int):
 	if _server_running:
 		return
 
+	_logger.debug("TCP server thread is starting.")
+
 	_sockets.clear()
 	_clients.clear()
 	_server_thread = Thread( \
-		target = lambda: _listen_to_client(server_ip, server_port))
+		target = lambda: _listen_to_client(server_ip, server_port), \
+		name = "tcp_server")
 	_server_running = True
 	_server_thread.start()
 
-	print("[TCP server] Start server on {0}:{1}" \
+	_logger.info("Server is started on {0}:{1}" \
 		.format(server_ip, server_port))
 
 def stop_server():
@@ -80,6 +85,8 @@ def stop_server():
 	if not _server_running:
 		return
 
+	_logger.debug("TCP server thread is stopping.")
+
 	_server_running = False
 	_server_thread.join()
 
@@ -88,7 +95,7 @@ def stop_server():
 		target_client.to_be_closed = True
 	_check_disconnection()
 
-	print("[TCP server] Stop server")
+	_logger.info("Server is stopped.")
 
 def is_running() -> bool:
 	"""Is server running?
@@ -119,6 +126,8 @@ def _listen_to_client(server_ip: str, server_port: int):
 	# Add server socket to the checking list
 	_sockets.append(_server_socket)
 
+	_logger.debug("TCP server thread is started.")
+
 	while _server_running:
 		# Checking sockets if there are incoming message for reading
 		checking_sockets = _sockets.copy()
@@ -135,6 +144,8 @@ def _listen_to_client(server_ip: str, server_port: int):
 		_check_disconnection()
 
 	_server_socket.close()
+
+	_logger.debug("TCP server thread is stopped.")
 
 def _new_connection(new_sock, addr_info):
 	"""Accepct new connection
@@ -153,9 +164,6 @@ def _new_connection(new_sock, addr_info):
 
 	sock_ip = new_sock.getpeername()[0]
 
-	print("[TCP server] New connection from {0}" \
-		.format(sock_ip))
-
 	try:
 		# Check if the incoming connection is already in the list
 		client_sock = _clients[sock_ip]
@@ -169,6 +177,9 @@ def _new_connection(new_sock, addr_info):
 		_sockets.append(new_sock)
 		_clients[sock_ip] = ClientSock(new_sock)
 
+		_logger.info("New connection from {0}. Current clients: {1}" \
+			.format(sock_ip, len(_clients)))
+
 	on_new_connect.invoke(sock_ip)
 
 def _disconnection(sock):
@@ -181,11 +192,11 @@ def _disconnection(sock):
 	"""
 	sock_ip = sock.getpeername()[0]
 
-	print("[TCP server] Disconnection from {0}" \
-		.format(sock_ip))
-
 	_sockets.remove(sock)
 	_clients.pop(sock_ip)
+
+	_logger.info("Disconnection from {0}. Current clients: {1}" \
+		.format(sock_ip, len(_clients)))
 
 	sock.close()
 	on_disconnect.invoke(sock_ip)
@@ -199,11 +210,12 @@ def force_disconnection(sock_ip):
 	try:
 		client_sock = _clients[sock_ip]
 	except KeyError:
-		print("[TCP server] {0} is not connecting to server" \
-			.format(sock_ip))
+		_logger.error("{0} is not connecting to server. " \
+			"Cannot forcely disconnect it.".format(sock_ip))
 		return
 	else:
 		client_sock.to_be_closed = True
+		_logger.info("Forcely disconnect {0}".format(sock_ip))
 
 def _check_disconnection():
 	sock_to_be_closed = []
@@ -231,8 +243,8 @@ def _recv_msg(sock):
 	try:
 		recv_data = sock.recv(RECV_BUFF_SIZE).decode('utf-8')
 	except Exception as e:
-		print("[TCP sevrer] Exception occured while receving data: {0}" \
-			.format(e))
+		_logger.error("Exception occured while receving data from {0}: {1}" \
+			.format(sock_ip, e))
 		_disconnection(sock)
 	else:
 		if len(recv_data) > 0:
@@ -240,7 +252,7 @@ def _recv_msg(sock):
 			target_client = _clients[sock_ip]
 
 			if time.time() - target_client.timestamp > request_interval:
-				#print("[TCP server] Receive data from {0}: {1}" \
+				#_logger.debug("Receive data from {0}: {1}" \
 				#	.format(sock_ip, recv_data))
 				target_client.timestamp = time.time()
 				on_recv_msg.invoke(sock_ip, recv_data)
@@ -262,12 +274,12 @@ def _consume_sending_queue():
 				if msg_sent == 0:
 					raise RuntimeError("Socket connetion broken")
 				total_msg_sent = total_msg_sent + msg_sent
-			#print("[TCP server] Send data to {0}: {1}".format(to_ip, message))
+			#_logger.debug("Send data to {0}: {1}".format(to_ip, message))
 		except KeyError:
-			print("[TCP server] Exception occured while sending data to {0}: "\
+			_logger.error("Exception occured while sending data to {0}: "\
 				"Client not found".format(to_ip))
 		except Exception as e:
-			print("[TCP server] Exception occured while sending data to {0}: {1}"\
+			_logger.error("Exception occured while sending data to {0}: {1}"\
 				.format(to_ip, e))
 			client.to_be_closed = True
 

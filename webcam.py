@@ -4,6 +4,7 @@ Capture frames from the web camera.
 
 from threading import Thread, Lock
 import cv2
+import logging
 
 class WebCamera:
 	"""Capture frames from the web camera.
@@ -37,6 +38,7 @@ class WebCamera:
 		@param width Specify the width in pixel of the frame
 		@param height Specify the height in pixel of the frame
 		"""
+		self._logger = logging.getLogger(self.__class__.__name__)
 		self._camera = cv2.VideoCapture(src)
 		self._camera.set(cv2.CAP_PROP_FRAME_WIDTH, width)
 		self._camera.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
@@ -45,9 +47,13 @@ class WebCamera:
 		self.is_thread_started = False
 		self.read_lock = Lock()
 
+		self._logger.debug("Camera object created. " \
+			"Resolution: {0} x {1}.".format(width, height))
+
 	def release_camera(self):
 		"""Release the camera object.
 		"""
+		self._logger.debug("Camera object released.")
 		self._camera.release()
 
 	def start_camera_thread(self):
@@ -58,13 +64,15 @@ class WebCamera:
 		message and do nothing.
 		"""
 		if self.is_thread_started:
-			print("[WebCamera] The camera thread has been started.\n");
+			self._logger.info("The camera thread has been started.\n");
 			return
 
-		self._camera_thread = Thread(target = self._camera_read_frame)
+		self._logger.debug("The camera thread is starting.")
+
+		self._camera_thread = Thread(target = self._camera_read_frame, \
+			name = "WebCamera")
 		self.is_thread_started = True
 		self._camera_thread.start()
-		print("[WebCamera] The camera thread is started.")
 
 	def stop_camera_thread(self):
 		"""Stop the running thread
@@ -73,10 +81,10 @@ class WebCamera:
 		nothing.
 		"""
 		if self._camera_thread.is_alive():
+			self._logger.debug("The camera thread is stopping.")
+
 			self.is_thread_started = False
 			self._camera_thread.join()
-
-			print("[WebCamera] The camera thread is stopped.")
 
 	def _camera_read_frame(self):
 		"""Keep capturing frames from the web camera
@@ -88,11 +96,16 @@ class WebCamera:
 		Updating WebCamera.frame and WebCamera.isCaptured is in the
 		critcal section.
 		"""
+		self._logger.debug("The camera thread is started.")
+
 		while self.is_thread_started:
 			(isCaptured, frame) = self._camera.read()
 			self.read_lock.acquire()
 			(self.isCaptured, self.frame) = isCaptured, frame
 			self.read_lock.release()
+
+		self._logger.debug("The camera thread is stopped.")
+
 
 	def get_frame(self):
 		"""Get the frame captured from the web camera

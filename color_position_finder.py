@@ -5,6 +5,7 @@ Find the position of the specified color in the image.
 import cv2
 import imutils
 import numpy as np
+import logging
 from threading import Lock
 from util.job_thread import JobThread
 
@@ -59,23 +60,31 @@ class ColorPositionFinder:
 	"""Find the given colors in the video stream of the camera
 
 	@var _colors_to_find A list stores colors to be find in the frame
+	@var _finder_name The name of the finder
 	@var _camera The camera object for getting frames
 	@var _color_finding_thread The thread for finding colors in the frame
 	@var _colors_to_find_lock The read lock of _colors_to_find
 	"""
 
-	def __init__(self, camera, fps = 100):
+	def __init__(self, finder_name, camera, fps = 100):
 		"""Constructor
 
+		@param finder_name The name of the finder
 		@param camera Spcify the camera object
 		@param fps Sepcify the updating rate of the car position
 		"""
+		self._logger = logging.getLogger(self.__class__.__name__)
+
 		self._colors_to_find = []
+		self._finder_name = finder_name
 		self._camera = camera
 
 		self._color_recognition_thread = JobThread(self._find_colors, \
-			"Color position recognition", 1.0 / fps)
+			"Color_{0}".format(finder_name), 1.0 / fps)
 		self._colors_to_find_lock = Lock()
+
+		self._logger.debug("Finder \"{0}\" is run in fps {1}." \
+			.format(finder_name, fps))
 
 	def add_target_color(self, color_b, color_g, color_r):
 		"""Add new target color to ColorPositionFinder._colors_to_find
@@ -85,13 +94,13 @@ class ColorPositionFinder:
 		@param color_r The red channel of the target color
 		"""
 		if self._color_recognition_thread.is_running:
-			print("[ColorPositionFinder] Stop the color recognition thread " \
-				"first before modify the target colors.")
+			self._logger.error("Cannot add colors while recognizing.")
 			return
 
 		self._colors_to_find.append(ColorPosition([color_b, color_g, color_r]))
-		print("[ColorPositionFinder] New target color added:" \
-			" ({0}, {1}, {2})".format(color_b, color_g, color_r))
+		self._logger.info("New target color ({0}, {1}, {2}) " \
+			"is added to the finder \"{3}\"." \
+			.format(color_b, color_g, color_r, self._finder_name))
 
 	def delete_target_color(self, color_b, color_g, color_r):
 		"""Delete the specified color from ColorPositionFinder._colors_to_find
@@ -104,8 +113,7 @@ class ColorPositionFinder:
 		@param color_r The red channel of the target color
 		"""
 		if self._color_recognition_thread.is_running:
-			print("[ColorPositionFinder] Stop the color recognition thread " \
-				"first before modify the target colors.")
+			self._logger.error("Cannot delete colors while recognizing.")
 			return
 
 		where = -1
@@ -113,12 +121,14 @@ class ColorPositionFinder:
 			where = self._colors_to_find.index( \
 				ColorPosition([color_b, color_g, color_r]))
 		except ValueError:
-			print("[ColorPositionFinder] Color ({0}, {1}, {2}) " \
-				"is not in the target colors".format(color_b, color_g, color_r))
+			self._logger.error("Cannot delete color ({0}, {1}, {2}). " \
+				"It is not in the finder \"{3}\"." \
+				.format(color_b, color_g, color_r, self._finder_name))
 		else:
 			self._colors_to_find.remove(self._colors_to_find[where])
-			print("[ColorPositionFinder] Target color removed:" \
-			" ({0}, {1}, {2})".format(color_b, color_g, color_r))
+			self._logger.info("Target color ({0}, {1}, {2}) is deleted " \
+				"from the finder \"{3}\"." \
+				.format(color_b, color_g, color_r, self._finder_name))
 
 	def get_target_color(self, color_b, color_g, color_r) -> ColorPosition:
 		"""Get the copy of the element of the specified color in _colors_to_find
@@ -139,8 +149,9 @@ class ColorPositionFinder:
 			where = self._colors_to_find.index( \
 				ColorPosition([color_b, color_g, color_r]))
 		except ValueError:
-			print("[ColorPositionFinder] Color ({0}, {1}, {2}) " \
-				"is not in the target colors".format(color_b, color_g, color_r))
+			self._logger.error("Color ({0}, {1}, {2}) is not in the finder \"{3}\"." \
+				.format(color_b, color_g, color_r, self._finder_name))
+			return None
 		else:
 			self._colors_to_find_lock.acquire()
 			new_item = self._colors_to_find[where].copy()
@@ -165,10 +176,6 @@ class ColorPositionFinder:
 		If the color recognition thread has been started,
 		the method will do nothing.
 		"""
-		if self._color_recognition_thread.is_running:
-			print("[INFO] The color recognition thread has been already started.")
-			return
-
 		self._color_recognition_thread.start()
 
 	def stop_recognition(self):
@@ -264,8 +271,8 @@ class ColorPosManager:
 		"""
 		self._is_recognition_started = False
 		self._color_pos_finders = {
-			PosFinderType.CAR_TEAM_A: ColorPositionFinder(camera, fps),
-			PosFinderType.CAR_TEAM_B: ColorPositionFinder(camera, fps)
+			PosFinderType.CAR_TEAM_A: ColorPositionFinder("team_A", camera, fps),
+			PosFinderType.CAR_TEAM_B: ColorPositionFinder("team_B", camera, fps)
 		}
 
 	@property

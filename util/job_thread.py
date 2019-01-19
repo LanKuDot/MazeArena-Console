@@ -1,5 +1,6 @@
 from threading import Thread
 from time import sleep
+import logging
 
 class JobThread():
 	"""A class that helps toggling a thread
@@ -31,6 +32,8 @@ class JobThread():
 		@param call_every_sec Specify the time interval in seconds
 		       for running the target method
 		"""
+		self._logger = logging.getLogger(self.__class__.__name__)
+
 		self._fn_target = target
 		self._thread = None
 		self._is_thread_started = False
@@ -53,7 +56,7 @@ class JobThread():
 		If the thread has been already started, the method does nothing.
 		"""
 		if self._thread is not None and self._is_thread_started:
-			print("[JobThread] {0} thread has been already started." \
+			self._logger.error("{0} thread has been already started." \
 				.format(self._name))
 		else:
 			self._is_thread_started = True
@@ -65,9 +68,8 @@ class JobThread():
 				target = lambda: self._thread_loop_every_sec(self._call_every_sec), \
 				name = self._name)
 
+			self._logger.debug("{0} thread is starting.".format(self._name))
 			self._thread.start()
-			print("[JobThread] {0} thread is started." \
-				.format(self._name))
 
 	def stop(self):
 		"""Stop the job thread
@@ -75,12 +77,11 @@ class JobThread():
 		If the thread is not alive, the method does nothing.
 		"""
 		if self._thread is not None and self._is_thread_started:
+			self._logger.debug("{0} thread is stopping.".format(self._name))
 			self._is_thread_started = False
 			self._thread.join()
-			print("[JobThread] {0} thread is stopped." \
-				.format(self._name))
 		else:
-			print("[JobThread] {0} thread has not been started yet." \
+			self._logger.warning("{0} thread has not been started yet." \
 				.format(self._name))
 
 	def stop_without_wait(self):
@@ -89,24 +90,35 @@ class JobThread():
 		If the thread is not alive, the method does nothing.
 		"""
 		if self._thread is not None and self._is_thread_started:
-			self._is_thread_started = False
-			print("[JobThread] {0} thread is stopped." \
+			self._logger.debug("{0} thread is stopping without wait." \
 				.format(self._name))
+
+			self._is_thread_started = False
 		else:
-			print("[JobThread] {0} thread has not been started yet." \
+			self._logger.warning("{0} thread has not been started yet." \
 				.format(self._name))
 
 	def _thread_loop(self):
 		"""A while loop for Thread to execute the target method
 		"""
+		self._logger.debug("{0} thread is started.".format(self._name))
+
 		while self._is_thread_started:
 			self._fn_target()
+
+		self._logger.debug("{0} thread is stopped.".format(self._name))
 
 	def _thread_loop_every_sec(self, time_interval):
 		"""A while loop for Thread to execute the target method every n sec
 
 		@param time_interval Specify the time interval
 		"""
+		self._logger.debug("{0} thread is started. " \
+			"Will be executed every {1} seconds." \
+			.format(self._name, time_interval))
+
 		while self._is_thread_started:
 			self._fn_target()
 			sleep(time_interval)
+
+		self._logger.debug("{0} thread is stopped.".format(self._name))

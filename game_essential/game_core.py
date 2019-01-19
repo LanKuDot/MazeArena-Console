@@ -6,7 +6,10 @@ from .player_info import BasicTeamInfo, TeamType
 from maze_manager import MazeManager, MazePositionFinder
 from util.function_delegate import FunctionDelegate
 from functools import wraps
-		
+import logging
+
+_logger = logging.getLogger(__name__)
+
 class BasicGameCore:
 	"""The basic functions in the game
 
@@ -133,7 +136,7 @@ class BasicGameCore:
 		@param team_name Specify the name of the team
 		"""
 		self._teams[team_type].team_name = team_name
-		print("[GameCore] Set the name of team {0} to \"{1}\"." \
+		_logger.info("Set the name of team {0} to \"{1}\"." \
 			.format(team_type, team_name))
 
 	def team_get_type_by_name(self, team_name) -> TeamType:
@@ -179,24 +182,26 @@ class BasicGameCore:
 			team_type = self.team_get_type_by_name(team_name) # ValueError
 		except IndexError:	# Invaild arguments
 			self._comm_server.send_message(player_ip, "join fail")
-			print("[GameCore] The arguments for join the game are invaild.")
+			_logger.error("player-join: " \
+				"The arguments for join the game are invaild.")
 		except ValueError:	# Invaild team name
 			self._comm_server.send_message(player_ip, "join fail")
-			print("[GameCore] Specified team name {0} is not found.".format(team_name))
+			_logger.error("player-join: " \
+				"Specified team name {0} is not found.".format(team_name))
 		else:
 			# If the player has already joined
 			if self._teammates.get(player_ip) is not None:
 				self._comm_server.send_message(player_ip, "join fail")
-				print("[GameCore] IP {0} has already joined the game." \
-					.format(player_ip))
+				_logger.error("player-join: " \
+					"IP {0} has already joined the game.".format(player_ip))
 				return
 
 			# Check if the player ID is used in the team
 			player_info = self._teams[team_type].get_player_info_by_ID(player_ID)
 			if player_info is not None:
 				self._comm_server.send_message(player_ip, "join fail")
-				print("[GameCore] Player \"{0}\" is already in the team." \
-					.format(player_ID))
+				_logger.error("player-join: " \
+					"Player \"{0}\" is already in the team.".format(player_ID))
 				return
 
 			player_info = self._teams[team_type] \
@@ -207,7 +212,7 @@ class BasicGameCore:
 
 			self._comm_server.send_message(player_ip, "join ok")
 
-			print("[GameCore] Player \"{0}\" from {1} joins the team \"{2}\"." \
+			_logger.info("Player \"{0}\" from {1} joins the team \"{2}\"." \
 				.format(player_info.ID, player_info.IP, player_info.team_name))
 
 	def player_quit(self, player_ip):
@@ -222,14 +227,14 @@ class BasicGameCore:
 		try:
 			team_type = self._teammates.pop(player_ip)
 		except KeyError:
-			print("[GameCore] Specified player is not found.")
+			_logger.error("player-quit: Specified player is not found.")
 			return
 		else:
 			player_info = self._teams[team_type].delete_player_info(player_ip)
 
 			self._handlers["player-quit"].invoke(player_info, team_type)
 
-			print("[GameCore] Player \"{0}\" from {1} quits the game." \
+			_logger.info("Player \"{0}\" from {1} quits the game." \
 				.format(player_info.ID, player_info.IP))
 
 	def player_kick(self, player_ip):
@@ -333,6 +338,7 @@ class BasicGameCore:
 		self._comm_server.broadcast_message("game-start")
 		self._is_game_started = True
 		self._handlers["game-start"].invoke()
+		_logger.info("Game is started.")
 
 	@game_started
 	def game_stop(self):
@@ -344,3 +350,4 @@ class BasicGameCore:
 		self._comm_server.broadcast_message("game-stop")
 		self._is_game_started = False
 		self._handlers["game-stop"].invoke()
+		_logger.info("Game is stopped.")

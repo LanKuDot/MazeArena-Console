@@ -5,6 +5,7 @@ in the gui.
 """
 
 import tkinter as tk
+import logging
 
 from webcam import WebCamera
 from color_position_finder import *
@@ -29,12 +30,17 @@ def start_gui():
 	main_window.title("MazeArena console")
 	_setup_gui(main_window)
 
+	logger = logging.getLogger(__name__)
+	logger.debug("Application GUI created.")
+
 	_camera.start_camera_thread()
 
 	main_window.mainloop()
 
 	_camera.stop_camera_thread()
 	_camera.release_camera()
+
+	logger.debug("Application GUI destoried.")
 
 def _setup_gui(main_window):
 	"""Set up the layout of the gui

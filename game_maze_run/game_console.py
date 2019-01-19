@@ -10,6 +10,9 @@ from .widget_timer import TimerWidget
 from game_essential import BasicPlayerInfoWidget, BasicTeamPanelWidget
 from maze_manager import MazeManager
 from tkinter import *
+import logging
+
+_logger = logging.getLogger(__name__)
 
 class PlayerInfoWidget(BasicPlayerInfoWidget):
 	def __init__(self, master, player_info: PlayerInfo, color_list, **options):
@@ -65,6 +68,8 @@ class GameConsoleWidget(LabelFrame):
 			self._team_A_panel.delete_player(player_info)
 
 	def _toggle_game(self):
+		_logger.debug("Toggle game button is pressed.")
+
 		if not self._game_core.is_game_started:
 			self._game_start_from_gm()
 		else:

@@ -1,6 +1,9 @@
 from tkinter import *
 from config_manager import ConfigManager
 import communication_server as comm_server
+import logging
+
+_logger = logging.getLogger(__name__)
 
 class WidgetServerManager(LabelFrame):
 	"""The widget for controling the communication_server
@@ -79,6 +82,7 @@ class WidgetServerManager(LabelFrame):
 		server_port = self._config_manager.server_config["port"]
 		self.children["entry_IP"].insert(END, server_ip)
 		self.children["entry_port"].insert(END, server_port)
+		_logger.debug("Server config is loaded to the widget.")
 
 	def _save_server_config(self, server_ip: str, server_port: int):
 		"""Save the server config to the ConfigManager
@@ -95,6 +99,8 @@ class WidgetServerManager(LabelFrame):
 		Start the communication server when the server is not started,
 		and vice versa.
 		"""
+		_logger.debug("Toggle server button is pressed.")
+
 		if not comm_server.is_running():
 			server_ip = self.children["entry_IP"].get()
 			server_port = int(self.children["entry_port"].get())
@@ -119,3 +125,5 @@ class WidgetServerManager(LabelFrame):
 		cur_conn, max_conn = comm_server.get_current_connection_num()
 		self.children["label_connections"].config( \
 			text = "連接數: {0}/{1}".format(cur_conn, max_conn))
+
+		_logger.debug("Connection number is updated.")

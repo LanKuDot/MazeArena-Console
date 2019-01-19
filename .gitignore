@@ -1,6 +1,7 @@
 *.pyproj
 *.sln
 *.swp
+*.log
 __pycache__/*
 */__pycache__
 MazeArena-Console/*

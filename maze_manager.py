@@ -5,6 +5,7 @@ such as the size of the maze, the position of the maze cars.
 
 import cv2
 import numpy as np
+import logging
 from operator import attrgetter
 from threading import Lock
 
@@ -73,6 +74,7 @@ class MazePositionFinder:
 
 	@var _color_pos_finder The ColorPosFinder that contains the colors to be found
 	     in the MazePositionFinder
+	@var _finder_name The name of the finder
 	@var _wall_height The height of the maze wall
 	@var _upper_transform_mat A matrix that transform from the frame
 	     coordinate to the coordinate of the upper plane of the maze
@@ -87,7 +89,9 @@ class MazePositionFinder:
 	@var _recognition_thread A JobThread for recognizing the car position
 	"""
 
-	def __init__(self, color_pos_finder: ColorPositionFinder, fps = 100):
+	def __init__(self, finder_name, color_pos_finder: ColorPositionFinder, fps = 100):
+		self._logger = logging.getLogger(self.__class__.__name__)
+		self._finder_name = finder_name
 		self._color_pos_finder = color_pos_finder
 
 		self._wall_height = None
@@ -101,7 +105,10 @@ class MazePositionFinder:
 		self._max_missing_counter = fps * 5	# 5 seconds
 
 		self._recognition_thread = JobThread(self._recognize_pos_in_maze, \
-			"Car position recognition", 1.0 / fps)
+			"Car_{0}".format(finder_name), 1.0 / fps)
+
+		self._logger.debug("Finder {0} is run in fps {1}." \
+			.format(finder_name, fps))
 
 	def set_wall_height(self, wall_height):
 		self._wall_height = wall_height
@@ -129,19 +136,21 @@ class MazePositionFinder:
 		@param LED_height The height of the LED on the maze car
 		"""
 		if self._recognition_thread.is_running:
-			print("[MazePosFinder] Cannot update colors while recognizing.")
+			self._logger.error("Cannot add colors while recognizing.")
 			return
 
 		try:
 			where = self._colors_to_find.index(MazePosition(color_bgr, 0))
 		except ValueError:
 			self._colors_to_find.append(MazePosition(color_bgr, LED_height))
-			print("[MazePosFinder] New color added: ({0}, {1}, {2})" \
-				.format(*color_bgr))
+			self._logger.info("New target color ({0}, {1}, {2}) is added " \
+				"to the finder \"{3}\"." \
+				.format(*color_bgr, self._finder_name))
 		else:
 			self._colors_to_find[where].LED_height = LED_height
-			print("[MazePosFinder] LED height of color ({0}, {1}, {2}) is updated" \
-				.format(*color_bgr))
+			self._logger.info("LED height of color ({0}, {1}, {2}) " \
+				"in the finder \"{3}\" is updated." \
+				.format(*color_bgr, self._finder_name))
 
 	def delete_target_color(self, color_bgr):
 		"""Delete the target color from the MazePositionFinder._colors_to_find
@@ -149,18 +158,20 @@ class MazePositionFinder:
 		@param color_bgr Specify the color to be removed in BGR domain
 		"""
 		if self._recognition_thread.is_running:
-			print("[MazePosFinder] Cannot update colors while recognizing.")
+			self._logger.error("Cannot delete colors while recognizing.")
 			return
 
 		try:
 			where = self._colors_to_find.index(MazePosition(color_bgr, 0))
 		except ValueError:
-			print("[MazePosFinder] Color ({0}, {1}, {2}) is not existing" \
-				.format(*color_bgr))
+			self._logger.error("Cannot delele color ({0}, {1}, {2}). " \
+				"It is not in the finder \"{3}\"." \
+				.format(*color_bgr, self._finder_name))
 		else:
 			self._colors_to_find.remove(self._colors_to_find[where])
-			print("[MazePosFinder] Color ({0}, {1}, {2}) is removed" \
-				.format(*color_bgr))
+			self._logger.info("Target color ({0}, {1}, {2}) is deleted " \
+				"from the finder \"{3}\"." \
+				.format(*color_bgr, self._finder_name))
 
 	def get_maze_pos(self, color_bgr) -> MazePosition:
 		"""Get the maze position of the specified color
@@ -202,7 +213,7 @@ class MazePositionFinder:
 		# Generate an array og the ratio of the LED height to the maze height
 		# of all colors
 		if self._upper_transform_mat is None or self._lower_transform_mat is None:
-			print("[MazePosFinder] The maze has not been recognized yet.")
+			self._logger.error("The maze has not been recognized yet.")
 			return
 
 		self._generate_ratio_to_wall_height()
@@ -307,8 +318,8 @@ class MazeManager:
 		team_a_color_finder = color_pos_manager.get_finder(PosFinderType.CAR_TEAM_A)
 		team_b_color_finder = color_pos_manager.get_finder(PosFinderType.CAR_TEAM_B)
 		self._maze_pos_finders = {
-			PosFinderType.CAR_TEAM_A: MazePositionFinder(team_a_color_finder, fps),
-			PosFinderType.CAR_TEAM_B: MazePositionFinder(team_b_color_finder, fps)
+			PosFinderType.CAR_TEAM_A: MazePositionFinder("team_A", team_a_color_finder, fps),
+			PosFinderType.CAR_TEAM_B: MazePositionFinder("team_B", team_b_color_finder, fps)
 		}
 
 	def recognize_maze(self, scale_x: int, scale_y: int, wall_height: float, \

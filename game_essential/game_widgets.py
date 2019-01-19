@@ -5,6 +5,9 @@ from tkinter import *
 import tkinter as tk
 from .game_core import TeamType
 from .player_info import BasicPlayerInfo
+import logging
+
+_logger = logging.getLogger(__name__)
 
 class BasicPlayerInfoWidget(Frame):
 	"""The widget for setting and displaying BasicPlayerInfo or its derived class
@@ -65,7 +68,7 @@ class BasicPlayerInfoWidget(Frame):
 		spacer = Label(self, width = 1)
 		spacer.pack(side = LEFT)
 		btn_kick = Button(self, text = "剔除", \
-			command = lambda: print("[PlayerInfoWidget] Kick handler is not assigned."), \
+			command = lambda: _logger.error("Kick handler is not assigned."), \
 			name = "btn_kick")
 		btn_kick.pack(side = LEFT)
 		spacer_mary = Label(self, width = 1)
@@ -98,7 +101,7 @@ class BasicPlayerInfoWidget(Frame):
 			color_bgr.append(int(color))
 		self._player_info.color_bgr = color_bgr
 
-		print("[PlayerInfoWidget] Set the color of player \"{0}\" to \"{1}\"." \
+		_logger.info("Set the color of player \"{0}\" to \"{1}\"." \
 			.format(self._player_info.ID, self._player_info.color_bgr))
 
 	def set_kick_handler(self, fn_kick):
@@ -107,7 +110,11 @@ class BasicPlayerInfoWidget(Frame):
 		@param fn_kick The function for kicking the player from server.
 		       Should be fn_kick(player_ip).
 		"""
-		self.children["btn_kick"].config(command = lambda: fn_kick(self._player_info.IP))
+		def kick_player():
+			_logger.debug("Kick player button is pressed.")
+			fn_kick(self._player_info.IP)
+
+		self.children["btn_kick"].config(command = kick_player)
 
 	def refresh(self):
 		"""Make the widget reflect the changes of BasicPlayerInfo object
@@ -201,6 +208,8 @@ class BasicTeamPanelWidget(LabelFrame):
 		player_widget.refresh()
 		self._player_widgets[player_info.IP] = player_widget
 
+		_logger.debug("PlayerInfoWidget for {0} is created.".format(player_info.IP))
+
 	def delete_player(self, player_info):
 		"""Delete a player widget from the panel
 
@@ -209,6 +218,8 @@ class BasicTeamPanelWidget(LabelFrame):
 		player_widget = self._player_widgets[player_info.IP]
 		player_widget.pack_forget()
 		player_widget.destroy()
+
+		_logger.debug("PlayerInfoWidget for {0} is deleted.".format(player_info.IP))
 
 	def num_of_player_widgets(self):
 		"""Get the number of player widgets it has

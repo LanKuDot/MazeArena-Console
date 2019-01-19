@@ -1,5 +1,6 @@
 import os.path
 import xml.etree.ElementTree as ET
+import logging
 from point import Point2D
 
 class ConfigManager:
@@ -24,6 +25,8 @@ class ConfigManager:
 
 		@param _config_file_path Specify the file path of the configuration file
 		"""
+		self._logger = logging.getLogger(self.__class__.__name__)
+
 		self._config_file_path = config_file_path
 		self.maze_config = {
 			"corner_plane_upper": \
@@ -48,8 +51,11 @@ class ConfigManager:
 		and save to the file.
 		"""
 		if not os.path.isfile(self._config_file_path):
+			self._logger.debug("Config file not found. Create a new one.")
 			self.save_config()
 			return
+
+		self._logger.debug("Loading config file {0}".format(self._config_file_path))
 
 		config_tree = ET.parse(self._config_file_path)
 		config_root = config_tree.getroot()
@@ -78,6 +84,8 @@ class ConfigManager:
 		self.server_config["ip"] = server_ip.text
 		server_port = config_root.find("./server/port")
 		self.server_config["port"] = int(server_port.text)
+
+		self._logger.debug("Config file is loaded.")
 
 	def save_config(self):
 		"""Save the configuration to the xml file
@@ -115,5 +123,7 @@ class ConfigManager:
 		rough_string = ET.tostring(config_root, "utf-8")
 		reparsed_string = minidom.parseString(rough_string).toprettyxml(indent = "  ")
 
+		self._logger.debug("Saving config file to {0}".format(self._config_file_path))
 		with open(self._config_file_path, 'w') as f:
 			f.write(reparsed_string)
+		self._logger.debug("Config file is saved.")
