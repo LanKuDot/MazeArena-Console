@@ -35,7 +35,10 @@ def start_gui():
 
 	_camera.start_camera_thread()
 
-	main_window.mainloop()
+	try:
+		main_window.mainloop()
+	except KeyboardInterrupt:
+		logger.error("User keyboard interrupt. Forcely shutdown.")
 
 	_camera.stop_camera_thread()
 	_camera.release_camera()
