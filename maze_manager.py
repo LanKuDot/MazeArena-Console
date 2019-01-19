@@ -102,6 +102,14 @@ class MazePositionFinder:
 		self._colors_to_find = []
 		self._colors_to_find_lock = Lock()
 		self._ratio_to_wall_height_array = []
+
+		try:
+			if int(fps) < 1:
+				raise ValueError
+		except ValueError:
+			self._logger.error("Invaild fps: {0}. Set to 30.".format(fps))
+			fps = 30
+
 		self._max_missing_counter = fps * 5	# 5 seconds
 
 		self._recognition_thread = JobThread(self._recognize_pos_in_maze, \

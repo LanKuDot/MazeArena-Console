@@ -79,6 +79,13 @@ class ColorPositionFinder:
 		self._finder_name = finder_name
 		self._camera = camera
 
+		try:
+			if int(fps) < 1:
+				raise ValueError
+		except ValueError:
+			self._logger.error("Invaild fps: {0}. Set to 30.".format(fps))
+			fps = 30
+
 		self._color_recognition_thread = JobThread(self._find_colors, \
 			"Color_{0}".format(finder_name), 1.0 / fps)
 		self._colors_to_find_lock = Lock()
