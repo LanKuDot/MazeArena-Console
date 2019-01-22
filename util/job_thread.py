@@ -114,7 +114,7 @@ class JobThread():
 		@param time_interval Specify the time interval
 		"""
 		self._logger.debug("{0} thread is started. " \
-			"Will be executed every {1} seconds." \
+			"Will be executed every {1:6f} seconds." \
 			.format(self._name, time_interval))
 
 		while self._is_thread_started:
