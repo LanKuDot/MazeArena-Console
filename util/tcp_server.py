@@ -272,8 +272,8 @@ def _recv_msg(sock):
 			target_client = _clients[sock_ip]
 
 			if time.time() - target_client.timestamp > request_interval:
-				#_logger.debug("Receive data from {0}: {1}" \
-				#	.format(sock_ip, recv_data))
+				_logger.debug("Receive data from {0}: {1}" \
+					.format(sock_ip, recv_data))
 				target_client.timestamp = time.time()
 				on_recv_msg.invoke(sock_ip, recv_data)
 		else:
@@ -294,7 +294,7 @@ def _consume_sending_queue():
 				if msg_sent == 0:
 					raise RuntimeError("Socket connetion broken")
 				total_msg_sent = total_msg_sent + msg_sent
-			#_logger.debug("Send data to {0}: {1}".format(to_ip, message))
+			_logger.debug("Send data to {0}: {1}".format(to_ip, message.rstrip("\n")))
 		except KeyError:
 			_logger.error("Exception occured while sending data to {0}: "\
 				"Client not found".format(to_ip))
