@@ -3,15 +3,15 @@ import logging.handlers
 
 log_dir = "./log"
 
-def clear_old_log_file(remain_file_num: int):
-	log_files = []
-	for file_name in os.listdir(log_dir):
-		if file_name.endswith(".log"):
-			log_files.append(log_dir + "/" + file_name)
-
-	while len(log_files) > remain_file_num:
-		os.remove(log_files[0])
-		log_files.pop(0)
+class ExecTimeFormatter(logging.Formatter):
+	def format(self, record):
+		relativeCreatedTime = int(record.relativeCreated)
+		minute = int(relativeCreatedTime / 60000)
+		relativeCreatedTime = relativeCreatedTime - minute * 60000
+		second = int(relativeCreatedTime / 1000)
+		millisecond = relativeCreatedTime - second * 1000
+		record.execTime = "{0}:{1:02d}.{2:03d}".format(minute, second, millisecond)
+		return super(ExecTimeFormatter, self).format(record)
 
 def initialize_logger():
 	if not os.path.exists(log_dir):
@@ -19,12 +19,12 @@ def initialize_logger():
 
 	timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
 
-	file_handler = logging.FileHandler( \
-		filename = "{0}/{1}.log".format(log_dir, timestamp))
+	file_handler = logging.handlers.RotatingFileHandler( \
+		filename = "{0}/execution.log".format(log_dir), maxBytes = 2 * 1024 * 1024, \
+		backupCount = 5)
 	file_handler.setLevel(logging.DEBUG)
-	file_log_formatter = logging.Formatter( \
-		fmt = "[%(asctime)s] %(levelname)-8s %(threadName)-12s %(name)-27s %(message)s", \
-		datefmt = "%H:%M")
+	file_log_formatter = ExecTimeFormatter( \
+		fmt = "[%(execTime)10s] %(levelname)-8s %(threadName)-12s %(name)-27s %(message)s")
 	file_handler.setFormatter(file_log_formatter)
 
 	console_handler = logging.StreamHandler()
@@ -49,9 +49,8 @@ def initialize_logger():
 	return logger, queue_listener
 
 def end_logger():
-	root_logger.debug("=== End logging ===")
+	root_logger.debug("=== End logging ===\n")
 	queue_listener.stop()
 	logging.shutdown()
 
-clear_old_log_file(5)
 root_logger, queue_listener = initialize_logger()
