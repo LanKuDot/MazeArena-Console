@@ -2,7 +2,8 @@
 *.sln
 *.swp
 *.log
-__pycache__/*
 */__pycache__
+.vs*
+__pycache__/*
 MazeArena-Console/*
 config.xml
