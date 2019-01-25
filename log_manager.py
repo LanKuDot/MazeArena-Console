@@ -6,10 +6,8 @@ log_dir = "./log"
 class ExecTimeFormatter(logging.Formatter):
 	def format(self, record):
 		relativeCreatedTime = int(record.relativeCreated)
-		minute = int(relativeCreatedTime / 60000)
-		relativeCreatedTime = relativeCreatedTime - minute * 60000
-		second = int(relativeCreatedTime / 1000)
-		millisecond = relativeCreatedTime - second * 1000
+		minute, second = divmod(relativeCreatedTime, 60000)
+		second, millisecond = divmod(second, 1000)
 		record.execTime = "{0}:{1:02d}.{2:03d}".format(minute, second, millisecond)
 		return super(ExecTimeFormatter, self).format(record)
 
